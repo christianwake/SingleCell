@@ -1,0 +1,167 @@
+import pandas as pd
+import subprocess
+import os
+from collections import defaultdict
+configfile: 'project_config_file.yaml'
+
+config = defaultdict(str, config)
+
+### List of test variable names from the configuration file
+tests = [x.strip() for x in config['test'].split(',')]
+print('Tests:')
+print(tests)
+
+### Define stratifications
+strats = [x.strip() for x in config['stratifications'].split(':')]
+strat_list = ['All']
+if(len(strats) > 1):
+  strat_list = strat_list + [strats[0] + '-' + v.strip() for v in strats[1].split(',')]
+print('Stratifications: ')
+print(strat_list)
+
+do_annot = False
+if(config['annotation_reference'] != ''):
+  do_annot = True
+
+dehash = config['hashed']
+### 
+sample_sheet = os.path.join(os.getcwd(), config['sample_sheet'])
+samples = pd.read_table(sample_sheet, sep = ',').set_index('Sample_ID', drop = False)
+#batchs = list(set(samples[config['batch']]))
+QC_name = config['QC_name']
+results_dir = os.path.join('results', QC_name) + '/'
+print(results_dir)
+
+### Read QC summary file (input to batch_eval checkpoint) and creates dictionary to hold the file paths held within
+QC_file = os.path.join(os.getcwd(), config['QC_file'])
+qcdat = pd.read_csv(QC_file)
+### Add missing steps to qcdat with '' file column, including step 0 (no QC done yet)
+steps = list(set(list(range(6))) - set(qcdat.step))
+d = {'step':steps, 'file':['' for s in steps]}
+qcdat = pd.concat([qcdat, pd.DataFrame(d)])
+### Reorder rows
+qcdat['step_num'] = ['step' + str(q) for q in qcdat.step]
+qcdat['post_name'] = [results_dir + 'PostQC' + str(q) + '.RDS' for q in qcdat.step]
+qcdat = qcdat.set_index('step')
+qcdat = qcdat.sort_index(ascending = True)
+### Add step_name
+qcdat['step_name'] = ['Base data', 'Sample filter', 'Imputation', 'Cell filter', 'Integration', 'Cluster filter']
+### Add original RDS file
+qcdat.iloc[0, qcdat.columns.get_loc('post_name')] = 'data/All_data.RDS'
+### Add skip information
+qcdat['skip'] = [f == '' for f in qcdat.file]
+qcdat.iloc[0, qcdat.columns.get_loc('skip')] = False
+#qcdat.to_csv(results_dir + 'QC_steps.csv', sep = ',')
+
+QC_specs = defaultdict(str, zip(qcdat.step_num, qcdat.file))
+print(qcdat)
+print(QC_file)
+
+### If cluster resolution for post-filter clustering is not specified, assume it should be the same as the original cluster
+if 'clust_resolution2' not in config.keys():
+  config['clust_resolution2'] = config['clust_resolution']
+
+### Read list of clusters to sub-cluster
+sc_file = os.path.join(os.getcwd(), config['sub_cluster'])
+if os.path.exists(sc_file):
+  sc = pd.read_csv(sc_file)
+  sc['cluster'] = sc['cluster'].astype(str)
+sub_clusters = ['-'.join(list(row)) for index,row in sc.iterrows()]
+print(sub_clusters)
+
+### If the last line of the second output of cluster_filters (Filters.txt) specifies that 0 cells were filtered, skip re-clustering
+def maybe_skip_second_cluster(wildcards):
+  checkp = checkpoints.cluster_filter.get().output[1]
+  with open(checkp) as f:
+    for line in f:
+      pass
+    last_line = line
+  print(last_line)
+  if(bool(re.search('"Total removed",NA,NA,NA,"0"', last_line))):
+    print('Skip second cluster.')
+    return results_dir + 'Cluster_filtered.RDS'
+  else:
+    print('Do second cluster.')
+    return results_dir + 'Clustered_again.RDS'
+
+def maybe_skip_QC_stepN(qcdat, stepN, spec = True):
+  ### txt output from batch_evaluations rule
+  #qc = pd.read_csv(qc_csv)
+  QC_files = defaultdict(str, zip(qcdat.step_num, qcdat.file))
+  QC_rds = dict(zip(qcdat.step_num, qcdat.post_name))
+  specs_file = QC_files['step' + str(stepN)]
+  ### Slice the data frame to include only up to input stepN
+  qcdat = qcdat[:stepN]
+  ### Select the step name of the last step that is not skipped (column 'skip' = F). Use that step name as key in the RDS dictionary.
+  rds_file = QC_rds[qcdat[qcdat.skip == False].iloc[-1, qcdat.columns.get_loc('step_num')]]
+  out = {'rds':rds_file, 'touch':'data/checkpoint.done'}
+  if spec:
+    out['qc'] = specs_file
+  return(out)
+
+def maybe_skip_annotation(annotation):
+  if(annotation != ''):
+    out = results_dir + 'Mapped.RDS'
+    print('Doing annotation')
+  else:
+    out = maybe_skip_second_cluster
+  return out
+        
+include: "/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/SingleCell/Snakefile"
+
+rule all:
+  input: results_dir + 'App/Data.RData'
+
+#### Assumes cellranger count or multi has been run on each flowcell
+if dehash == True:
+  rule Dehash:
+    input:
+      samples = sample_sheet,
+      gtf = 'data/gtf/RDS'
+    params:
+      scripts = config['SC_scripts'],
+      runs_dir = config['runs_dir'],
+      project = config['project']
+    output:
+      "data/Cell_data.csv"
+    shell:
+      "Rscript {params.scripts}/Dehash.R {input} {params.runs_dir} {params.project} {output}"
+
+  rule Create_cells_Seurat_hash:
+    input:
+      samples = sample_sheet,
+      csv = "data/Cell_data.csv",
+      gtf = "data/gtf.RDS"
+    params:
+      scripts = config['TenX_scripts'],
+      runs_dir = config['runs_dir'],
+      project = config['project'],
+      results_dir = results_dir
+    output:
+      "data/All_data.RDS" 
+    resources:
+      mem_mb=30000 
+    shell:
+      """
+      mkdir -p {params.results_dir}
+      Rscript {params.scripts}/Create_Seurat_RDS_hash.R {params.runs_dir} {params.project} {input} {output}
+      """
+else:
+  rule Create_cells_Seurat:
+    input:
+      samples = sample_sheet,
+      gtf = "data/gtf.RDS"
+    params:
+      scripts = config['TenX_scripts'],
+      runs_dir = config['runs_dir'],
+      results_dir = results_dir
+    output:
+      temp("data/All_data.RDS")
+    resources:
+      mem_mb=30000 
+    shell:
+      """
+      mkdir -p {params.results_dir}
+      Rscript {params.scripts}/Create_Seurat_RDS.R {params.runs_dir} {input} {output}
+      """
+
