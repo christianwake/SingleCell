@@ -60,10 +60,17 @@ qcdat.iloc[0, qcdat.columns.get_loc('post_name')] = 'data/All_data.RDS'
 ### Add skip information
 qcdat['skip'] = [f == '' for f in qcdat.file]
 qcdat.iloc[0, qcdat.columns.get_loc('skip')] = False
+
 #qcdat.to_csv(results_dir + 'QC_steps.csv', sep = ',')
 QC_specs = defaultdict(str, zip(qcdat.step_num, qcdat.file))
 print(qcdat)
 print(QC_file)
+
+qc_skip = qcdat[qcdat.step_num == 'step1'].skip.values[0]
+print(qc_skip)
+
+if(qc_skip == False):
+  print('is actually boolean')
 
 ### Read list of cluster comparisons to do
 cc_file = os.path.join(os.getcwd(), config['cluster_compare'])
@@ -102,10 +109,24 @@ size_step = [8000, 15000, 64000, 240000]
 def get_mem_mb(wildcards, attempt):
   return size_step[attempt]
 
+### For dynamic batches. Uses checkpoint 'set_batches', creates a list for input to rule 'Combine_batches'
+def aggregate_rds_inputs(wildcards):
+  checkpoint_output = checkpoints.set_batches.get(**wildcards).output[0]
+  rna_rds = expand(results_dir + "{i}/RNA_cell_filtered.RDS", i = glob_wildcards(os.path.join(checkpoint_output, "{i}", "Sample_sheet.csv")).i)
+  dsb_rds = expand(results_dir + "{i}/DSB_normalized_data.RDS", i = glob_wildcards(os.path.join(checkpoint_output, "{i}", "Sample_sheet.csv")).i)
+  return rna_rds + dsb_rds
+def aggregate_txt_inputs(wildcards):
+  checkpoint_output = checkpoints.set_batches.get(**wildcards).output[0]
+  txt1 = expand(results_dir + "{i}/Filters_Ncells.txt", i = glob_wildcards(os.path.join(checkpoint_output, "{i}", "Sample_sheet.csv")).i)
+  txt2 = expand(results_dir + "{i}/Excluded_genes.txt", i = glob_wildcards(os.path.join(checkpoint_output, "{i}", "Sample_sheet.csv")).i)
+  return txt1 + txt2
+
 ### For chained QC steps
 def maybe_skip_QC_stepN(qcdat, stepN, spec = True):
   QC_files = defaultdict(str, zip(qcdat.step_num, qcdat.file))
+  ### Name of output RDS file for this QC step
   QC_rds = dict(zip(qcdat.step_num, qcdat.post_name))
+  ### File with specficics for this QC step
   specs_file = QC_files['step' + str(stepN)]
   ### Slice the data frame to include only up to input stepN
   qcdat = qcdat[:stepN]
@@ -156,39 +177,39 @@ rule make_gtf_R_object:
   shell:
     'Rscript {params.scripts}/gtf.R {input} {output}'
 
-# rule read_cellranger_data:
-  # input:
-   # samples = sample_sheet,
-   # gtf = 'data/gtf.RDS'
-#  params:
-   # scripts = config['SC_scripts'],
-   # runs_dir = config['runs_dir'],
-   # project = config['project']
- # resources: mem_mb=50000 
- # output:
-  #  "data/Cell_data.csv"
- # shell:
-   # "Rscript {params.scripts}/Dehash.R {input} '{params.runs_dir}' '{params.project}' {output}"
+rule read_cellranger_data:
+  input:
+    samples = sample_sheet,
+    gtf = 'data/gtf.RDS'
+  params:
+    scripts = config['SC_scripts'],
+    runs_dir = config['runs_dir'],
+    project = config['project']
+  resources: mem_mb=50000 
+  output:
+    "data/Cell_data.csv"
+  shell:
+    "Rscript {params.scripts}/Dehash.R {input} '{params.runs_dir}' '{params.project}' {output}"
 
-# rule Create_cells_seurat:
- # input:
-  #  samples = sample_sheet,
-   # csv = "data/Cell_data.csv"
- # params:
-   # scripts = config['CITESeq_scripts'],
-   # runs_dir = config['runs_dir'],
-   # project = config['project'],
-   # results_dir = results_dir
-#  output:
-  #  "data/All_data.RDS",
-   # "data/All_data.pdf"
- # resources:
- #   mem_mb=30000
-  #shell:
-  #  """
-  #  mkdir -p {params.results_dir}
-   # Rscript {params.scripts}/Create_Seurat_RDS.R '{params.runs_dir}' '{params.project}' {input} {output}
-   # """
+rule Create_cells_seurat:
+  input:
+    samples = sample_sheet,
+    csv = "data/Cell_data.csv"
+  params:
+    scripts = config['CITESeq_scripts'],
+    runs_dir = config['runs_dir'],
+    project = config['project'],
+    results_dir = results_dir
+  output:
+    "data/All_data.RDS",
+    "data/All_data.pdf"
+  resources:
+    mem_mb=30000
+  shell:
+    """
+    mkdir -p {params.results_dir}
+    Rscript {params.scripts}/Create_Seurat_RDS.R '{params.runs_dir}' '{params.project}' {input} {output}
+    """
 
 rule Batch_evaluation:
   input:
@@ -230,37 +251,63 @@ rule Create_background:
     """
 
 ### QC step1, sample filter e.g. entire batches gone wrong
-checkpoint Filter_whole_samples:
+rule Filter_whole_samples_for_Seurat:
   input:
     **maybe_skip_QC_stepN(qcdat, 1) ### Returns RDS file as 'rds' and file with QC details as 'qc', and 'touch'
+    #"data/All_data.RDS"
   params:
     scripts = config['SC_scripts'],
     samples = samples
   output:
-    rds = results_dir + "PostQC1.RDS",
-    csv = results_dir + "Sample_sheet.csv"
+    rds = results_dir + "PostQC1.RDS"
+    #csv = results_dir + "Sample_sheet.csv"
   resources:
     mem_mb=240000
   run:
     shell('Rscript {params.scripts}/Filter_samples.R {input.rds} {input.qc} {output.rds}')
-    ### subset samples
-    dat = pd.read_table(input['qc'], sep = ',')
-    dat = dat[dat['type'] == 'batch_remove']
-    samples = params['samples']
-    for index, row in dat.iterrows():
-      exclude = '!' in row['value']
-      feature_value = re.sub('!', '', row['value'])
-      if(exclude):
-        samples = samples[samples[row['feature']] != feature_value]
-      else: 
-        samples = samples[samples[row['feature']] == feature_value]
-    
+
+rule Filter_whole_samples_for_Sample_sheet: 
+  input:
+    sample_sheet = sample_sheet 
+  output:
+    csv = results_dir + "Sample_sheet.csv"
+  run:
+    samples = pd.read_table(input['sample_sheet'], sep = ',').set_index('Sample_ID', drop = False)
+    qc_skip = qcdat[qcdat.step_num == 'step1'].skip.values[0]
+    ### If Sample filter file is input, subset and print sample sheet into the results/qc_name directory
+    if(qc_skip == False):
+      qc_file = qcdat[qcdat.step_num == 'step1'].file.values[0]
+      ### subset samples
+      dat = pd.read_table(qc_file, sep = ',')
+      dat = dat[dat['type'] == 'batch_remove']
+      for index, row in dat.iterrows():
+        exclude = '!' in row['value']
+        feature_value = re.sub('!', '', row['value'])
+        if(exclude):
+          samples = samples[samples[row['feature']] != feature_value]
+        else: 
+          samples = samples[samples[row['feature']] == feature_value]
+          
     ### Write to output file
-    #with open(output['csv'], 'w') as f:
     samples.to_csv(output['csv'])
-    #batchs = list(set(samples[config['batch']]))
-    #CR_IDs = list(set(samples['CR_ID']))
-    #print('N batches: ' + len((batchs)))
+
+checkpoint set_batches:
+  input:
+    sample_sheet = results_dir + "Sample_sheet.csv"
+  output:
+    batch_dir = directory(results_dir + 'batches/')
+  run:
+    ### Create directory
+    os.mkdir(output['batch_dir'])
+    samples = pd.read_table(input['sample_sheet'], sep = ',').set_index('Sample_ID', drop = False)
+    batchs = list(set(samples[config['batch']]))
+    for batch in batchs:
+      ### Create sub directory
+      os.mkdir(os.path.join(output['batch_dir'], batch))
+      ### Get sample sheet subset
+      sub = samples[samples[config['batch']] == batch]
+      ### Print
+      sub.to_csv(os.path.join(output['batch_dir'], batch, 'Sample_sheet.csv'))
 
 ### (not here yet) QC step2, optional imputation of RNA and/or protein values
 
@@ -277,10 +324,10 @@ rule Cell_and_RNA_filters:
     batch_name = config['batch'],
     results_dir = results_dir
   output:
-    results_dir + "{batch}/RNA_cell_filtered.RDS",
-    results_dir + "{batch}/RNA_filters.pdf",
-    results_dir + "{batch}/Excluded_genes.txt",
-    results_dir + "{batch}/Filters_Ncells.txt"
+    results_dir + "batches/{batch}/RNA_cell_filtered.RDS",
+    results_dir + "batches/{batch}/RNA_filters.pdf",
+    results_dir + "batches/{batch}/Excluded_genes.txt",
+    results_dir + "batches/{batch}/Filters_Ncells.txt"
   resources:
     mem_mb=get_mem_mb
   shell:
@@ -301,7 +348,7 @@ rule DSB:
     csv = "data/Cell_data.csv",
     #"data/Unnormalized_data.RDS"
   output:
-    results_dir + "{batch}/DSB_normalized_data.RDS"
+    results_dir + "batches/{batch}/DSB_normalized_data.RDS"
   params:
     scripts = config['CITESeq_scripts'],
     batch_name = config['batch'],
@@ -311,9 +358,9 @@ rule DSB:
 
 rule Combine_batches:
   input:
-    [os.path.join(results_dir,str(Batch), 'RNA_cell_filtered.RDS') for Batch in batchs],
-    [os.path.join(results_dir,str(Batch), 'DSB_normalized_data.RDS') for Batch in batchs]
-#    [os.path.join(results_dir,str(Batch), 'Filters_Ncells.txt') for Batch in batchs]
+    aggregate_rds_inputs
+    #[os.path.join(results_dir, str(Batch), 'RNA_cell_filtered.RDS') for Batch in batchs],
+    #[os.path.join(results_dir, str(Batch), 'DSB_normalized_data.RDS') for Batch in batchs]
   params:
     scripts = config['CITESeq_scripts'],
     batch_name = config['batch']
@@ -365,8 +412,9 @@ rule batch_evaluation_again:
 
 rule combine_QC_outs:
   input:
-     [os.path.join(results_dir, str(Batch), 'Filters_Ncells.txt') for Batch in batchs],
-     [os.path.join(results_dir,str(Batch), 'Excluded_genes.txt') for Batch in batchs]
+    aggregate_txt_inputs
+    #[os.path.join(results_dir, str(Batch), 'Filters_Ncells.txt') for Batch in batchs],
+    #[os.path.join(results_dir,str(Batch), 'Excluded_genes.txt') for Batch in batchs]
   params:
     scripts = config['CITESeq_scripts'],
   output:

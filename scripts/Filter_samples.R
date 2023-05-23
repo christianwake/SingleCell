@@ -25,13 +25,15 @@ if(interactive()){
   sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/All_data.RDS')
   filter_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/QC_steps/Sample_filters.csv')
   out_rds <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/PostQC1.RDS')
-}else{
+  out_csv <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Sample_sheet.csv')
+  }else{
   args = commandArgs(trailingOnly=TRUE)
   
   sdat_file <- args[1]
   #batch_txt <- args[2] ### Currently not even used, but need to be snakefile input
   filter_file <- args[2]
   out_rds <- args[3]
+  out_csv <- args[4]
   
 }
 
@@ -72,3 +74,4 @@ for(filter in row.names(filters)){
 }
 
 saveRDS(sdat, file = out_rds)
+#write.table(sdat@meta.data, file = out_csv, quote = F, sep = ',')
