@@ -62,12 +62,12 @@ if(interactive()){
   #checkpt_file <- args[2]
   filter_file <- args[2]
   covs_file <- args[3]
-  gtf_file <- args[4]
-  batch_value <- args[5]
-  batch_name <- args[6]
-  out_rds <- args[7]
-  out_pdf <- args[8]
-  out_txt1 <- args[9]
+  exclude_file <- args[4]
+  gtf_file <- args[5]
+  batch_value <- args[6]
+  batch_name <- args[7]
+  out_rds <- args[8]
+  out_pdf <- args[9]
   out_txt2 <- args[10]
 }
 
@@ -79,20 +79,12 @@ print(batch_value)
 print(batch_name)
 print(out_rds)
 print(out_pdf)
-print(out_txt1)
 print(out_txt2)
 
 filters <- read.table(filter_file, header = T, sep = ',')
 nFeature_RNA <- filters[which(filters$type == 'cell' & filters$feature == 'nFeature_RNA'), 'value']
 nCount_RNA <- filters[which(filters$type == 'cell' & filters$feature == 'nCount_RNA'), 'value']
 fraction_MT <- filters[which(filters$type == 'cell' & filters$feature == 'fraction_MT'), 'value']
-fraction_cells <- filters[which(filters$type == 'gene' & filters$feature == 'fraction_cells'), 'value']
-count_min <- gsub('<', '', gsub('=', '', filters[which(filters$type == 'gene' & filters$feature == 'counts'), 'value']))
-key_words <- filters[which(filters$type %in% c('feature', 'gene') & filters$feature == 'pattern'), 'value']
-exceptions <- filters[which(filters$type %in% c('feature', 'gene') & filters$feature == 'pattern_exceptions'), 'value']
-downsample_RNA <- filters[which(grepl('downsample', tolower(filters$type)) & filters$feature == 'RNA'), 'value']
-downsample_prot <- filters[which(grepl('downsample', tolower(filters$type)) & filters$feature == 'prot'), 'value']
-### downsample
 
 cell_filters <- filters[which(filters$type == 'cell'), 'feature'] 
 ### Set defaults
@@ -109,12 +101,7 @@ if(length(nCount_RNA) == 0){
 if(length(fraction_MT) == 0){
   fraction_MT <- '0,0.4'
 }
-if(length(key_words) == 0){
-  key_words <- ''
-}
-if(length(exceptions) == 0){
-  exceptions <- ''
-}
+
 sdat <- readRDS(sdat_file)
 DefaultAssay(sdat) <- 'RNA'
 
@@ -126,7 +113,7 @@ print(paste0('Subsetting to input batch, ', batch_name))
 print(table(sdat@meta.data[, batch_name]), useNA = 'ifany')
 keep_cells <- colnames(sdat)[which(sdat@meta.data[, batch_name] == batch_value)]
 sdat <- subset(sdat, cells = keep_cells)
-saveRDS(sdat, file = gsub('/RNA_cell_filtered.RDS', '.RDS', out_rds))
+#saveRDS(sdat, file = gsub('/RNA_cell_filtered.RDS', '.RDS', out_rds))
 #sdat <- readRDS(gsub('/RNA_cell_filtered.RDS', '.RDS', out_rds))
 print(table(sdat@meta.data[, batch_name]), useNA = 'ifany')
 
@@ -153,77 +140,11 @@ if(gtf_file == '' | is.na(gtf_file)){
   id_type <- get_id_name(row.names(sdat), gtf)
 }
 
-### DOWNSAMPLE
-if(length(downsample_RNA) > 0){
-  print('Downsample RNA')
-  ### Default is by batch, unless filter file has 'cell' in the 'value' line e.g. "downsample_by_cell"
-  ds_by <- ifelse(grepl('cell', filters[which(grepl('downsample', tolower(filters$type)) & filters$feature == 'RNA'), 'type']), 'cell', 'batch')
-  bycol <- ifelse(ds_by == 'cell', T, F)
-  print(paste0('Down sampling each ', ds_by , ' by ', downsample_RNA, ' to RNA UMI total.'))
-  downsampled <- downsampleMatrix(GetAssayData(object = sdat, assay = "RNA", slot = "counts"), prop = as.numeric(downsample_RNA), bycol = bycol)
-  sdat@assays$RNA@counts <- downsampled
-  sdat$nFeature_RNA <- colSums(sdat@assays$RNA@counts > 0)
-  sdat$nCount_RNA <- colSums(sdat@assays$RNA@counts)
+if(file.info(exclude_file)[, 'size'] > 0){
+  exclude_gene_names <- read.table(exclude_file)[,1]
+} else{
+  exclude_gene_names <- c()
 }
-if(length(downsample_prot) > 0){
-  print('Downsample protein')
-  ### Default is by batch, unless filter file has 'cell' in the 'value' line e.g. "downsmaple_by_cell"
-  ds_by <- ifelse(grepl('cell', filters[which(grepl('downsample', tolower(filters$type)) & filters$feature == 'prot'), 'type']), 'cell', 'batch')
-  bycol <- ifelse(ds_by == 'cell', T, F)
-  print(paste0('Down sampling each ', ds_by, ' by ', downsample_prot, ' to prot UMI total.'))
-  ### Print mean nCount_prot before
-  print(mean(colSums(sdat@assays$prot@data)))
-  downsampled <- downsampleMatrix(GetAssayData(object = sdat, assay = "prot", slot = "data"), prop = as.numeric(downsample_prot), bycol = bycol)
-  sdat@assays$prot@data <- downsampled
-  sdat$nFeature_prot <- colSums(sdat@assays$prot@data > 0)
-  sdat$nCount_prot <- colSums(sdat@assays$prot@data)
-  ### Print mean nCount_prot after
-  print(mean(colSums(sdat@assays$prot@data)))
-}
-
-### FEATURE EXCLUSTION
-exclude_gene_names <- c()
-### FEATURE EXCLUSTION based on fraction of cells with at least one count
-if(length(fraction_cells) > 0){
-  fraction_cells <- as.numeric(gsub('<', '', fraction_cells))
-  print(paste0('Excluding features present in fewer than ', fraction_cells, ' of cells.'))
-  
-  a1 <- Sys.time()
-  a <- CreateSeuratObject(sdat@assays$RNA@data, assay = 'RNA', min.cells = length(colnames(sdat)) * fraction_cells)
-  genes <- setdiff(row.names(sdat), row.names(a))
-  rm(a)
-  a2 <- Sys.time()
-  a2-a1
-  
-  exclude_gene_names <- c(exclude_gene_names, genes)
-  hist(rowSums(sdat@assays$RNA@data > 0)/length(row.names(sdat)), xlab = 'Fraction of cells with > 0 counts', main = 'N features by fraction of cells')
-}
-
-### FEATURE EXCLUSTION Based on minimum counts 
-if(length(count_min) > 0){
-  print(paste0('Excluding features with fewer than ', count_min, ' total counts.'))
-  count_min <- as.numeric(count_min) 
-  genes <- row.names(sdat)[which(rowSums(sdat@assays$RNA@data) <= count_min)]
-  exclude_gene_names <- c(exclude_gene_names, genes)
-}
-
-### FEATURE EXCLUSTION BY INPUT KEY WORD
-all_names <- row.names(sdat@assays$RNA@counts)
-key_words <- strsplit(key_words, ',')[[1]]
-key_word_matches <- all_names[sapply(all_names, function(x) any(sapply(key_words, function(y) grepl(y, x))))]
-key_word_matches <- sort(key_word_matches)
-### Exclude those specified as exceptions
-key_words <- strsplit(exceptions, ',')[[1]]
-if (length(key_words) > 0) {
-  print(paste0('Excluding features whose names match key word(s):  ', toString(key_words), ', with exceptions: ', exceptions))
-  exception_gene_names <- key_word_matches[sapply(key_word_matches, function(x) any(sapply(key_words, function(y) grepl(y, x))))]
-  key_word_matches <- key_word_matches[!key_word_matches %in% exception_gene_names]
-}
-exclude_gene_names <- unique(c(exclude_gene_names, key_word_matches))
-### Write
-print(paste0('Excluding ', length(exclude_gene_names), ' genes.'))
-write.table(exclude_gene_names, out_txt1, quote = F, sep = ',', row.names = F, col.names = F)
-
 print('Determing which genes are mitochondiral')
 ### Determine which genes are mitochondrial by gtf if it is input. Otherwise, by gene name pattern '^MT'.
 if(is.data.frame(gtf)){

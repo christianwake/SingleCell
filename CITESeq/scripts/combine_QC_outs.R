@@ -41,20 +41,20 @@ if(interactive()){
   
   txt_out <- args[1]
   xls_out <- args[2]
-  ex_out <- args[3]
-  all_files <- args[4:length(args)]
-  filter_files <- all_files[1:(length(all_files)/2)]
-  ex_files <- all_files[((length(all_files)/2)+1):length(all_files)]
-  
+  #ex_out <- args[3]
+  #all_files <- args[4:length(args)]
+  #filter_files <- all_files[1:(length(all_files)/2)]
+  #ex_files <- all_files[((length(all_files)/2)+1):length(all_files)]
+  filter_files <- args[4:length(args)]
 }
-### Read gene exclusion files into list
-ex <- lapply(ex_files, function(ex_file) read.table(ex_file)[,1])
-### Double check that each batch has the same exclusions
-if(length(unique(ex)) != 1){
-  warning('Batches have not excluded the same genes.')
-} else{
-  write.table(ex[[1]], ex_out, quote = F, sep = ',', row.names = F, col.names = F)
-}
+# ### Read gene exclusion files into list
+# ex <- lapply(ex_files, function(ex_file) read.table(ex_file)[,1])
+# ### Double check that each batch has the same exclusions
+# if(length(unique(ex)) != 1){
+#   warning('Batches have not excluded the same genes.')
+# } else{
+#   write.table(ex[[1]], ex_out, quote = F, sep = ',', row.names = F, col.names = F)
+# }
 
 read_ncells <- function(batch_files, batch){
   batch_file <- batch_files[batch]

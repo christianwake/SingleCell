@@ -33,7 +33,7 @@ source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
 if(interactive()){
   project <- '2021614_21-002'
   base_dir <- '/hpcdata/vrc/vrc1_data/douek_lab/'
-  qc_name <- '2023-Jan'
+  qc_name <- 'DSB_by_sample'
   runs_dir <- '/hpcdata/vrc/vrc1_data/douek_lab/Runs/'
 
     # project <- '2022619_857.3b'
@@ -124,7 +124,8 @@ labels <- labels[which(labels$CR_ID %in% unique(dat$CR_ID)),]
 dim(labels)
 
 #labels$cell_id <- sapply(labels$X, function(x) paste0(strsplit(x, '_')[[1]][2], '_',strsplit(x, '_')[[1]][1]))
-labels <- labels[, c('cell_id', 'CR_ID', 'Assignment_CR', 'Assignment_simple', 'rna_size', 'ngene', 'prot_size', 'fraction_MT')]
+labels <- labels[, c('cell_id', 'CR_ID', 'Assignment_CR', 'Assignment_simple', 'rna_size',
+                     'ngene', 'prot_size', 'fraction_MT')]
 ### Account for weird "multi_" prefacing cell_id if processed by cellranger multi
 #labels$cell_id <- sapply(labels$cell_id, function(x) gsub('multi_', '', x))
 

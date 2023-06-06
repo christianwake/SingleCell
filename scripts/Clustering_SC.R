@@ -20,15 +20,19 @@ source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
 source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
 
 if(interactive()){
+  project <- '2021614_21-002'
+  qc_name <- 'DSB_by_sample'
+  negative_markers <- ''
+  
   # project <- '2021617_mis-c'
   # qc_name <- 'Dropout_mitigated'
   # integration_file <- ''
   
-  project <- '2021600_kristin'
-  qc_name <- 'Run2023-05-14'
-  test_var <- 'Time,TCR.status'
-  integration_file <- ''
-  gene_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/220921_transcriptome_analysis.xlsx')
+  # project <- '2021600_kristin'
+  # qc_name <- 'Run2023-05-14'
+  # test_var <- 'Time,TCR.status'
+  # integration_file <- ''
+  # gene_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/220921_transcriptome_analysis.xlsx')
   
   # project <- '2022620_857.1'
   # qc_name <- '2023-01-09' ### published
@@ -40,6 +44,8 @@ if(interactive()){
   ### 1st cluster
   sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/PostQC3.RDS')
   sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/PostQC4.RDS')
+  sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/DSB_normalized_data.RDS')
+  
   out_rds <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Clustered.RDS')
   out_pdf <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/RNA_clusters.pdf')
   ### 2nd cluster
@@ -174,6 +180,7 @@ if(integration_file == '' | is.na(integration_file) | !file.exists(integration_f
     plot_title <- 'Clustering (seurat integration)'
   }
 }
+
 ilisi_rna <- compute_lisi(sdat@reductions[[umap_name]]@cell.embeddings, sdat@meta.data[, 'RNA_clusters', drop = F], c('RNA_clusters'))
 
 ### Check if protein assay is included
@@ -188,10 +195,14 @@ print('save')
 saveRDS(sdat, file = out_rds)
 #sdat<- readRDS(out_rds)
 
+### Get name of 'umap' reductions
 reductions <- names(sdat@reductions)[grepl('umap', names(sdat@reductions))]
-print(reductions)
 ### Get names of column names that contain 'cluster'
 clusters <- colnames(sdat@meta.data)[grepl('cluster', colnames(sdat@meta.data))]
+### And don't begin with 'Subset'
+clusters <- clusters[!grepl('^Subset', clusters)]
+
+print(reductions)
 print(clusters)
 ### Name them on the first '_' section, e.g. 'RNA_cluster' named 'RNA'
 names(clusters) <- sapply(clusters, function(x) strsplit(x, '_')[[1]][1])
@@ -224,7 +235,13 @@ for(red in reductions){
     if(feat %in% names(res)){
       subtitle <- paste0('Resolution: ', res[feat])
     }
-    print(DimPlot(sdat, group.by = feat, label = T, reduction = red) + ggtitle(paste0(feat, ', ', red), subtitle =  subtitle))
+    p <- DimPlot(sdat, group.by = feat, label = T, reduction = red) + 
+            ggtitle(paste0(feat, ', ', red), subtitle =  subtitle)
+    #### Hide legend if it will make the plot illegibile
+    if(length(unique(sdat@meta.data[, feat])) > 15){
+      p <- p+ theme(legend.position = "none")      
+    }
+    print(p)
   }
 }
 #dev.off()

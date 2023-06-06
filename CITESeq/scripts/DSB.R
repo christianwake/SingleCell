@@ -27,10 +27,14 @@ if(interactive()){
   base_dir <- '/hpcdata/vrc/vrc1_data/'
   
   project <- '2021614_21-002'
-  qc_name <- 'Both_celltypes'
-  batch_value <- '2021-12-02'
-  batch_name <- 'Date_sort'
+  qc_name <- '2023-05-30'
+  # batch_value <- '2021-12-02'
+  # batch_name <- 'Date_sort'
+  # batch_value <- 'Su7_03_Innate'
+  batch_value <- 'Su4_01_B_cells'
+  batch_name <- 'Sample_Name'
   hto_string <- 'C0251,C0252,C0253,C0254,C0255,C0256,C0257,C0258,C0259,C0260'
+  isotype_controls <- 'C0090,C0091,C0092,C0095'
   
   # project <- '2022619_857.3b'
   # qc_name <- 'QC_first_pass'
@@ -38,7 +42,8 @@ if(interactive()){
   # batch_value <- '2022-02-22'
   # hto_string <- 'C0251,C0252,C0253,C0254,C0255,C0256,C0257,C0258,C0259,C0260'
 
-  sdat_file <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/', batch_value, '/RNA_cell_filtered.RDS')
+  sdat_file <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/results/', qc_name, 
+                      '/batches/', batch_value, '/Cell_filtered.RDS')
   br_rds <- paste0(base_dir,'/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Background.RDS')
   covs_file <- paste0(base_dir,'/douek_lab/projects/RNASeq/', project, '/Sample_sheet.csv')
   labels_file <- paste0(base_dir,'douek_lab/projects/RNASeq/', project, '/data/Cell_data.csv')
@@ -54,8 +59,11 @@ if(interactive()){
   batch_value <- args[5]
   batch_name <- args[6]
   hto_string <- args[7]
-  out_file <- args[8]
+  isotype_controls <- args[8]
+  out_file <- args[9]
 }
+
+isotype_controls <- strsplit(isotype_controls, ',')[[1]]
 ### This file uses the "count" slot of the prot assay for DSB, and prints DSB results to a separate file (not Seurat)
 
 ### Read covariates
@@ -96,7 +104,9 @@ print(mean(colSums(prot)))
 
 is.na(background)[1]
 ### Save as data frame. When read should be added to Seurat assay "data" slot
-dsb <- DSB_once(prot, md, negative_mtx_rawprot = background)
+print(isotype_controls)
+print(row.names(prot))
+dsb <- DSB_once(prot, md, negative_mtx_rawprot = background, isotype_controls = isotype_controls)
 
 print(mean(colSums(dsb)))
 saveRDS(dsb, file = out_file)

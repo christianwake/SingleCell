@@ -6,35 +6,49 @@ library('ggplot2')
 library('umap')
 library('textshape')
 library('dplyr')
-library('biomaRt')
+#library('biomaRt')
 library('grid')
 library('scales')
 library('rsconnect')
+library('readxl')
+library('data.table')
+library('plyr')
+library('lisi')
 
 source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
+source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
 source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
 
 if(interactive()){
   project <- '2021614_21-002'
-  qc_name <- '2023-Jan'
+  qc_name <- 'DSB_by_sample'
   out_rdata <-  paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/App/Data.RData')
   username <- 'wakecg'
   server <- 'rstudio-connect.niaid.nih.gov'
-  cseq_file <-  paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2', project, '/results/', qc_name, '/Mapped.RDS')
+  server <- ''
+  cseq_file <-  paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Mapped.RDS')
   rds_files <- c('RNA-RNA_clusters', 'RNA-prot_clusters', 'RNA-wnn_clusters', 'prot-RNA_clusters', 'prot-prot_clusters', 'prot-wnn_clusters')
   rds_files <- c('RNA-RNA_clusters', 'RNA-prot_clusters', 'prot-RNA_clusters', 'prot-prot_clusters', 'prot-wnn_clusters')
-  rds_files <- c(paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cluster_DE/', rds_files, '.RDS'),
+  rds_files <- c(paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cluster_DE/One-all/', 
+                        rds_files, '.RDS'),
                  paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/SubClusters/predicted.celltype.l1-B.RDS'))
+  
+  gene_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/genes.xlsx')
+  pdf_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/SomeGenes.pdf')
+  gtf_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
   
 }else{
   args = commandArgs(trailingOnly=TRUE)
   out_rdata <- args[1]
-  project <- args[2]
-  username <- args[3]
-  server <- args[4]
-  findmarkers <- args[5]
-  cseq_file <- args[6]
-  rds_files <- args[7:length(args)]
+  pdf_file <- args[2]
+  gene_file <- args[3]
+  project <- args[4]
+  username <- args[5]
+  server <- args[6]
+  gtf_file <- args[7]
+  findmarkers <- args[8]
+  cseq_file <- args[9]
+  rds_files <- args[10:length(args)]
   
 }
 
@@ -43,8 +57,21 @@ print('Beginning app data')
 cluster_de_files <- rds_files[grepl('/Cluster_DE/', rds_files)]
 sub_cluster_files <- rds_files[grepl('/SubClusters/', rds_files)]
 
-### Read Seurat data
-cseq <- readRDS(cseq_file)
+downsample_var <- 0.3
+if(!interactive()){
+  ### Read Seurat data
+  cseq <- readRDS(cseq_file)
+  print('Done reading Seurat object')
+  ### Downsample so I can work interactiveley for testing
+  csub <- DietSeurat(cseq, counts = F, assays = c('RNA', 'prot'))
+  cells <- sample(x = colnames(csub), size = (length(colnames(csub)) * downsample_var), replace = F)
+  
+  csub <- subset(csub, cells = cells)
+  saveRDS(csub, file = gsub('.RDS', paste0('_DownSampledTo', downsample_var, '.RDS'), cseq_file))
+  print('saved downsampled version for testing')
+} else{
+  cseq <- readRDS(gsub('.RDS', paste0('_DownSampledTo', downsample_var, '.RDS'), cseq_file))
+}
 
 ### Save size by removing some unnecessary meta data
 cols <- c('MT_sum', 'orig.ident', 'propmt', 'rna_size', 'prot_size', 'ngene', 'bc', 'Assignment_CR', 'Assignment_simple', 'cell_id', 'FCID', 'HTO_index_name', 'Cell_subset', 'Cell_Count',
@@ -58,8 +85,10 @@ for(c in cols){
 ### removing some assays and reductions
 DefaultAssay(cseq) <- 'RNA'
 umaps <- names(cseq@reductions)[grepl('_umap', names(cseq@reductions))]
-cseq <- DietSeurat(cseq, counts = F, dimreducs = umaps, assays = c('RNA', 'prot'))
 
+print("Diet Seurat")
+cseq <- DietSeurat(cseq, counts = F, dimreducs = umaps, assays = c('RNA', 'prot'))
+print('Reading cluster DE files')
 dat <- lapply(cluster_de_files, function(file) readRDS(file))
 names(dat) <- sapply(cluster_de_files, function(file) gsub('.RDS', '', basename(file)))
 
@@ -85,6 +114,43 @@ for(sc in names(dat)){
   }
 }
 rm(dat)
+
+### Specific gene expression dot plots
+if(pdf_file != '' & gene_file != '' & file.exists(gene_file) & file.info(gene_file)$size != 0){
+  ### Do direct matching from gtf
+  if(grepl('\\.gtf', gtf_file)){
+    gtf <- read_gtf(gtf_file, feature_type = 'gene', atts_of_interest = c('gene_id', 'gene_name',  'gene_biotype'))
+  } else if(grepl('\\.RDS', gtf_file)){
+    gtf <- readRDS(gtf_file)
+  }
+  
+  print(paste0('Violin plots for: ', gene_file))
+  genes <- as.data.frame(read_excel(gene_file, sheet = 1))
+  colnames(genes) <- c('gene_name', 'gene_id', 'category')
+  ### Does not currently allow duplicate gene names
+  genes <- complete_gene_table(genes, gtf)
+  cats <- unique(genes$category)
+  
+  ### Get names of column names that contain 'cluster'
+  clusters <- colnames(cseq@meta.data)[grepl('cluster', colnames(cseq@meta.data))]
+  ### And don't begin with 'Subset'
+  clusters <- clusters[!grepl('^Subset', clusters)]
+  pdf(pdf_file)
+  for(clust in clusters){
+    print(clust)
+    p <- expression_plots2(cseq, genes, gtf, features, cats, group_by = clust)
+    print(p)
+  }
+
+  if(length(umaps) > 1){
+    print(paste0('doing ilisi to compare ', toString(umaps[1:2])))
+    plot_ilisi(cseq, umaps, 'Sample_ID')
+  }
+  dev.off()
+}
+
+
+
 
 # to_keep <- c('cseq', 'rna_by_rna', 'rna_by_prot', 'rna_by_wnn','prot_by_rna', 'prot_by_prot', 'prot_by_wnn')
 # to_remove  <- ls()[which(!ls() %in% to_keep)]

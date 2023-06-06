@@ -18,8 +18,8 @@ source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
 if(interactive()){
   project <- '2021614_21-002'
   #project <- '2022619_857.3b'
-  qc_name <- 'Both_celltypes'
-  candidates <- 'Date_sort'
+  qc_name <- 'DSB_by_sample'
+  candidates <- 'Sample_Name'
   ### Before filtering
   sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/All_data.RDS')
   plots_path <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/batch_plots/')
@@ -134,6 +134,8 @@ if('Cell_Count' %in% colnames(sdat@meta.data)){
 
 ### string to array
 candidates <- trimws(strsplit(candidates, ',')[[1]])
+### Try adding these as well, as likely options for some technical effects
+candidates <- unique(c(candidates, 'Date_sort', 'Lane'))
 ### only those in seurat object
 candidates <- candidates[candidates %in% colnames(sdat@meta.data)]
 ### Analysis only done in the 'else' statement, if the user has input some candidate batch variable to evaluate. If they haven't, only output a message recommending that they do.

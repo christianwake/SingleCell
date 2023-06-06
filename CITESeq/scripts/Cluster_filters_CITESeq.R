@@ -10,11 +10,11 @@ library('biomaRt')
 library('grid')
 library('scales')
 
-# source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/sc_functions.R')
-# source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
+source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
 
-source('/Volumes/VRC1_DATA/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/Volumes/VRC1_DATA/douek_lab/snakemakes/sc_functions.R')
+# source('/Volumes/VRC1_DATA/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+# source('/Volumes/VRC1_DATA/douek_lab/snakemakes/sc_functions.R')
 
 ### Filters
 ### 1. Clusters with very few reads
