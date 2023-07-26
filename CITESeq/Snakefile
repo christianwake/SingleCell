@@ -17,6 +17,12 @@ else:
   panels = [panel_info]
 print('Panel(s): ', panels)
 
+### If the input method is a file, lets assume they are hashing results from some custom method. For now, we have to assume the cell IDs will match those in the Cell Ranger outputs
+if(os.path.isfile(config['dehash_method'])):
+  dehash_results = config['dehash_method']
+else: ### Otherwise, define the result output based on the input method name
+  dehash_results = 'data/Dehash_' + config['dehash_method'] + '.csv'
+
 ### List of test variable names from the configuration file
 tests = [x.strip() for x in config['test'].split(',')]
 print('Tests:')
@@ -28,7 +34,7 @@ if 'RNA_resolution2' not in config.keys():
 if 'prot_resolution2' not in config.keys():
   config['prot_resolution2'] = config['prot_resolution']
 
-### Define stratifications
+### Definestratifications
 strats = [x.strip() for x in config['stratifications'].split(':')]
 strat_list = ['All']
 if(len(strats) > 1):
@@ -80,10 +86,11 @@ QC_specs = defaultdict(str, zip(qcdat.step_num, qcdat.file))
 
 ### Read list of cluster comparisons to do
 cc_file = os.path.join(os.getcwd(), config['cluster_compare'])
+cluster_combos = []
 if os.path.exists(cc_file):
   cc = pd.read_csv(cc_file)
-print(cc)
-cluster_combos = ['-'.join(list(row)) for index,row in cc.iterrows()]
+  print(cc)
+  cluster_combos = ['-'.join(list(row)) for index,row in cc.iterrows()]
 print(cluster_combos)
 
 ### Read list of clusters to sub-cluster
@@ -122,7 +129,7 @@ def aggregate_rds_inputs(wildcards):
   return rna_rds + dsb_rds
 def aggregate_txt_inputs(wildcards):
   checkpoint_output = checkpoints.set_batches.get(**wildcards).output[0]
-  txt = expand(results_dir + "batches/{i}/Filters_Ncells.txt", i = glob_wildcards(os.path.join(checkpoint_output, "{i}", "Sample_sheet.csv")).i)
+  txt = expand(results_dir + "batches/{i}/Cell_filtered.txt", i = glob_wildcards(os.path.join(checkpoint_output, "{i}", "Sample_sheet.csv")).i)
   return txt
 
 ### For chained QC steps
@@ -186,24 +193,29 @@ rule make_gtf_R_object:
   shell:
     'Rscript {params.scripts}/gtf.R {input} {output}'
 
-rule read_cellranger_data:
+rule Dehash:
   input:
     samples = sample_sheet,
     gtf = 'data/gtf.RDS'
   params:
     scripts = config['SC_scripts'],
     runs_dir = config['runs_dir'],
-    project = config['project']
+    project = config['project'],
+    method = config['dehash_method']
   resources: mem_mb=50000 
   output:
-    "data/Cell_data.csv"
+    #"data/Cell_data.csv",
+    dehash_results,
+    "data/Feature_counts.pdf",
+    "data/Cell_counts.pdf"
   shell:
-    "Rscript {params.scripts}/Dehash.R {input} '{params.runs_dir}' '{params.project}' {output}"
+    "Rscript {params.scripts}/Dehash.R {input} '{params.runs_dir}' '{params.project}' '{params.method}' {output}"
 
 rule Create_cells_seurat:
   input:
     samples = sample_sheet,
-    csv = "data/Cell_data.csv"
+    #csv = "data/Cell_data.csv",
+    csv = dehash_results
   params:
     scripts = config['CITESeq_scripts'],
     runs_dir = config['runs_dir'],
@@ -226,23 +238,28 @@ rule Batch_evaluation:
   params:
     scripts = config['SC_scripts'],
     batch = config['batch'],
+    test = config['test'],
+    strat = config['stratifications'],
     plots_path = 'data/batch_plots/'
   output:
-    "data/Batch.txt",
-    "data/N_cells.pdf",
+    txt = "data/Batch.txt",
+    pdf = "data/Initial_QC.pdf",
     #"data/Batch.pdf"
-    touch('data/checkpoint.done') ### For rule dependencies
+    cp = touch('data/checkpoint.done') ### For rule dependencies
   shell:
     """
     mkdir -p {params.plots_path}
-    Rscript {params.scripts}/QC_eval.R {input} '{params.batch}' '{params.plots_path}' {output}
+    Rscript {params.scripts}/QC_eval.R {input} '{params.batch}' '{params.test}' '{params.strat}' '{params.plots_path}' {output}
+    touch {output.cp}
     """
 
 ### QC step0 (not optional)
+### Background cells are those that are called that way both by CellRanger and by the dehashing step, and then are filtered further.
 rule Create_background:
   input:
     samples = sample_sheet,
-    csv = "data/Cell_data.csv",
+    #csv = "data/Cell_data.csv",
+    csv = dehash_results,
     qc = QC_specs['step0'], 
     gtf = 'data/gtf.RDS'
   params:
@@ -337,6 +354,7 @@ rule Downsample:
     """
 
 ### QC step 4 remove RNAs
+### Add output with N genes per filter criteria
 rule Feature_filters:
   input:
     **maybe_skip_QC_stepN(qcdat, 4),
@@ -386,7 +404,8 @@ rule DSB:
     sdat = results_dir + "batches/{batch}/Cell_filtered.RDS",
     background = results_dir + "Background.RDS",
     samples = sample_sheet,
-    csv = "data/Cell_data.csv",
+    #csv = "data/Cell_data.csv",
+    csv = dehash_results
     #"data/Unnormalized_data.RDS"
   output:
     results_dir + "batches/{batch}/DSB_normalized_data.RDS"
@@ -424,15 +443,17 @@ rule batch_evaluation_again:
   params:
     scripts = config['SC_scripts'],
     batch = config['batch'],
+    test = config['test'],
+    strat = config['stratifications'],
     plots_path = results_dir + '/post_DSB/'
   output:
     txt = results_dir + 'Batch.txt',
-    pdf1 = results_dir + 'N_cells.pdf'
+    pdf1 = results_dir + 'Post_QC.pdf'
     #pdf2 = results_dir + 'Batch.pdf'
   shell:
     """
     mkdir -p {params.plots_path}
-    Rscript {params.scripts}/QC_eval.R {input} '{params.batch}' '{params.plots_path}' {output}
+    Rscript {params.scripts}/QC_eval.R {input} '{params.batch}' '{params.test}' '{params.strat}' '{params.plots_path}' {output}
     """
 
 ### QC step 7
@@ -441,27 +462,29 @@ rule batch_evaluation_again:
 #    seurat = results_dir + "DSB_normalized_data.RDS",
 #    samples = sample_sheet,
 #    qc = QC_specs['step7']
-#    [os.path.join(results_dir, Batch, 'Filters_Ncells.txt') for Batch in batchs]
+#    [os.path.join(results_dir, Batch, 'Cell_filtered.txt') for Batch in batchs]
 #  params:
 #    script = config['CITESeq_scripts'],
 #    batch_name = config['batch']
 #  output:
 #tch    results_dir + "RNA_cell_filtered.RDS",
 #    results_dir + "RNA_filters.pdf",
-#    results_dir + "Filters_Ncells.txt"
+#    results_dir + "Cell_filtered.txt"
 #  shell:
 #    "Rscript {params.script}/prot_filter.R {params.batch_name} {output} {input}"
 
 rule combine_QC_outs:
   input:
     aggregate_txt_inputs
-    #[os.path.join(results_dir, str(Batch), 'Filters_Ncells.txt') for Batch in batchs],
+    #[os.path.join(results_dir, str(Batch), 'Cell_filtered.txt') for Batch in batchs],
     #[os.path.join(results_dir,str(Batch), 'Excluded_genes.txt') for Batch in batchs]
   params:
     scripts = config['CITESeq_scripts'],
   output:
-    results_dir + 'Filters_Ncells.txt',
-    results_dir + 'Filters_Ncells.xls'
+    results_dir + 'Cell_filtered.txt',
+    results_dir + 'Batches_cells_remaining.txt',
+    results_dir + 'Cell_filtered.xls',
+    results_dir + 'Cell_filtered.pdf'
   shell:
     "Rscript {params.scripts}/combine_QC_outs.R {output} {input}"
 
@@ -585,7 +608,7 @@ rule Cluster_FindMarkers:
     maybe_skip_annotation(do_annot),
     results_dir + "Excluded_genes.txt"
   params:
-    scripts = config['CITESeq_scripts'],
+    scripts = config['SC_scripts'],
     results_dir = results_dir
   output:
     results_dir + "Cluster_DE/One-one/{assay}_{clusters}.RDS"
