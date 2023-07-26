@@ -18,18 +18,21 @@ source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
 if(interactive()){
   project <- '2021614_21-002'
   #project <- '2022619_857.3b'
-  qc_name <- 'DSB_by_sample'
+  #qc_name <- 'DSB_by_sample'
+  qc_name <- '2023-05-30'
   candidates <- 'Sample_Name'
+  tests <- 'Arm,Visit'
+  strats <- 'Cell_subset-B_cells,Cell_subset-Innate'
   ### Before filtering
   sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/All_data.RDS')
   plots_path <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/batch_plots/')
   txt_out <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/Batch.txt')
-  pdf_out <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/N_cells.pdf')
+  pdf_out <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/Initial_QC.pdf')
   ### After filtering
-  sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/DSB_normalized_data.RDS')
-  plots_path <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/post_DSB/')
-  txt_out <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Batch.txt')
-  pdf_out <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/N_cells.pdf')
+  # sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/DSB_normalized_data.RDS')
+  # plots_path <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/post_DSB/')
+  # txt_out <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Batch.txt')
+  # pdf_out <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Post_QC.pdf')
   
   
   # sdat_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021618_galt/data/All_data.RDS'
@@ -70,10 +73,12 @@ if(interactive()){
   sdat_file <- args[1]
   #QC_input_file <- args[2]
   candidates <- args[2]  ### CiteSeq snakemake inputs just 1 batch definiteively, not candidates
-  plots_path <- args[3] 
+  tests <- args[3]
+  strats <- args[4]
+  plots_path <- args[5] 
   #txt_out1 <- args[5]
-  txt_out <- args[4]
-  pdf_out <- args[5]
+  txt_out <- args[6]
+  pdf_out <- args[7]
 }
 
 # qc_input <- read.table(QC_input_file, sep = ',', header = T)
@@ -87,11 +92,34 @@ if(interactive()){
 # qc_output['0', ] <- c('step0', 'Base_data', F)
 # qc_output <- qc_output[as.character(0:4), ]
 # write.table(qc_output, txt_out1, quote =F, sep = ',', row.names = T, col.names = T)
-sdat <- readRDS(sdat_file)
+
+downsample_var <- 0.3
+if(!interactive()){
+  ### Read Seurat data
+  sdat <- readRDS(sdat_file)
+  print('Done reading Seurat object')
+  ### Downsample so I can work interactiveley for testing
+  ssub <- DietSeurat(sdat, counts = F, assays = c('RNA', 'prot'))
+  cells <- sample(x = colnames(ssub), size = (length(colnames(ssub)) * downsample_var), replace = F)
+  
+  ssub <- subset(ssub, cells = cells)
+  saveRDS(ssub, file = gsub('.RDS', paste0('_DownSampledTo', downsample_var, '.RDS'), sdat_file))
+  print('saved downsampled version for testing')
+} else{
+  sdat <- readRDS(gsub('.RDS', paste0('_DownSampledTo', downsample_var, '.RDS'), sdat_file))
+}
+
 
 print('Batch:')
 print(candidates)
 print(table(sdat@meta.data[, candidates]))
+
+### string to array
+tests <- trimws(strsplit(tests, ',')[[1]])
+
+### string to array
+strats <- trimws(strsplit(strats, ',')[[1]])
+strat_vars <- unique(sapply(strats, function(strat) trimws(strsplit(strat, '-')[[1]][1])))
 
 pdf(pdf_out)
 if('Cell_Count' %in% colnames(sdat@meta.data)){
@@ -109,28 +137,47 @@ if('Cell_Count' %in% colnames(sdat@meta.data)){
   nCells_observed <- nCells_observed[names(nCells_actual)]
   ### Get the batch value for each Sample_ID
   Batch <- sapply(names(nCells_actual), function(sid) unique(sdat@meta.data[which(sdat$Sample_ID == sid), candidates[1]]))
+  CR_ID <- sapply(names(nCells_actual), function(sid) unique(sdat@meta.data[which(sdat$Sample_ID == sid), 'CR_ID']))
   ### Put those three info into a data frame
-  Ncells <- as.data.frame(cbind(nCells_observed, nCells_actual, Batch))
+  Ncells <- as.data.frame(cbind(nCells_observed, nCells_actual, Batch, CR_ID))
   Ncells$nCells_observed <- as.numeric(Ncells$nCells_observed)
   Ncells$nCells_actual <- as.numeric(Ncells$nCells_actual)
-  
-  
+  ### Add tests and strat vars
+  for(cov in c(tests, strat_vars)){
+    col <- sapply(names(nCells_actual), function(sid) unique(sdat@meta.data[which(sdat$Sample_ID == sid), cov]))
+    if(all(sapply(col, function(x) length(x)) == 1)){
+      Ncells[, cov] <- col
+    }
+  }
   maxvalue <- max(Ncells[, c('nCells_observed', 'nCells_actual')]) * 1.05
-  p1 <- ggplot(Ncells, aes(x = nCells_actual, y = nCells_observed, color = Batch, label = row.names(Ncells))) + 
+  axis_size <- heatmap_N_to_size(length(Batch), size_range = c(10, 1.5), n_range = c(10, 100))
+  #### If the color legend will be illegible, change it
+  if(length(Batch) > 10){
+    color <- colnames(Ncells)[length(colnames(Ncells))]
+  } else{
+    color <- Batch
+  }
+  Ncells$Sample_ID <- factor(row.names(Ncells), levels = row.names(Ncells[order(Ncells$nCells_actual),]))
+  
+  # p1 <- ggplot(Ncells, aes(x = nCells_actual, y = nCells_observed, color = color, label = row.names(Ncells))) + 
+  #   geom_text(size = 3) + geom_abline(slope = 1) + ylim(0, maxvalue) + xlim(0, maxvalue)
+  p1 <- ggplot(Ncells, aes_string(x = 'nCells_actual', y = 'nCells_observed', color = color, label = 'row.names(Ncells)')) + 
     geom_text(size = 3) + geom_abline(slope = 1) + ylim(0, maxvalue) + xlim(0, maxvalue)
   
-  Ncells$Sample_ID <- factor(row.names(Ncells), levels = row.names(Ncells[order(Ncells$nCells_actual),]))
   #Ncells <- Ncells[order(Ncells$Ncells_actual),]
-  p2 <- ggplot(data = Ncells, aes(x = Sample_ID, y = nCells_actual, color = Batch)) +
-    geom_bar(stat = "identity") + coord_flip()
-  
+  p2 <- ggplot(data = Ncells, aes_string(x = 'Sample_ID', y = 'nCells_actual', color = color)) +
+    geom_bar(stat = "identity") + coord_flip() +
+    theme(axis.text.y = element_text(size = axis_size))
+  p3 <- ggplot(data = Ncells, aes_string(x = 'Sample_ID', y = 'nCells_actual', color = 'CR_ID')) +
+    geom_bar(stat = "identity") + coord_flip() +
+    theme(axis.text.y = element_text(size = axis_size))
   
   #pdf(gsub('.pdf', '_ncells.pdf', pdf_out))
   print(p1)
   print(p2)
+  print(p3)
   #dev.off()
 }
-
 
 ### string to array
 candidates <- trimws(strsplit(candidates, ',')[[1]])
@@ -139,6 +186,11 @@ candidates <- unique(c(candidates, 'Date_sort', 'Lane'))
 ### only those in seurat object
 candidates <- candidates[candidates %in% colnames(sdat@meta.data)]
 ### Analysis only done in the 'else' statement, if the user has input some candidate batch variable to evaluate. If they haven't, only output a message recommending that they do.
+print(paste0('Batch candidates: ', toString(candidates)))
+
+### Add test and strat variables
+candidates <- c(candidates, tests, strat_vars)
+candidates <- candidates[which(candidates %in% colnames(sdat@meta.data))]
 if(length(candidates) == 0){
   cat(paste0('Automated recommendation: Enter batch information in config file', ''), file = txt_out, sep = "\n", append = T)
   cat('Model batch: ', file = txt_out, sep = "\n", append = T)
@@ -179,16 +231,32 @@ if(length(candidates) == 0){
     ### Make sure it has levels 
     bats <- unique(sdat@meta.data[, batch])[order(unique(sdat@meta.data[, batch]))]
     sdat@meta.data[, batch] <- factor(sdat@meta.data[, batch], levels = bats)
-    ### Violin plots
+    ##### Violin plots
+    ### N cells for annotation
     batch_ns <- as.character(sapply(levels(sdat@meta.data[, batch]), function(b) length(which(sdat@meta.data[, batch] == b))))
+    ### Dynamic text size for legibility
+    axis_size <- heatmap_N_to_size(length(batch_ns), size_range = c(10,1), n_range = c(10,100))
+    annot_size <- heatmap_N_to_size(length(batch_ns), size_range = c(6,1.5), n_range = c(10,100))
+
     for(comparison in batch_comparisons){
-      print(comparison)
+      print(paste0('Violin plot of ', comparison, ' by ', batch))
+      ### y-axis location to put extra text
       text_y <- max(sdat@meta.data[, comparison]) * 0.92
-      p <- VlnPlot(sdat, group.by = batch, features = comparison, pt.size = 0) + theme(legend.position = "none") +
-              ggtitle(paste0(comparison, ' by ', batch), subtitle = paste0(signif(adjps[batch, comparison]), ' (', test_names[batch, comparison], ' adjusted p)'))
-      p <- p + annotate('text', x = 0.56, y = text_y, size = 3, label = 'N')
-      p <- p + annotate('text', x = 1:length(unique(sdat@meta.data[, batch])), y = text_y, label = batch_ns, size = 3, angle = 30)
+      p <- VlnPlot(sdat, group.by = batch, features = comparison, pt.size = 0) + 
+        theme(legend.position = "none", axis.text.x = element_text(size = axis_size)) + 
+        ggtitle(paste0(comparison, ' by ', batch), subtitle = paste0(signif(adjps[batch, comparison]), ' (', test_names[batch, comparison], ' adjusted p)'))
+      p <- p + annotate('text', x = 0.56, y = text_y, size = annot_size, label = 'N')
+      p <- p + annotate('text', x = 1:length(unique(sdat@meta.data[, batch])), y = text_y, 
+                        label = batch_ns, size = annot_size, angle = 30)
       print(p)
+      
+      ### Print to separate pdf if too large
+      if(length(batch_ns) > 30){
+        pdf(gsub('.pdf', paste0('_', batch, '_', comparison, '.pdf'), pdf_out),
+            height = heatmap_N_to_pdfsize(length(batch_ns)))
+        print(p + coord_flip() + theme(axis.text.x = element_text(size = 8)))
+        dev.off()
+      }
     }
     #a <- table(sdat$seurat_clusters, sdat@meta.data[, batch])
     ### 857 - Plates which have more than 2x the Cluster 1 average

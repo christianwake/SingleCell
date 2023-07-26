@@ -20,32 +20,39 @@ source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
 
 if(interactive()){
   project <- '2021614_21-002'
-  qc_name <- '2023-Jan'
+  # qc_name <- '2023-Jan'
+  # batches <- c('2021-11-09', '2021-11-10', '2021-12-02', '2022-08-11', '2022-08-12')
+  qc_name <- '2023-05-30'
   batches <- c('2021-11-09', '2021-11-10', '2021-12-02', '2022-08-11', '2022-08-12')
+  batches <- c('Su13_03_Innate', 'Su19_3_Innate', 'Su9_03_B_cells')
   
-  project <- '2022619_857.3b'
-  qc_name <- 'QC_first_pass'
-  batches <- c('2022-02-14', '2022-02-15', '2022-02-16', '2022-02-17', '2022-02-18', '2022-02-22', '2022-02-24', '2022-02-25')
+  # project <- '2022619_857.3b'
+  # qc_name <- 'QC_first_pass'
+  # batches <- c('2022-02-14', '2022-02-15', '2022-02-16', '2022-02-17', '2022-02-18', '2022-02-22', '2022-02-24', '2022-02-25')
   
-  txt_out <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filters_Ncells.txt')
-  xls_out <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filters_Ncells.xls')
+  txt_out <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cell_filtered.txt')
+  txt_out2 <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Batches_cells_remaining.txt')
+  xls_out <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cell_filtered.xls')
   
   ex_out <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Excluded_genes.txt')
-  filter_files <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/', batches, '/Filters_Ncells.txt')
-  ex_files <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/', batches, '/Excluded_genes.txt')
+  filter_files <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, 
+                         '/results/', qc_name, '/batches/', batches, '/Cell_filtered.txt')
+  ex_files <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, 
+                     '/results/', qc_name, '/', batches, '/Excluded_genes.txt')
   
   
   
 }else{
   args <- commandArgs(trailingOnly=TRUE)
-  
   txt_out <- args[1]
-  xls_out <- args[2]
+  txt_out2 <-args[2]
+  xls_out <- args[3]
+  pdf_out <- args[4]
   #ex_out <- args[3]
   #all_files <- args[4:length(args)]
   #filter_files <- all_files[1:(length(all_files)/2)]
   #ex_files <- all_files[((length(all_files)/2)+1):length(all_files)]
-  filter_files <- args[4:length(args)]
+  filter_files <- args[5:length(args)]
 }
 # ### Read gene exclusion files into list
 # ex <- lapply(ex_files, function(ex_file) read.table(ex_file)[,1])
@@ -89,3 +96,21 @@ WriteXLS(out_list, ExcelFileName = xls_out, row.names = F)
 rna_filter <- as.data.frame(rbindlist(dat_list))
 write.table(rna_filter, txt_out, sep = ',', quote = F, row.names = F, col.names = T)
 
+
+sample_dat <- t(sapply(names(dats), function(su) 
+  dats[su][[1]][c('remaining', 'original'), 'N_fail']))
+colnames(sample_dat) <- c('remaining', 'original')
+sample_dat <- sample_dat[order(sample_dat[, 'remaining']), ]
+
+write.table(sample_dat, txt_out2, sep = ',', quote = F, row.names = T, col.names = T)
+
+pdf(pdf_out)
+plot_dat <- as.data.frame(t(as.data.frame(lapply(names(dats), 
+                     function(su) dats[su][[1]][c('original', 'remaining'), 'N_fail']))))
+colnames(plot_dat) <- c('original', 'remaining')
+row.names(plot_dat) <- names(dats)
+
+plot_dat <- melt(plot_dat)
+colnames(plot_dat) <- c('pre_or_post', 'reads')
+ggplot(plot_dat, aes(x = reads, color = pre_or_post)) + geom_histogram()
+dev.off()

@@ -1,0 +1,5 @@
+cluster: qsub -l h_vmem=$(({resources.mem_mb} / 1000))G
+jobs: 50
+restart-times: 0
+default-resources: 
+        mem_mb=50000

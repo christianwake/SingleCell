@@ -61,6 +61,16 @@ print(QC_file)
 if 'clust_resolution2' not in config.keys():
   config['clust_resolution2'] = config['clust_resolution']
 
+### Read list of cluster comparisons to do
+cluster_combos = []
+cc_file = os.path.join(os.getcwd(), config['cluster_compare'])
+if os.path.exists(cc_file):
+  cc = pd.read_csv(cc_file)
+  print(cc)
+  cluster_combos = ['-'.join(list(row)) for index,row in cc.iterrows()]
+
+print(cluster_combos)
+
 ### Read list of clusters to sub-cluster
 sc_file = os.path.join(os.getcwd(), config['sub_cluster'])
 if os.path.exists(sc_file):

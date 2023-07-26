@@ -24,17 +24,20 @@ rule QC_eval:
   params:
     scripts = config['SC_scripts'],
     batch_candidates = config['batch'],
+    test = config['test'],
+    strat = config['stratifications'],
     plots_path = "plots/",
     results_dir = results_dir
   output:
-    results_dir + "batch_evaluation.txt",
-    results_dir + "batch_evaluation.pdf",
-    touch('data/checkpoint.done') ### Makes rule 'Filter_whole_samples' dependent on this checkpoint
+    txt = results_dir + "batch_evaluation.txt",
+    pdf = results_dir + "batch_evaluation.pdf",
+    cp = touch('data/checkpoint.done') ### Makes rule 'Filter_whole_samples' dependent on this checkpoint
   shell:
     """
     mkdir -p {params.plots_path}
     mkdir -p {params.results_dir}
-    Rscript {params.scripts}/QC_eval.R {input} '{params.batch_candidates}' '{params.plots_path}' {output}
+    Rscript {params.scripts}/QC_eval.R {input} '{params.batch_candidates}' '{params.test}' '{params.strat}' '{params.plots_path}' {output}
+    touch {output.cp}
     """
 
 ### For the case that the later QC steps reveal some wholly bad samples
@@ -160,15 +163,78 @@ rule post_filter_cluster:
 rule Cluster_FindAllMarkers:
   input:
     maybe_skip_second_cluster,
-    results_dir + "Excluded_genes.txt"
+    results_dir + "Excluded_genes.txt",
+    'data/gtf.RDS'
   params:
     scripts = config['SC_scripts'],
     results_dir = results_dir
   output:
-    results_dir + "Cluster_DE.RDS"
+    results_dir + "Cluster_DE/Cluster_DE.RDS",
+    results_dir + "Cluster_DE/Cluster_DE.tsv"
   resources: mem_mb=240000
   shell:
     "Rscript {params.scripts}/Cluster_DE_SC.R {input} {output}"
+
+rule Cluster_FindMarkers:
+  input:
+    maybe_skip_annotation(do_annot),
+    results_dir + "Excluded_genes.txt",
+    'data/gtf.RDS'
+  params:
+    scripts = config['SC_scripts'],
+    results_dir = results_dir
+  output:
+    results_dir + "Cluster_DE/One-one/{assay}Data_{clusters}_DE.RDS",
+    results_dir + "Cluster_DE/One-one/{assay}Data_{clusters}_DE.tsv"
+  resources: mem_mb=240000
+  shell:
+    """
+    mkdir -p {params.results_dir}/Cluster_DE/One-one/
+    Rscript {params.scripts}/Cluster_FindMarkers.R {input} {output} {wildcards.assay} {wildcards.clusters}
+    """
+
+rule fgsea_FindAllMarkers:
+  input:
+    maybe_skip_annotation(do_annot),
+    results_dir + 'Cluster_DE/Cluster_DE.tsv',
+    results_dir + "Excluded_genes.txt",
+    'data/gtf.RDS'
+  params: 
+    scripts = config['SC_scripts'],
+    gmt = config['pathways'],
+    custom_sets = config['custom_sets'],
+    species = config['species']
+  output:
+    results_dir + "Cluster_DE/Cluster_fgsea.tsv"
+  shell:
+    "Rscript {params.scripts}/fgsea.R {input} '{params.gmt}' '{params.species}' {output} '{params.custom_sets}'"
+
+rule fgsea_FindMarkers:
+  input:
+    maybe_skip_annotation(do_annot),
+    results_dir + 'Cluster_DE/One-one/{assay}Data_{clusters}_DE.tsv',
+    results_dir + "Excluded_genes.txt",
+    'data/gtf.RDS'
+  params: 
+    scripts = config['SC_scripts'],
+    gmt = config['pathways'],
+    custom_sets = config['custom_sets'],
+    species = config['species']
+  output:
+    results_dir + "Cluster_DE/One-one/{assay}Data_{clusters}_fgsea.tsv"
+  shell:
+    "Rscript {params.scripts}/fgsea.R {input} '{params.gmt}' '{params.species}' {output} '{params.custom_sets}'"
+
+rule Combine_FindMarkers:
+  input:
+    expand(os.path.join(results_dir, 'Cluster_DE', 'One-one', "{assay}Data_{clusters}_fgsea.tsv"), assay = ['RNA'], clusters = cluster_combos)
+  params:
+    scripts = config['SC_scripts'],
+  output:
+    results_dir + "Cluster_DE/One-one/GSEA.xls",
+    results_dir + "Cluster_DE/One-one/GSEA_sig.xls"
+  shell:
+    "Rscript {params.scripts}/Excel_fgsea.R {output} 0.05 {input}"
 
 rule annotation:
   input:
@@ -188,7 +254,7 @@ rule annotation:
   shell:
     "Rscript {params.scripts}/Annotation.R {input} '{params.annotation}' '{params.method}' '{params.species}' '{params.cell_type}' {output}"
 
-rule DE_excel:
+rule FindAllMarkers_to_excel:
   input:
     results_dir + "Cluster_DE.RDS"
   params: 
@@ -196,7 +262,7 @@ rule DE_excel:
   output:
     results_dir + "Cluster_DE.xls"
   shell:
-    "Rscript {params.scripts}/Excel_Cluster_DE.R {input} {output} 0.05"
+    "Rscript {params.scripts}/Excel_FindAllMarkers.R {input} {output} 0.05"
 
 rule pseudobulk_DE:
   input:
@@ -206,32 +272,65 @@ rule pseudobulk_DE:
     'data/gtf.RDS'
   params: 
     scripts = config['SC_scripts'],
-    path = results_dir + 'DE/{test}/'
+    path = results_dir + 'DE/{test_name}/'
   output:
-    results_dir + 'DE/{test}/{strat}/DE_results.tsv'
+    #results_dir + 'DE/{test}/{strat}/DE_results.tsv'
+    results_dir + 'DE/{test_name}/{strat_name}/{test_name}-{value1}-{value2}_DE_within_{strat_name}-{strat_values}.tsv',
+    results_dir + 'DE/{test_name}/{strat_name}/{test_name}-{value1}-{value2}_DE_within_{strat_name}-{strat_values}.pdf'
   shell:
     """
     mkdir -p {params.path}
-    Rscript {params.scripts}/pseudobulk_DE.R {input} {wildcards.test} {wildcards.strat} {output}
+    #Rscript {params.scripts}/pseudobulk_DE.R {input} {wildcards.test_name} {wildcards.strat_name} {output}
+    Rscript {params.scripts}/pseudobulk_DE.R {input} '{wildcards.test_name}' '{wildcards.value1}' '{wildcards.value2}' '{wildcards.strat_name}' '{wildcards.strat_values}' {output}
     """
 
-rule fgsea:
+rule fgsea_test_DE:
   input:
     maybe_skip_second_cluster,
-    results_dir + 'DE/{test}/{strat}/DE_results.tsv',
+    #results_dir + 'DE/{test}/{strat}/DE_results.tsv',
+    results_dir + 'DE/{test_name}/{strat_name}/{test_name}-{value1}-{value2}_DE_within_{strat_name}-{strat_values}.tsv',
     results_dir + "Excluded_genes.txt",
     'data/gtf.RDS'
+  resources: mem_mb=240000
   params: 
     scripts = config['SC_scripts'],
     gmt = config['pathways'],
     custom_sets = config['custom_sets'],
     species = config['species']
   output:
-    results_dir + 'DE/{test}/{strat}/fgsea.tsv'
-    #results_dir + 'DE/{test}/fgsea.pdf'
+    #results_dir + 'DE/{test}/{strat}/fgsea.tsv'
+    results_dir + 'DE/{test_name}/{strat_name}/{test_name}-{value1}-{value2}_GSEA_within_{strat_name}-{strat_values}.tsv'
   shell:
     "Rscript {params.scripts}/fgsea.R {input} '{params.gmt}' '{params.species}' {output} '{params.custom_sets}'"
-  
+
+rule Excel_DE:
+  input:
+    [results_dir + "DE/{test_name}/{strat_name}/{test_name}-{value1}-{value2}_DE_within_{strat_name}-{strat_values}.tsv".format(test_name = comp_dict[dkey]['test_name'], value1 = comp_dict[dkey]['value1'], value2 = comp_dict[dkey]['value2'], strat_name = comp_dict[dkey]['strat_name'], strat_values = comp_dict[dkey]['strat_values']) for dkey in comp_dict.keys()]
+  params:
+    scripts = config['SC_scripts'],
+    test = config['test']
+  output:
+    results_dir + "DE/DE.xls",
+    results_dir + "DE/DE_sig.xls"
+  shell:
+    "Rscript {params.scripts}/Combine_results.R {output} 0.05 {input}"
+
+#test1 = {'test_name': 'Celltype', 'val1':'CD4', 'val2':'CD8', 'strat_name':'All', 'strat_values':'All'}
+#test2 = {'test_name': 'Time', 'val1':'30', 'val2':'31', 'strat_name':'Celltype', 'strat_values':'CD4'}
+#comp_dict = {'test1': test1, 'test2': test2}
+### Testing
+rule Excel_fgsea:
+  input:
+    [results_dir + "DE/{test_name}/{strat_name}/{test_name}-{value1}-{value2}_GSEA_within_{strat_name}-{strat_values}.tsv".format(test_name = comp_dict[dkey]['test_name'], value1 = comp_dict[dkey]['value1'], value2 = comp_dict[dkey]['value2'], strat_name = comp_dict[dkey]['strat_name'], strat_values = comp_dict[dkey]['strat_values']) for dkey in comp_dict.keys()]
+  params:
+    scripts = config['SC_scripts'],
+    test = config['test']
+  output:
+    results_dir + "DE/GSEA.xls",
+    results_dir + "DE/GSEA_sig.xls"
+  shell:
+    "Rscript {params.scripts}/Combine_results.R {output} 0.05 {input}"
+
 rule make_GSEA_excel:
   input:
     [results_dir + "DE/{test}/{strat}/fgsea.tsv".format(test = test, strat = strat) for test in tests for strat in strat_list]
@@ -274,9 +373,11 @@ rule App_data:
     maybe_skip_annotation(config['annotation_reference']),
     results_dir + 'Cluster_DE.RDS',
     results_dir + "Excluded_genes.txt",
-    'data/gtf.RDS'
-    #expand(os.path.join(results_dir, 'DE', '{test}', "{strat}", "DE_results.tsv"), test = tests, strat = strat_list),
-    #expand(os.path.join(results_dir, 'SubClusters', "{cluster}.RDS"), cluster = sub_clusters)
+    'data/gtf.RDS',
+    results_dir + "Cluster_DE/Singles.txt",
+    results_dir + "Cluster_DE.RDS", ### FindAllMarkers
+    #expand(os.path.join(results_dir, 'DE', '{test}', "{strat}", "DE_results.tsv"), test = tests, strat = strat_list), ### pseudobulk DE
+    expand(os.path.join(results_dir, 'SubClusters', "{cluster}.RDS"), cluster = sub_clusters) ### 
   params: 
     scripts = config['SC_scripts'],
     project = config['project'],

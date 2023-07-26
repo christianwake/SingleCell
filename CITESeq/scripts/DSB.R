@@ -27,11 +27,12 @@ if(interactive()){
   base_dir <- '/hpcdata/vrc/vrc1_data/'
   
   project <- '2021614_21-002'
+  qc_name <- 'DSB_by_sample'
   qc_name <- '2023-05-30'
   # batch_value <- '2021-12-02'
   # batch_name <- 'Date_sort'
   # batch_value <- 'Su7_03_Innate'
-  batch_value <- 'Su4_01_B_cells'
+  batch_value <- 'Su1_01_B_cells'
   batch_name <- 'Sample_Name'
   hto_string <- 'C0251,C0252,C0253,C0254,C0255,C0256,C0257,C0258,C0259,C0260'
   isotype_controls <- 'C0090,C0091,C0092,C0095'

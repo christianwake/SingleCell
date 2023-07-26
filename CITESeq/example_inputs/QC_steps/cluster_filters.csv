@@ -1,0 +1,9 @@
+data,threshold,features,value
+prot,min_cells,,50
+prot,expression_flat,,10
+prot,expression_ratio,,0.2
+RNA,min_cells,,50
+RNA,expression_flat,,10
+RNA,expression_ratio,,0.2
+RNA,negative,"AB-CD3,B-CD3,CD4,CD14",100
+RNA,positive,"CD19,CD20",0

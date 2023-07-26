@@ -1,0 +1,11 @@
+---
+project: 'project_name'
+scripts_dir: '/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/CITESeq/scripts/'
+runs_dir: '/hpcdata/vrc/vrc1_data/douek_lab/Runs/'
+sample_sheet: 'All_covariates.csv' 
+QC_name: 'QC_first_pass'
+QC_file: 'QC_steps/QC_steps.csv'
+batch: 'Batch_column_name'
+hashtags: 'C0251,C0252,C0253,C0254,C0255,C0256,C0257,C0258,C0259,C0260'
+username: 'locus_username'
+server: 'rstudio-connect.niaid.nih.gov'

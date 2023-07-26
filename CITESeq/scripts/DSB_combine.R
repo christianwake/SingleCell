@@ -20,17 +20,22 @@ source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
 
 if(interactive()){
   project <- '2021614_21-002'
-  qc_name <- '2023-Jan'
-  batch <- 'Date_sort'
-  batches <- c('2021-11-09', '2021-11-10','2021-12-02', '2022-08-11', '2022-08-12')
-  out_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/DSB_normalized_data.RDS')
-  pdf_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/DSB_normalized_data.pdf')
-  sdat_files <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/', batches, '/RNA_cell_filtered.RDS')
+  qc_name <- '2023-05-30'
+  batch <- 'Sample_Name'
+  batches <- c('Su13_03_Innate', 'Su19_3_Innate', 'Su9_03_B_cells')
+  # batch <- 'Date_sort'
+  # batches <- c('2021-11-09', '2021-11-10','2021-12-02', '2022-08-11', '2022-08-12')
+  out_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', 
+                     qc_name, '/DSB_normalized_data.RDS')
+  pdf_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', 
+                     qc_name, '/DSB_normalized_data.pdf')
+  sdat_files <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, 
+                       '/results/', qc_name, '/batches/', batches, '/Cell_filtered.RDS')
   
-  mat_files <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/', batches, '/DSB_normalized_data.RDS')
+  mat_files <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project,
+                      '/results/', qc_name, '/batches/', batches, '/DSB_normalized_data.RDS')
   sdat_files <- sdat_files[1:2]
   mat_files <- mat_files[1:2]
-  
 }else{
   args <- commandArgs(trailingOnly=TRUE)
   
@@ -40,7 +45,6 @@ if(interactive()){
   all_files <- args[4:length(args)]
   sdat_files <- all_files[1:(length(all_files)/2)]
   mat_files <- all_files[((length(all_files)/2)+1):length(all_files)]
-  
 }
 
 ### RNA counts is integer values. RNA data is integer values (probably identical)
@@ -50,10 +54,10 @@ sdats <- lapply(sdat_files, function(sdat_file) readRDS(sdat_file))
 ### NOTE - merge doesn't work on an assay if the counts slot is empty but the data slot is full. Then both will end up empty.
 for(i in 1:length(sdats)){
   print('per batch')
-  print(mean(colSums(sdats[[i]]@assays$prot@data)))
+  print(paste0('Mean data: ', mean(colSums(sdats[[i]]@assays$prot@data))))
   sdats[[i]]@assays$prot@counts <- sdats[[i]]@assays$prot@data
   ### Print mean nCount_prot
-  print(mean(colSums(sdats[[i]]@assays$prot@counts)))
+  print(paste0('Mean counts: ', mean(colSums(sdats[[i]]@assays$prot@counts))))
 }
 
 ### merge.data = F will get rid of anything in 'data' and make them 'counts' instead. This is necessary if you have DSB normalized values in 'data'
@@ -61,8 +65,8 @@ for(i in 1:length(sdats)){
 sdat <- merge(x = sdats[[1]], y = array(unlist(sdats[2:length(sdats)])), merge.data = F, project = 'SeuratProject')
 DefaultAssay(sdat) <- 'prot'
 print('Merged')
-print(mean(colSums(sdats[[i]]@assays$prot@counts)))
-print(mean(colSums(sdats[[i]]@assays$prot@data)))
+print(paste0('Mean counts: ', mean(colSums(sdats[[i]]@assays$prot@counts))))
+print(paste0('Mean data: ', mean(colSums(sdats[[i]]@assays$prot@data))))
 row.names(sdat@assays$prot@data) <- gsub('-totalseq', '', row.names(sdat@assays$prot))
 row.names(sdat@assays$prot@counts) <- gsub('-totalseq', '', row.names(sdat@assays$prot))
 

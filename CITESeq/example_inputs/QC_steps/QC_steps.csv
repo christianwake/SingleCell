@@ -1,0 +1,5 @@
+step,file,
+1,QC_steps/DSB_background.csv
+4,QC_steps/RNA_filters.csv
+6,QC_steps/prot_filters.csv
+7,QC_steps/cluster_filters.csv

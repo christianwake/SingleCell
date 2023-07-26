@@ -22,12 +22,15 @@ if(interactive()){
   qc_name <- '2022-11-01'
   sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filtered_clustered.RDS')
   exclude_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Excluded_genes.txt')
-  out_rdata <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/App/Data.RData')
+  out_rds <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cluster_DE.RDS')
+  out_tsv <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cluster_DE.tsv')
 } else{
   args = commandArgs(trailingOnly=TRUE)
   sdat_file <- args[1]
   exclude_file <- args[2]
-  out_rdata <- args[3] 
+  gtf_file <- args[3]
+  out_rds <- args[4]
+  out_tsv <- args[5]
 }
 
 sdat <- readRDS(sdat_file)
@@ -38,13 +41,27 @@ if(file.exists(exclude_file) & file.info(exclude_file)$size != 0){
   exclude_gene_names <- c()
 }
 
+### Do direct matching from gtf
+if(grepl('\\.gtf', gtf_file)){
+  gtf <- read_gtf(gtf_file, feature_type = 'gene', atts_of_interest = c('gene_id', 'gene_name',  'gene_biotype'))
+} else if(grepl('\\.RDS', gtf_file)){
+  gtf <- readRDS(gtf_file)
+} else{
+  warning('No gtf file')
+}
+row.names(gtf) <- gtf$gene_id
+
 sdat <- ScaleData(sdat, assay = "RNA", features = row.names(sdat))
 
 ### Exclude genes, e.g. IG and ribosomal RNAs
 rna_features <- row.names(sdat@assays$RNA@counts)[which(!row.names(sdat@assays$RNA@counts) %in% exclude_gene_names)]
-rna_by_rna <- run_fam(sdat, 'RNA', 'RNA_clusters', 5, features = rna_features)
+de <- run_fam(sdat, 'RNA', 'RNA_clusters', 5, features = rna_features)
 ### Order
-rna_by_rna <- rna_by_rna[order(rna_by_rna$p_val),]
-
-saveRDS(rna_by_rna, out_rdata)
-
+de <- de[order(de$p_val),]
+### Add gene name
+### Determine whether 'gene_name' or 'gene_id' better matches those in the seurat object
+gtf_cols <- c('gene_name', 'gene_id')
+de$gene_name <- gtf[row.names(de), 'gene_name']
+de <- de[, c('gene_name', colnames(de)[which(colnames(de) != 'gene_name')])]
+saveRDS(de, out_rds)
+write.table(de, file = out_tsv, sep = '\t', quote = F, row.names = T)

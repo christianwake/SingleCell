@@ -23,13 +23,13 @@ if(interactive()){
   # additional <- ''
   # 
   project <- '2021600_kristin'
-  qc_name <- 'Run2022-11-14'
+  qc_name <- 'Run2023-05-14'
   additional <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021600_kristin/SampleSheets/Additional.csv' # columns - cell id then more stuff
   gene_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/220921_transcriptome_analysis.xlsx')
   
-  project <- '2022620_857.1'
-  qc_name <- '2023-01-09'
-  additional <- '/hpcdata/vrc/vrc1_data/douek_lab/wakecg/2020213_NHP857.1/preprocessing_2021-02-04_metadata.csv'
+  # project <- '2022620_857.1'
+  # qc_name <- '2023-01-09'
+  # additional <- '/hpcdata/vrc/vrc1_data/douek_lab/wakecg/2020213_NHP857.1/preprocessing_2021-02-04_metadata.csv'
   
   sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Mapped.RDS')
   #de_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cluster_DE.RDS')
@@ -40,9 +40,10 @@ if(interactive()){
   gtf_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
   exclude_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Excluded_genes.txt')
   
+  cluster_compare <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cluster_DE/Singles.txt')
   rds_files <- c(paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cluster_DE.RDS'),
-                 paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/SubClusters/seurat_clusters-0.RDS'),
-                 paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/SubClusters/seurat_clusters-3.RDS'))
+                 paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/SubClusters/RNA_clusters-0.RDS'),
+                 paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/SubClusters/RNA_clusters-3.RDS'))
 
   username <- ''
   server <- 'rstudio-connect.niaid.nih.gov'
@@ -59,6 +60,8 @@ if(interactive()){
   de_file <- args[9]
   exclude_file <- args[10]
   gtf_file <- args[11]
+  cluster_compare <- args[12]
+  rds_files <- args[13:length(args)]
 }
 
 print(sdat_file)
@@ -68,6 +71,10 @@ print(gtf_file)
 ### Divide support RDS files into Cluster DE or sub clusters
 cluster_de_files <- rds_files[grepl('/Cluster_DE', rds_files)]
 sub_cluster_files <- rds_files[grepl('/SubClusters/', rds_files)]
+
+### Read single cluster comparison file
+comp_rds <- read.table(cluster_compare)[,1]
+comp1 <- readRDS(comp_rds[1])
 
 ### Do direct matching from gtf
 if(grepl('\\.gtf', gtf_file)){
@@ -82,21 +89,21 @@ row.names(gtf) <- gtf$gene_id
 gtf_cols <- c('gene_name', 'gene_id')
 sdat <- readRDS(sdat_file)
 
-mis <- c('34941_wk2_3', '36186_wk2_2', '16C301_wk6_1')
-plates <- unique(sdat$plate_name)
-
-dat <- read.csv('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2022620_857.1/Cell_sheet.csv')
-all(plates %in% dat$plate_name)
-mis %in% dat$plate_name
-table(dat$plate_name)
-table(dat[which(dat$plate_name %in% mis), 'plate_name'])
-for(plate in unique(sdat$plate_name)){
-  cells <- row.names(sdat@meta.data[which(sdat$plate_name == plate),])
-  dat <- sdat@assays$RNA@counts[, cells]
-  write.csv(dat, paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/BCRSeq/2020213_NHP857.1/tempForDeposit/COUNTS-B-', plate, '.csv'), quote =F)
-  gzip(paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/BCRSeq/2020213_NHP857.1/tempForDeposit/COUNTS-B-', plate, '.csv'))
+if(project == '2020213_NHP857.1'){
+  mis <- c('34941_wk2_3', '36186_wk2_2', '16C301_wk6_1')
+  plates <- unique(sdat$plate_name)
+  dat <- read.csv('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2022620_857.1/Cell_sheet.csv')
+  all(plates %in% dat$plate_name)
+  mis %in% dat$plate_name
+  table(dat$plate_name)
+  table(dat[which(dat$plate_name %in% mis), 'plate_name'])
+  for(plate in unique(sdat$plate_name)){
+    cells <- row.names(sdat@meta.data[which(sdat$plate_name == plate),])
+    dat <- sdat@assays$RNA@counts[, cells]
+    write.csv(dat, paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/BCRSeq/2020213_NHP857.1/tempForDeposit/COUNTS-B-', plate, '.csv'), quote =F)
+    gzip(paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/BCRSeq/2020213_NHP857.1/tempForDeposit/COUNTS-B-', plate, '.csv'))
+  } 
 }
-
 
 #id_type <- names(which.max(sapply(gtf_cols, function(col) sum(row.names(sdat) %in% gtf[, col]))))
 id_type <- get_id_name(row.names(sdat), gtf)
@@ -140,9 +147,24 @@ for(sc in names(dat)){
   ### Add cluster info to the original object
   sdat@meta.data[, colnames(dat[[sc]]@meta.data)] <- dat[[sc]]@meta.data
   ### Add UMAP info to the original object
+  ### Having these subcluster UMAPs breaks ability to subset sdat. Removing them fixes the problem.
   for(umap in names(dat[[sc]]@reductions)){
-    sdat@reductions[paste0(umap, '_umap')] <- dat[[sc]]@reductions[umap] 
+    sdat@reductions[paste0(umap, '_umap')] <- dat[[sc]]@reductions[umap]
+    #### To access these slots, we provide the Embeddings, Loadings, and Stdev functions
+    # ### Subcluster Embedding 
+    # dat <- Embeddings(dat[[sc]], reduction = umap)
+    # abs <- colnames(sdat)[which(!colnames(sdat) %in% row.names(dat))]
+    # newdat <- as.data.frame(matrix(nrow = length(abs), ncol = length(colnames(dat))))
+    # row.names(newdat) <- abs
+    # colnames(newdat) <- colnames(dat)
+    # dat <- rbind(dat, newdat)
+    # ### Reorder to match sdat
+    # dat <- dat[colnames(sdat), ]
+    # ### Modified subcluser Emedding in the original seurat object
+    # Embeddings(sdat, reduction = paste0(umap, '_umap')) <- dat
   }
+  sdat_plot <- subset(x = sdat, subset = Celltype == "CD4")
+  sdat@reductions[paste0(umap, '_umap')] <- NULL
 }
 rm(dat)
 
@@ -152,8 +174,8 @@ DefaultAssay(sdat) <- 'RNA'
 umaps <- names(sdat@reductions)[grepl('umap', names(sdat@reductions))]
 print(umaps)
 ### Rename 'umap' as 'RNA_umap'
-sdat@reductions$RNA_umap <- sdat@reductions$umap
-umaps[which(umaps == 'umap')] <- 'RNA_umap'
+# sdat@reductions$RNA_umap <- sdat@reductions$umap
+# umaps[which(umaps == 'umap')] <- 'RNA_umap'
 
 pdf(out_pdf)
 ##### Some basic plots

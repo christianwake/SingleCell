@@ -1,0 +1,6 @@
+type,feature,value
+cell,nFeature_RNA,"50,3(SD)"
+cell,nCount_RNA,"1000,99999999999999"
+cell,MT_prop,"-1,0.4"
+gene,pattern,"^IG,JCHAIN,^RPS,^RPL"
+gene,fraction_cells,"<0.05"

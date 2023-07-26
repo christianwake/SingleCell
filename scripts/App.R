@@ -1,7 +1,7 @@
 ### Note: As of 9/2020, the RStudio Connect server requires R version 3.5.0, 3.6.2 or 4.0.2
 
 ### Note: this line needs to be run before compiling, so that the compiler has access to the Bioconductor repository for BiocGenerics installation which is not already available on the Connect server.
-options(repos = BiocManager::repositories())
+#options(repos = BiocManager::repositories())
 
 library('shiny')
 library('DT')
@@ -30,13 +30,16 @@ load('Data.RData')
 source('sc_functions.R')
 
 ### Find all cluster options from the serurat object and choose from our list, the first in our order of preference
-cluster_names <- c('RNA_clusters', 'clusters_seurat_integrated', 'clusters_harmony_integrated', 'cluster_unintegrated', 'seurat_clusters', 'predicted.celltype.l1', 'predicted.celltype.l2', 'predicted_label_main', 'predicted_label_fine')
+cluster_names <- c('RNA_clusters', 'clusters_seurat_integrated', 'clusters_harmony_integrated',
+                   'cluster_unintegrated', 'seurat_clusters', 'predicted.celltype.l1', 
+                   'predicted.celltype.l2', 'predicted_label_main', 'predicted_label_fine',
+                   'TCR_status', 'Stim', 'Time', 'Celltype')
 #cluster_names <- cluster_names[cluster_names %in% colnames(sdat@meta.data)[grepl('clusters', colnames(sdat@meta.data))]]
 cluster_names <- cluster_names[cluster_names %in% colnames(sdat@meta.data)]
 extra_annots <- c('Assignment', 'Condition', 'CR_ID')
 extra_annots <- extra_annots[extra_annots %in% colnames(sdat@meta.data)]
 
-umap_name <- c('umap_seurat', 'umap_harmony', 'umap')
+umap_name <- c('RNA_umap', 'umap_seurat', 'umap_harmony', 'umap')
 umap_name <- umap_name[umap_name %in% names(sdat@reductions)[grepl('umap', names(sdat@reductions))]]
 umap_name <- umap_name[1]
 
@@ -45,6 +48,7 @@ ui <- fluidPage(
   mainPanel(
     headerPanel('RNA UMAP'),
     selectInput('umap_color1', 'UMAP color', cluster_names, selected = cluster_names[1]),
+    selectInput('umap_split', 'UMAP split', c('None', cluster_names), selected = 'None'),
     uiOutput("dynamic_n1"),
     plotOutput('umap_plot1', height = 700)
   ),
@@ -91,18 +95,23 @@ server <- function(input, output, session) {
     pal <- hue_pal()(length(unique(sdat@meta.data[, input$umap_color1])))
     names(pal) <- unique(sdat@meta.data[, input$umap_color1])
     par(mar = c(5.1, 4.1, 0, 0.1))
+    if(input$umap_split=='None'){
+      split_by = NULL
+    } else{
+      split_by <- input$umap_split
+    }
     if(length(input$highlight1) == 0){
       cells.highlight <- c()
       cols.highlight <- pal[as.character(sdat@meta.data[, input$umap_color1])]
       
-      DimPlot(sdat, group.by = input$umap_color1, label = T, reduction = umap_name, cols = pal)
+      DimPlot(sdat, group.by = input$umap_color1, split.by = split_by, label = T, reduction = umap_name, cols = pal)
     } else if(length(input$highlight1) > 0 ){
       cells.highlight <- lapply(as.character(input$highlight1), function(x) colnames(sdat)[which(sdat@meta.data[, input$umap_color1] == x)])
       names(cells.highlight) <- as.character(input$highlight1)
       cols.highlight <- sapply(as.character(input$highlight1), function(x) pal[x])
       names(cols.highlight) <- as.character(input$highlight1)
       
-      DimPlot(sdat, group.by = input$umap_color1, label = T, reduction = umap_name, 
+      DimPlot(sdat, group.by = input$umap_color1, split.by = split_by, label = T, reduction = umap_name, 
               cells.highlight = cells.highlight,
               cols.highlight = cols.highlight) + 
         theme(legend.position = "none")

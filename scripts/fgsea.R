@@ -17,9 +17,12 @@ source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
 
 if(interactive()){
   project <- '2021600_kristin'
-  qc_name <- 'Run2022-11-14'
-  test <- 'TCR.status'
-  strat <- 'seurat_clusters-3'
+  qc_name <- 'Run2023-05-14'
+  test <- 'RNA_clusters'
+  value1 <- '2'
+  value2 <- '3'
+  strat <- 'All'
+  strat_values <- 'All'
   species <- 'hsapiens'
   sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filtered_clustered.RDS')
   
@@ -30,7 +33,13 @@ if(interactive()){
   # species <- 'mmulatta'
   # sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filtered.RDS')
   
-  res_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/DE/', test, '/', strat, '/DE_results.tsv')
+  # res_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', 
+  #                    qc_name, '/DE/', test, '/', strat, '/DE_results.tsv')
+  res_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', 
+                     qc_name, '/DE/', test, '/', strat, '/', test, '-', value1, '-', value2, 
+                     '_DE_within_', strat, '-', strat_values, '.tsv')
+  
+  #res_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/DE/', test, '/', strat, '/DE_results.tsv')
   exclude_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Excluded_genes.txt')
   gtf_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
   #gmt_file <- '/hpcdata/vrc/vrc1_data/douek_lab/wakecg/genesets/c2.cp.v7.2.symbols.gmt'
@@ -64,6 +73,7 @@ if(file.exists(exclude_file) & file.info(exclude_file)$size != 0){
 sdat <- readRDS(sdat_file)
 norm_counts <- as.data.frame(sdat@assays$RNA@data)
 norm_counts <- norm_counts[which(!(row.names(norm_counts) %in% exclude_gene_names)),]
+rm(sdat)
 
 ### Convert to numeric
 #norm_counts <- mutate_all(norm_counts, function(x) as.numeric(x))
@@ -140,7 +150,19 @@ res <- res[which(!res$gene_name %in% dup_names),]
 rnk <- seurat_wilcox_Res2Rank(res)
 rnk <- rnk[order(rnk$logp, decreasing = T),]
 ranks <- setNames(rnk[, 'logp'], rnk$ID)
-
+### Remove and send warning if any are NA, INF or -INF
+if(any(is.na(ranks))){
+  warning(paste0(sum(is.na(ranks)), ' features are NA logp and must be removed'))
+  ranks <- ranks[!is.na(ranks)]
+}
+if(any(ranks == '-Inf')){
+  warning(paste0(sum(ranks == '-Inf'), ' features are NA logp and must be removed'))
+  ranks <- ranks[ranks != '-Inf']
+}
+if(any(ranks == 'Inf')){
+  warning(paste0(sum(ranks == 'Inf'), ' features are NA logp and must be removed'))
+  ranks <- ranks[ranks != 'Inf']
+}
 ### MSigDB
 genesets <- getGmt(gmt_file)
 DB <- gmtPathways(gmt_file)
@@ -165,7 +187,7 @@ genes <- unique(unlist(DB))
 a_ids <- row.names(norm_counts)[which(rowSums(norm_counts) > 0)]
 a_names <- id_key[a_ids, 'hsapiens_name']
 a_names <- a_names[which(!is.na(a_names))]
-
+rm(norm_counts)
 paste0('Of ', length(a_ids), ' ids, ', length(a_names), ' are in ', species, '-human biomaRt, and ', sum(a_names %in% genes), ' of those are in human ', gmt_file)
 
 #DB <- DB[grepl('BIOCARTA', names(DB))]
@@ -178,15 +200,21 @@ paste0('Of ', length(a_ids), ' ids, ', length(a_names), ' are in ', species, '-h
 
 print('Beginning fgsea')
 fgseaRes <- fgsea(pathways = DB, stats = ranks, minSize = minSize, maxSize = 500, nPermSimple = 10000)
+print('test1')
 fgseaRes <- as.data.frame(fgseaRes)
+print('test2')
 fgseaRes <- fgseaRes[order(fgseaRes$pval), ]
+print('test3')
 ### Convert the leadingEdge list of gene names into a comma delimited string, in order to print. 
 fgseaRes[, 'leadingEdgeStr'] <- apply(fgseaRes, 1, function(x) gsub(', ', ',', toString(x['leadingEdge'][[1]])))
 ### Subset significant results
+print('test4')
 sig <- fgseaRes[which(fgseaRes$padj < 0.05), ]
+print('test5')
 min(fgseaRes$pval)
 num_sig <- length(sig$padj)
 #print(paste0(num_sig, ' padj 0.05 significant GSEA results for -log(p) sorted ', names(res_file)))
+print('test6')
 
 ### Print significant GSEA results to a file
 write.table(fgseaRes[,c("pathway","pval","padj","ES","NES","size","leadingEdgeStr")], out_tsv, sep = '\t', row.names = F, quote = F)

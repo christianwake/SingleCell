@@ -51,6 +51,44 @@ print(strat_list)
 if 'clust_resolution2' not in config.keys():
   config['clust_resolution2'] = config['cluster_resolution']
 
+### Read list of cluster comparisons to do
+cluster_combos = []
+cc_file = os.path.join(os.getcwd(), config['cluster_compare'])
+if os.path.exists(cc_file):
+  cc = pd.read_csv(cc_file, dtype = str)
+  print(cc)
+  ### List of '-' delimited strings
+  cluster_combos = ['-'.join(list(row)) for index, row in cc.iterrows()]
+print(cluster_combos)
+
+### Read list of tests to do (redundant with cluster_compare)
+comparisons = []
+cc_file = os.path.join(os.getcwd(), config['comparison_file'])
+if os.path.exists(cc_file):
+  cc = pd.read_csv(cc_file, dtype = str)
+  print(cc)
+  #comparisons = ['-'.join(list(row)) for index, row in cc.iterrows()
+  
+print(comparisons)
+
+import csv
+from collections import defaultdict
+comp_dict = defaultdict(int)
+with open(config['comparison_file'], newline = '') as csvfile:
+  reader = csv.DictReader(csvfile)
+  keyint = 0
+  for row in reader:
+    comp_dict[keyint] = row
+    if(comp_dict[keyint]['strat_name'] == ''):
+      comp_dict[keyint]['strat_name'] = 'All'
+      comp_dict[keyint]['strat_values'] = 'All'
+    if(comp_dict[keyint]['value1'] == ''): 
+      comp_dict[keyint]['value1'] = 'NA'
+    if(comp_dict[keyint]['value2'] == ''): 
+      comp_dict[keyint]['value2'] = 'NA'
+    keyint += 1
+print(comp_dict)
+
 ### Read list of clusters to sub-cluster
 sc_file = os.path.join(os.getcwd(), config['sub_cluster'])
 if os.path.exists(sc_file):
@@ -259,339 +297,4 @@ rule all:
     results_dir + 'Cluster_DE.xls',
     [results_dir +  "DE/{test}_GSEA.xls".format(test = test) for test in tests]
 #    'data/multiqcs.txt'
-
-### Pipeline starts after bcl2fastq has been completed separately
-rule fastqc_raw_once:
-  input:
-    unpack(get_raw_fastq)
-  output:
-    'data/fastq/raw/{cell_id}/read1_{raw_name}_fastqc.zip',
-    'data/fastq/raw/{cell_id}/read2_{raw_name}_fastqc.zip'
-  shell:
-    """
-    fastqc --noextract -o data/fastq/raw/{wildcards.cell_id}/ {input.R1}
-    fastqc --noextract -o data/fastq/raw/{wildcards.cell_id}/ {input.R2}
-    """
-
-rule fastqc_trimmed_once:
-  input:
-    'data/fastq/trimmed/{cell_id}/{sample}_paired.fq.gz'
-  output:
-    'data/fastq/trimmed/{cell_id}/{sample}_paired_fastqc.zip'
-  shell:
-    "fastqc --noextract -o data/fastq/trimmed/{wildcards.cell_id}/ {input}"
-
-### wildcard sdir cannot go in the expand function with the non-wildcard fastq
-rule aggregate_fastqc_raw:
-  input:
-    raw_qc
-  output:
-    "data/fastq/raw/multiqc_input_files.txt"
-  shell:
-    "ls {input} > {output}"
-
-rule aggregate_fastqc_trimmed:
-  input:
-    trimmed_qc
-  output:
-    "data/fastq/trimmed/multiqc_input_files.txt"
-  shell:
-    "ls {input} > {output}"
-
-rule aggregate_bams:
-  input:
-    expand('data/bam/{cell_id}/{cell_id}_Aligned.sortedByCoord.out.bam.bai', cell_id = cells['Cell_ID'])
-  output:
-    'data/bam/bam_files.txt'
-  shell:
-    'ls {input} > {output}'
-
-rule aggregate_rseqc:
-  input:
-    expand('data/bam/{cell_id}/RSeQC/multiqc_input_files.txt', cell_id = cells['Cell_ID'])
-  output:
-    'data/bam/multiqc_input_files.txt'
-  shell:
-    "cat {input} > {output}"
-
-rule aggregate_trim_stderr:
-  input: 
-    trimerr_files
-  output:
-    "data/trims.txt"
-  shell:
-    "ls {input} > {output}"
-
-rule aggregate_multiqc:
-  input:
-    raw_fastq = 'data/fastq/raw/multiqc.html',
-    trimmed_fastq = 'data/fastq/trimmed/multiqc.html',
-    bam = 'data/bam/multiqc.html'
-  output:
-    'data/multiqcs.txt'
-  shell:
-    'ls {input} > {output}'
-
-rule multiqc:
-  input:
-    "data/{sdir}/multiqc_input_files.txt"
-  resources:mem_mb=240000
-  output:
-    "data/{sdir}/multiqc.html"
-  shell:
-    "multiqc --file-list {input} -f --filename {output}"
-
-rule gunzip_once:
-  input:
-    unpack(get_raw_fastq)
-  output:
-    R1 = temp('data/fastq/raw/{cell_id}/R1.fq'),
-    R2 = temp('data/fastq/raw/{cell_id}/R2.fq')
-  shell:
-    """
-    gunzip -c {input.R1} > {output.R1}
-    gunzip -c {input.R2} > {output.R2}
-    """
-
-rule trimmomatic_once:
-  input:
-    unpack(get_raw_fastq_temp)
-  params:
-    adapter_file = adapter_file
-  output:
-    R1_paired = "data/fastq/trimmed/{cell_id}/{cell_id}_R1_paired.fq.gz",
-    R1_unpaired = "data/fastq/trimmed/{cell_id}/{cell_id}_R1_unpaired.fq.gz",
-    R2_paired = "data/fastq/trimmed/{cell_id}/{cell_id}_R2_paired.fq.gz",
-    R2_unpaired = "data/fastq/trimmed/{cell_id}/{cell_id}_R2_unpaired.fq.gz",
-  conda:
-    "/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/RRBSeq/py2.7.yml"
-  log:
-    log1 = "data/fastq/trimmed/{cell_id}/trim_stdout.txt",
-    log2 = "data/fastq/trimmed/{cell_id}/trim_stderr.txt",
-  shell:
-    """
-    java -Xmx7G -jar /hpcdata/vrc/vrc1_data/douek_lab/programs/Trimmomatic-0.39/trimmomatic-0.39.jar PE -phred33 -threads 1 {input.R1} {input.R2} {output.R1_paired} {output.R1_unpaired} {output.R2_paired} {output.R2_unpaired} ILLUMINACLIP:{params.adapter_file}:2:30:10:4:true LEADING:3 TRAILING:3 SLIDINGWINDOW:4:20 MINLEN:50 1>{log.log1} 2>{log.log2}
-    """
-
-rule STAR_align_once:
-  input: 
-    "data/fastq/trimmed/{cell_id}/{cell_id}_R1_paired.fq.gz",
-    "data/fastq/trimmed/{cell_id}/{cell_id}_R2_paired.fq.gz"
-  params:
-    starDB = config['starDB']
-  output:
-    bam = "data/bam/{cell_id}/{cell_id}_Aligned.sortedByCoord.out.bam",
-    starlog = 'data/bam/{cell_id}/{cell_id}_Log.final.out'
-  resources: mem_mb=30000
-  log:
-    outlog = "data/bam/{cell_id}/logs/STAR.olog",
-    errlog = "data/bam/{cell_id}/logs/STAR.elog"
-  shell:
-    """
-    mkdir -p data/fastq/bam/{wildcards.cell_id}/RSeQC/
-    mkdir -p data/fastq/bam/{wildcards.cell_id}/logs/
-    STAR --genomeDir {params.starDB} --readFilesIn {input} --outFileNamePrefix data/bam/{wildcards.cell_id}/{wildcards.cell_id}_ --readFilesCommand gzip -dc --outReadsUnmapped Fastx --outSAMtype BAM SortedByCoordinate --outFilterMultimapNmax 20 --outFilterMismatchNoverReadLmax 0.04 --limitSjdbInsertNsj 1200000 1>{log.outlog} 2>{log.errlog}
-   """
-
-rule flagstat_once:
-  input:
-    "data/bam/{cell_id}/{cell_id}_Aligned.sortedByCoord.out.bam"
-  output:
-    "data/bam/{cell_id}/Nreads.csv"
-  shell:
-    """
-    echo -n {wildcards.cell_id}, >> {output}
-    samtools flagstat {input} | grep 'in total' | awk 'BEGIN{{FS=" "}} {{print $1}}' | xargs echo >> {output}
-    """
-    
-rule aggr_flagstat:
-  input:
-    cells['flagstat']
-  output:
-    "data/bam/Nreads.csv"
-  shell:
-    "cat {input} > {output}"
-
-checkpoint filter_empty:
-  input:
-    "data/bam/Nreads.csv"
-  params:
-    scripts = config['SmartSeq_scripts']
-  output:
-    "data/Post_filter.csv"
-  shell:
-    "Rscript {params.scripts}/Empty_cell_filter.R {input} {output}"
-
-rule index_bam_once:
-  input:
-    "data/bam/{cell_id}/{cell_id}_Aligned.sortedByCoord.out.bam",
-  log:
-    outlog = "data/bam/{cell_id}/logs/index.olog",
-    errlog = "data/bam/{cell_id}/logs/index.elog"
-  output:
-    "data/bam/{cell_id}/{cell_id}_Aligned.sortedByCoord.out.bam.bai",
-  shell:
-    "samtools index {input} 1>{log.outlog} 2>{log.errlog}"
-
-rule idxstats_once:
-  input:
-    "data/bam/{cell_id}}/{cell_id}_Aligned.sortedByCoord.out.bam",
-  output:
-    "data/bam/{cell_id}/Star_alignment_stats.txt"
-  shell:
-    "samtools idxstats {input} > {output}"
-
-###  These two RSeQC functions take so long that they will run separately
-rule RSeQC_tin:
-  input:
-    bam = "data/bam/{cell_id}/{cell_id}_Aligned.sortedByCoord.out.bam",
-    bai = "data/bam/{cell_id}/{cell_id}_Aligned.sortedByCoord.out.bam.bai"
-  params:
-    anno = config['refbed'],
-  output: 
-    tin = 'data/bam/{cell_id}/RSeQC/{cell_id}.out.summary.txt',
-    xls = 'data/bam/{cell_id}/RSeQC/{cell_id}.out.tin.xls'
-  shell:
-    """
-    mkdir -p data/bam/{wildcards.cell_id}/RSeQC/
-    tin.py -i {input.bam} -r {params.anno} > {output.tin}
-    """
-
-rule RSeQC_gbc:
-  input: 
-    bam = "data/bam/{cell_id}/{cell_id}_Aligned.sortedByCoord.out.bam",
-    bai = "data/bam/{cell_id}/{cell_id}_Aligned.sortedByCoord.out.bam.bai"
-  params:
-    anno = config['refbed']
-  output:
-    geneBody_cov = 'data/bam/{cell_id}/RSeQC/{cell_id}.geneBodyCoverage.txt'
-  shell:
-    """
-    mkdir -p data/bam/{wildcards.cell_id}/RSeQC/
-    geneBody_coverage.py -i {input.bam} -o data/bam/{wildcards.cell_id}/RSeQC/{wildcards.cell_id} -r {params.anno}
-    """
-
-rule RSeQC_once:
-  input:
-    bam = "data/bam/{cell_id}/{cell_id}_Aligned.sortedByCoord.out.bam",
-    bai = "data/bam/{cell_id}/{cell_id}_Aligned.sortedByCoord.out.bam.bai"
-  params:
-    anno = config['refbed'],
-    out_pref = 'data/bam/{cell_id}/RSeQC/{cell_id}'
-  output:
-    bam_stat = 'data/bam/{cell_id}/RSeQC/{cell_id}.bam_stat.txt',
-    read_dist = 'data/bam/{cell_id}/RSeQC/{cell_id}.read_distribution.txt',
-    infer_exp = 'data/bam/{cell_id}/RSeQC/{cell_id}.infer_experiment.txt',
-    inner_dist = 'data/bam/{cell_id}/RSeQC/{cell_id}.inner_distance_freq.txt',
-    junction_anno = 'data/bam/{cell_id}/RSeQC/{cell_id}_junction_annotation.txt',
-    junction_sat = 'data/bam/{cell_id}/RSeQC/{cell_id}.junctionSaturation_plot.r',
-    read_GC = 'data/bam/{cell_id}/RSeQC/{cell_id}.GC.xls',
-    dup_rate = 'data/bam/{cell_id}/RSeQC/{cell_id}.pos.DupRate.xls',
-    RNA_frag_size = 'data/bam/{cell_id}/RSeQC/{cell_id}.RNA_fragment_size.txt'
-  shell:
-    """
-    mkdir -p data/bam/{wildcards.cell_id}/RSeQC/
-    bam_stat.py -i {input.bam} > {output.bam_stat}
-    read_distribution.py -i {input.bam} -r {params.anno} > {output.read_dist}
-    infer_experiment.py -i {input.bam} -r {params.anno} > {output.infer_exp}
-    inner_distance.py -i {input.bam} -o {params.out_pref} -r {params.anno}
-    junction_annotation.py -i {input.bam} -o {params.out_pref} -r {params.anno} 2>{output.junction_anno}
-    junction_saturation.py -i {input.bam} -o {params.out_pref} -r {params.anno}
-    read_GC.py -i {input.bam} -o {params.out_pref}
-    read_duplication.py -i {input.bam} -o {params.out_pref}
-    #read_NVC.py -i {input} -o {params.out_pref}
-    #stread_quality.py -i {input} -o {params.out_pref}
-    RNA_fragment_size.py -i {input} -r {params.anno} > {output.RNA_frag_size}
-    #RPKM_saturation.py -i {input} -o {params.out_pref} -r {params.anno}
-    #mismatch_profile.py -i {input} -o {params.out_pref}
-    """
-
-rule aggregate_RSeQC:
-  input:
-    bam_stat = 'data/bam/{cell_id}/RSeQC/{cell_id}.bam_stat.txt',
-    read_dist = 'data/bam/{cell_id}/RSeQC/{cell_id}.read_distribution.txt',
-    infer_exp = 'data/bam/{cell_id}/RSeQC/{cell_id}.infer_experiment.txt',
-    inner_dist = 'data/bam/{cell_id}/RSeQC/{cell_id}.inner_distance_freq.txt',
-    junction_anno = 'data/bam/{cell_id}/RSeQC/{cell_id}_junction_annotation.txt',
-    junction_sat = 'data/bam/{cell_id}/RSeQC/{cell_id}.junctionSaturation_plot.r',
-    read_GC = 'data/bam/{cell_id}/RSeQC/{cell_id}.GC.xls',
-    dup_rate = 'data/bam/{cell_id}/RSeQC/{cell_id}.pos.DupRate.xls',
-    RNA_frag_size = 'data/bam/{cell_id}/RSeQC/{cell_id}.RNA_fragment_size.txt',
-    geneBody_cov = 'data/bam/{cell_id}/RSeQC/{cell_id}.geneBodyCoverage.txt',
-    tin = 'data/bam/{cell_id}/RSeQC/{cell_id}.out.summary.txt',
-    starlog = 'data/bam/{cell_id}/{cell_id}_Log.final.out'
-  output:
-    'data/bam/{cell_id}/RSeQC/multiqc_input_files.txt'
-  shell:
-    'ls {input} > {output}'
-
-rule stringtie_once:
-  input:
-    bam = 'data/bam/{cell_id}/{cell_id}_Aligned.sortedByCoord.out.bam',
-    bai = 'data/bam/{cell_id}/{cell_id}_Aligned.sortedByCoord.out.bam.bai'
-  output:
-    tab = 'data/count/{cell_id}/gene_abundances.tab'
-  log:
-    gtflog = 'data/count/{cell_id}/stringtie.gtf',
-    txtlog = 'data/count/{cell_id}/stringtie_stderr.txt'
-  params:
-    ref = config['refgtf']
-  #resources:mem_mb=240000
-  shell:
-    'stringtie {input.bam} -G {params.ref} -A {output.tab} -e 1> {log.gtflog} 2> {log.txtlog}'
-
-### From checkpoint 'filter_empty'
-def get_filtered_cells_as_tab_files(wildcards):
-  checkpoint_output = checkpoints.filter_empty.get(**wildcards).output[0]
-  #checkpoint_output = checkpoints.filter_empty
-  ### read it to get list of cell IDs
-  cells_filt = pd.read_table(checkpoint_output, sep = ',').set_index("ID", drop = False)
-  ### Add 'data/count/{cell_id}/gene_abundances.tab' to each
-  cells_filt['tabs'] = 'data/count/' + cells_filt['ID'].map(str) + '/gene_abundances.tab'
-  ### return input to create_mtx, list of tab files per cell 
-  return list(cells_filt['tabs'])
-
-rule create_mtx:
-  input:
-    #config['tabs']
-    get_filtered_cells_as_tab_files ### checks results from checkpoint
-  params:
-    project = config['project'],
-    Cell_sheet = config['Cell_sheet'],
-    scripts = config['SmartSeq_scripts']
-  output:
-    mtx_file = 'data/raw_mtx.RDS'
-  shell: ### Currently this determines tab files from those that exist from Cell_sheet. It could instead take input directly here.
-    "Rscript {params.scripts}/tab2mtx.R {params.project} {params.Cell_sheet} {output}"
-
-### Filters cells based on general values. Should be updated to take inputs (as CITESeq pipepline)
-rule compile_QC_metrics:
-  input:
-    ancient('data/raw_mtx.RDS'),
-    'data/gtf.RDS'
-  params:
-    runs_dir = config['runs_dir'],
-    project = config['project'],
-    Cell_sheet = config['Cell_sheet'],
-    demult = demult,
-    scripts = config['SmartSeq_scripts']
-  output:
-    'data/Covariates_QC_metrics.csv'
-    #'data/Cell_filters.txt',
-    #'data/Cell_filters.pdf'
-  shell:
-    'Rscript {params.scripts}/SC_Compile_QC_metrics.R {input} {params.runs_dir} {params.project} {params.Cell_sheet} {params.demult} {output}'
-
-rule create_seurat_object:
-  input:
-    ancient('data/raw_mtx.RDS'),
-    'data/Covariates_QC_metrics.csv',
-    'data/gtf.RDS'
-  params:
-    project = config['project'],
-    scripts = config['SmartSeq_scripts']
-  output:
-    'data/All_data.RDS'
-  shell:
-    'Rscript {params.scripts}/mtx2seurat.R {params.project} {input} {output}'
 

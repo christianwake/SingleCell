@@ -16,10 +16,10 @@ source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
 
 if(interactive()){
   project <- '2021600_kristin'
-  qc_name <- 'Run2022-11-14'
+  qc_name <- 'Run2023-05-14'
   sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Mapped.RDS')
   exclude_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Excluded_genes.txt')
-  cluster_info <- 'seurat_clusters-0'
+  cluster_info <- 'RNA_clusters-0'
   out_rds <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/SubClusters/', cluster_info, '.RDS')
   
 }else{
