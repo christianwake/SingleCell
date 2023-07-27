@@ -287,18 +287,6 @@ rule Excel_fgsea:
   shell:
     "Rscript {params.scripts}/Combine_results.R {output} 0.05 {input}"
 
-rule make_GSEA_excel:
-  input:
-    [results_dir + "DE/{test}/{strat}/fgsea.tsv".format(test = test, strat = strat) for test in tests for strat in strat_list]
-  params:
-    scripts = config['SC_scripts'],
-    test = config['test']
-  output:
-    results_dir + "DE/{test}_GSEA.xls",
-    results_dir + "DE/{test}_GSEA_sig.xls"
-  shell:
-    "Rscript {params.scripts}/Excel_fgsea.R {output} 0.05 {input}"
-
 rule SubCluster:
   input:
     maybe_skip_annotation(do_annot),

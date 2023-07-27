@@ -7,19 +7,6 @@ configfile: 'project_config_file.yaml'
 
 config = defaultdict(str, config)
 
-### List of test variable names from the configuration file
-tests = [x.strip() for x in config['test'].split(',')]
-print('Tests:')
-print(tests)
-
-### Define stratifications
-strats = [x.strip() for x in config['stratifications'].split(':')]
-strat_list = ['All']
-if(len(strats) > 1):
-  strat_list = strat_list + [strats[0] + '-' + v.strip() for v in strats[1].split(',')]
-print('Stratifications: ')
-print(strat_list)
-
 do_annot = False
 if(config['annotation_reference'] != ''):
   do_annot = True

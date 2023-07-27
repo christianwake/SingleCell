@@ -32,23 +32,6 @@ cells['Lane'] = cells['Lane'].apply(str)
 #cells = cells[(cells['flowcell_full'] != '210401_K00241_0189_BHKMVMBBXY') & (cells['Lane'] != '8')]
 #cells = cells[(cells['flowcell_full'] != '210401_K00241_0189_BHKMVMBBXY')]
 
-### List of test variable names from the configuration file
-tests = [x.strip() for x in config['test'].split(',')]
-print('Tests:')
-print(tests)
-### Define stratifications
-#strats = [x.strip() for x in config['stratifications'].split(':')]
-#strat_list = ['All']
-#if(len(strats) > 1):
-#  strat_list = strat_list + [strats[0] + '-' + v.strip() for v in strats[1].split(',')]
-
-strats = [x.strip() for x in config['stratifications'].split(',')]
-strat_list = ['All']
-if(len(strats) > 0):
-  strat_list = strat_list + strats
-print('Stratifications: ')
-print(strat_list)
-
 if 'clust_resolution2' not in config.keys():
   config['clust_resolution2'] = config['cluster_resolution']
 
