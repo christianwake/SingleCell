@@ -1,6 +1,7 @@
 import pandas as pd
 import subprocess
 import os
+import csv
 from collections import defaultdict
 configfile: 'project_config_file.yaml'
 
@@ -61,15 +62,21 @@ print(QC_file)
 if 'clust_resolution2' not in config.keys():
   config['clust_resolution2'] = config['clust_resolution']
 
-### Read list of cluster comparisons to do
-cluster_combos = []
-cc_file = os.path.join(os.getcwd(), config['cluster_compare'])
-if os.path.exists(cc_file):
-  cc = pd.read_csv(cc_file)
-  print(cc)
-  cluster_combos = ['-'.join(list(row)) for index,row in cc.iterrows()]
-
-print(cluster_combos)
+comp_dict = defaultdict(int)
+with open(config['comparison_file'], newline = '') as csvfile:
+  reader = csv.DictReader(csvfile)
+  keyint = 0
+  for row in reader:
+    comp_dict[keyint] = row
+    if(comp_dict[keyint]['strat_name'] == ''):
+      comp_dict[keyint]['strat_name'] = 'All'
+      comp_dict[keyint]['strat_values'] = 'All'
+    if(comp_dict[keyint]['value1'] == ''): 
+      comp_dict[keyint]['value1'] = 'NA'
+    if(comp_dict[keyint]['value2'] == ''): 
+      comp_dict[keyint]['value2'] = 'NA'
+    keyint += 1
+print(comp_dict)
 
 ### Read list of clusters to sub-cluster
 sc_file = os.path.join(os.getcwd(), config['sub_cluster'])

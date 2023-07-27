@@ -2,6 +2,7 @@ import pandas as pd
 import subprocess
 import os
 from collections import defaultdict
+import csv
 
 configfile: 'project_config_file.yaml'
 localrules: aggregate_fastqc_raw, aggregate_trim_stderr, aggregate_RSeQC
@@ -51,28 +52,6 @@ print(strat_list)
 if 'clust_resolution2' not in config.keys():
   config['clust_resolution2'] = config['cluster_resolution']
 
-### Read list of cluster comparisons to do
-cluster_combos = []
-cc_file = os.path.join(os.getcwd(), config['cluster_compare'])
-if os.path.exists(cc_file):
-  cc = pd.read_csv(cc_file, dtype = str)
-  print(cc)
-  ### List of '-' delimited strings
-  cluster_combos = ['-'.join(list(row)) for index, row in cc.iterrows()]
-print(cluster_combos)
-
-### Read list of tests to do (redundant with cluster_compare)
-comparisons = []
-cc_file = os.path.join(os.getcwd(), config['comparison_file'])
-if os.path.exists(cc_file):
-  cc = pd.read_csv(cc_file, dtype = str)
-  print(cc)
-  #comparisons = ['-'.join(list(row)) for index, row in cc.iterrows()
-  
-print(comparisons)
-
-import csv
-from collections import defaultdict
 comp_dict = defaultdict(int)
 with open(config['comparison_file'], newline = '') as csvfile:
   reader = csv.DictReader(csvfile)

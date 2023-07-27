@@ -175,23 +175,6 @@ rule Cluster_FindAllMarkers:
   shell:
     "Rscript {params.scripts}/Cluster_DE_SC.R {input} {output}"
 
-rule Cluster_FindMarkers:
-  input:
-    maybe_skip_annotation(do_annot),
-    results_dir + "Excluded_genes.txt",
-    'data/gtf.RDS'
-  params:
-    scripts = config['SC_scripts'],
-    results_dir = results_dir
-  output:
-    results_dir + "Cluster_DE/One-one/{assay}Data_{clusters}_DE.RDS",
-    results_dir + "Cluster_DE/One-one/{assay}Data_{clusters}_DE.tsv"
-  resources: mem_mb=240000
-  shell:
-    """
-    mkdir -p {params.results_dir}/Cluster_DE/One-one/
-    Rscript {params.scripts}/Cluster_FindMarkers.R {input} {output} {wildcards.assay} {wildcards.clusters}
-    """
 
 rule fgsea_FindAllMarkers:
   input:
@@ -208,33 +191,6 @@ rule fgsea_FindAllMarkers:
     results_dir + "Cluster_DE/Cluster_fgsea.tsv"
   shell:
     "Rscript {params.scripts}/fgsea.R {input} '{params.gmt}' '{params.species}' {output} '{params.custom_sets}'"
-
-rule fgsea_FindMarkers:
-  input:
-    maybe_skip_annotation(do_annot),
-    results_dir + 'Cluster_DE/One-one/{assay}Data_{clusters}_DE.tsv',
-    results_dir + "Excluded_genes.txt",
-    'data/gtf.RDS'
-  params: 
-    scripts = config['SC_scripts'],
-    gmt = config['pathways'],
-    custom_sets = config['custom_sets'],
-    species = config['species']
-  output:
-    results_dir + "Cluster_DE/One-one/{assay}Data_{clusters}_fgsea.tsv"
-  shell:
-    "Rscript {params.scripts}/fgsea.R {input} '{params.gmt}' '{params.species}' {output} '{params.custom_sets}'"
-
-rule Combine_FindMarkers:
-  input:
-    expand(os.path.join(results_dir, 'Cluster_DE', 'One-one', "{assay}Data_{clusters}_fgsea.tsv"), assay = ['RNA'], clusters = cluster_combos)
-  params:
-    scripts = config['SC_scripts'],
-  output:
-    results_dir + "Cluster_DE/One-one/GSEA.xls",
-    results_dir + "Cluster_DE/One-one/GSEA_sig.xls"
-  shell:
-    "Rscript {params.scripts}/Excel_fgsea.R {output} 0.05 {input}"
 
 rule annotation:
   input:
