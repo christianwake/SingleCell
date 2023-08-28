@@ -16,13 +16,20 @@ source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
 source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
 
 if(interactive()){
-  project <- '2021614_21-002'
-  #project <- '2022619_857.3b'
-  #qc_name <- 'DSB_by_sample'
-  qc_name <- '2023-05-30'
-  candidates <- 'Sample_Name'
-  tests <- 'Arm,Visit'
-  strats <- 'Cell_subset-B_cells,Cell_subset-Innate'
+  # project <- '2021614_21-002'
+  # #project <- '2022619_857.3b'
+  # #qc_name <- 'DSB_by_sample'
+  # qc_name <- '2023-05-30'
+  # candidates <- 'Sample_Name'
+  # tests <- 'Arm,Visit'
+  # strats <- 'Cell_subset-B_cells,Cell_subset-Innate'
+  
+  project <- '2021600_kristin'
+  qc_name <- '2023-05-14'
+  candidates <- 'Lane'
+  tests <- ''
+  strats <- ''
+  
   ### Before filtering
   sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/All_data.RDS')
   plots_path <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/batch_plots/')
@@ -112,6 +119,9 @@ if(!interactive()){
 
 print('Batch:')
 print(candidates)
+if(!all(candidates %in% colnames(sdat@meta.data))){
+  warning("An input batch candidate is not in the Seurat object")
+}
 print(table(sdat@meta.data[, candidates]))
 
 ### string to array
@@ -119,7 +129,7 @@ tests <- trimws(strsplit(tests, ',')[[1]])
 
 ### string to array
 strats <- trimws(strsplit(strats, ',')[[1]])
-strat_vars <- unique(sapply(strats, function(strat) trimws(strsplit(strat, '-')[[1]][1])))
+strat_vars <- unlist(unique(sapply(strats, function(strat) trimws(strsplit(strat, '-')[[1]][1]))))
 
 pdf(pdf_out)
 if('Cell_Count' %in% colnames(sdat@meta.data)){
@@ -172,10 +182,45 @@ if('Cell_Count' %in% colnames(sdat@meta.data)){
     geom_bar(stat = "identity") + coord_flip() +
     theme(axis.text.y = element_text(size = axis_size))
   
+  sids <- unique(sdat$Sample_ID)
+  StoCR <- lapply(sids, function(sid) unique(sdat@meta.data[which(sdat@meta.data$Sample_ID == sid), 'CR_ID']))
+  all(sapply(StoCR, function(x) length(x)) == 1)
+  StoCR <- unlist(StoCR)
+  names(StoCR) <- sids
+  
+  sdat@meta.data[, 'nCells_RNA']
+  ### Confirm that there is only 1 nCells_RNA value per CR_ID
+  all(sapply(unique(sdat$CR_ID), function(cr) length(unique(sdat@meta.data[which(sdat@meta.data[, 'CR_ID'] == cr), 'nCells_RNA']))) == 1)
+  CellRanger <- sapply(unique(sdat$CR_ID), function(cr) unique(sdat@meta.data[which(sdat@meta.data[, 'CR_ID'] == cr), 'nCells_RNA']))
+  Observed <- sapply(unique(Ncells$CR_ID), function(cr) sum(Ncells[which(Ncells$CR_ID == cr), 'nCells_observed']))
+  Actual <- sapply(unique(Ncells$CR_ID), function(cr) sum(Ncells[which(Ncells$CR_ID == cr), 'nCells_actual']))
+  
+  ### Put those three info into a data frame
+  Ncells_CR <- as.data.frame(cbind(CellRanger, Observed, Actual))
+  #Ncells$nCells_observed <- as.numeric(Ncells$nCells_observed)
+  #Ncells$nCells_actual <- as.numeric(Ncells$nCells_actual)
+  ### Add tests and strat vars
+  for(cov in c(tests, strat_vars)){
+    col <- sapply(names(CellRanger), function(cr) length(unique(sdat@meta.data[which(sdat$CR_ID == cr), cov])))
+    if(all(col == 1)){
+      Ncells_CR[, cov] <- sapply(names(CellRanger), function(cr) unique(sdat@meta.data[which(sdat$CR_ID == cr), cov]))
+    }
+  }
+  maxvalue <- max(Ncells_CR[, c('Observed', 'Actual', 'CellRanger')]) * 1.05
+  p4 <- ggplot(Ncells_CR, aes_string(x = 'Actual', y = 'Observed', color = color, label = 'row.names(Ncells_CR)')) + 
+    geom_text(size = 3) + geom_abline(slope = 1) + ylim(0, maxvalue) + xlim(0, maxvalue)
+  p5 <- ggplot(Ncells_CR, aes_string(x = 'Actual', y = 'CellRanger', color = color, label = 'row.names(Ncells_CR)')) + 
+    geom_text(size = 3) + geom_abline(slope = 1) + ylim(0, maxvalue) + xlim(0, maxvalue)
+  p6 <- ggplot(Ncells_CR, aes_string(x = 'Observed', y = 'CellRanger', color = color, label = 'row.names(Ncells_CR)')) + 
+    geom_text(size = 3) + geom_abline(slope = 1) + ylim(0, maxvalue) + xlim(0, maxvalue)
+  
   #pdf(gsub('.pdf', '_ncells.pdf', pdf_out))
   print(p1)
   print(p2)
   print(p3)
+  print(p4)
+  print(p5)
+  print(p6)
   #dev.off()
 }
 
