@@ -228,23 +228,23 @@ rule pseudobulk_DE:
     'data/gtf.RDS'
   params: 
     scripts = config['SC_scripts'],
-    path = results_dir + 'DE/{test_name}/'
+    path = results_dir + 'DE/{test_name}/{strat_name1}/'
   output:
     #results_dir + 'DE/{test}/{strat}/DE_results.tsv'
-    results_dir + 'DE/{test_name}/{strat_name}/{test_name}-{value1}-{value2}_DE_within_{strat_name}-{strat_values}.tsv',
-    results_dir + 'DE/{test_name}/{strat_name}/{test_name}-{value1}-{value2}_DE_within_{strat_name}-{strat_values}.pdf'
+    results_dir + 'DE/{test_name}/{strat_name1}/{test_name}-{value1}-{value2}_DE_Strat1-{strat_name1}-{strat_values1A}-{strat_values1B}_Strat2-{strat_name2}-{strat_values2A}-{strat_values2B}.tsv',
+    results_dir + 'DE/{test_name}/{strat_name1}/{test_name}-{value1}-{value2}_DE_Strat1-{strat_name1}-{strat_values1A}-{strat_values1B}_Strat2-{strat_name2}-{strat_values2A}-{strat_values2B}.pdf'
   shell:
     """
     mkdir -p {params.path}
-    #Rscript {params.scripts}/pseudobulk_DE.R {input} {wildcards.test_name} {wildcards.strat_name} {output}
-    Rscript {params.scripts}/pseudobulk_DE.R {input} '{wildcards.test_name}' '{wildcards.value1}' '{wildcards.value2}' '{wildcards.strat_name}' '{wildcards.strat_values}' {output}
+    #Rscript {params.scripts}/pseudobulk_DE.R {input} {wildcards.test_name} {wildcards.strat_name1} {output}
+    Rscript {params.scripts}/pseudobulk_DE.R {input} '{wildcards.test_name}' '{wildcards.value1}' '{wildcards.value2}' '{wildcards.strat_name1}' '{wildcards.strat_values1A}' '{wildcards.strat_values1B}' '{wildcards.strat_name2}' '{wildcards.strat_values2A}' '{wildcards.strat_values2B}' {output}
     """
 
 rule fgsea_test_DE:
   input:
     maybe_skip_second_cluster,
     #results_dir + 'DE/{test}/{strat}/DE_results.tsv',
-    results_dir + 'DE/{test_name}/{strat_name}/{test_name}-{value1}-{value2}_DE_within_{strat_name}-{strat_values}.tsv',
+    results_dir + 'DE/{test_name}/{strat_name1}/{test_name}-{value1}-{value2}_DE_Strat1-{strat_name1}-{strat_values1A}-{strat_values1B}_Strat2-{strat_name2}-{strat_values2A}-{strat_values2B}.tsv',
     results_dir + "Excluded_genes.txt",
     'data/gtf.RDS'
   resources: mem_mb=240000
@@ -255,32 +255,38 @@ rule fgsea_test_DE:
     species = config['species']
   output:
     #results_dir + 'DE/{test}/{strat}/fgsea.tsv'
-    results_dir + 'DE/{test_name}/{strat_name}/{test_name}-{value1}-{value2}_GSEA_within_{strat_name}-{strat_values}.tsv'
+    tsv = results_dir + 'DE/{test_name}/{strat_name1}/{test_name}-{value1}-{value2}_GSEA_Strat1-{strat_name1}-{strat_values1A}-{strat_values1B}_Strat2-{strat_name2}-{strat_values2A}-{strat_values2B}.tsv',
+    pdf = results_dir + 'DE/{test_name}/{strat_name1}/{test_name}-{value1}-{value2}_GSEA_Strat1-{strat_name1}-{strat_values1A}-{strat_values1B}_Strat2-{strat_name2}-{strat_values2A}-{strat_values2B}.pdf'
   shell:
     "Rscript {params.scripts}/fgsea.R {input} '{params.gmt}' '{params.species}' {output} '{params.custom_sets}'"
 
+rule fgsea_bubble_plots:
+  input:
+    'data/gtf.RDS',
+    [results_dir + "DE/{test_name}/{strat_name1}/{test_name}-{value1}-{value2}_GSEA_Strat1-{strat_name1}-{strat_values1A}-{strat_values1B}_Strat2-{strat_name2}-{strat_values2A}-{strat_values2B}.tsv".format(test_name = comp_dict[dkey]['test_name'], value1 = comp_dict[dkey]['value1'], value2 = comp_dict[dkey]['value2'], strat_name1 = comp_dict[dkey]['strat_name1'], strat_values1A = comp_dict[dkey]['strat_values1A'], strat_values1B = comp_dict[dkey]['strat_values1B'], strat_name2 = comp_dict[dkey]['strat_name2'], strat_values2A = comp_dict[dkey]['strat_values2A'], strat_values2B = comp_dict[dkey]['strat_values2B']) for dkey in comp_dict.keys()]
+  params:
+    scripts = config['SC_scripts']
+  output:
+    results_dir + "DE/Bubble_plots.pdf"
+  shell:
+    "Rscript {params.scripts}/fgsea_bubble_plots.R {output} {input}"
+
 rule Excel_DE:
   input:
-    [results_dir + "DE/{test_name}/{strat_name}/{test_name}-{value1}-{value2}_DE_within_{strat_name}-{strat_values}.tsv".format(test_name = comp_dict[dkey]['test_name'], value1 = comp_dict[dkey]['value1'], value2 = comp_dict[dkey]['value2'], strat_name = comp_dict[dkey]['strat_name'], strat_values = comp_dict[dkey]['strat_values']) for dkey in comp_dict.keys()]
+    [results_dir + "DE/{test_name}/{strat_name1}/{test_name}-{value1}-{value2}_DE_Strat1-{strat_name1}-{strat_values1A}-{strat_values1B}_Strat2-{strat_name2}-{strat_values2A}-{strat_values2B}.tsv".format(test_name = comp_dict[dkey]['test_name'], value1 = comp_dict[dkey]['value1'], value2 = comp_dict[dkey]['value2'], strat_name1 = comp_dict[dkey]['strat_name1'], strat_values1A = comp_dict[dkey]['strat_values1A'], strat_values1B = comp_dict[dkey]['strat_values1B'], strat_name2 = comp_dict[dkey]['strat_name2'], strat_values2A = comp_dict[dkey]['strat_values2A'], strat_values2B = comp_dict[dkey]['strat_values2B']) for dkey in comp_dict.keys()]
   params:
-    scripts = config['SC_scripts'],
-    test = config['test']
+    scripts = config['SC_scripts']
   output:
     results_dir + "DE/DE.xls",
     results_dir + "DE/DE_sig.xls"
   shell:
     "Rscript {params.scripts}/Combine_results.R {output} 0.05 {input}"
 
-#test1 = {'test_name': 'Celltype', 'val1':'CD4', 'val2':'CD8', 'strat_name':'All', 'strat_values':'All'}
-#test2 = {'test_name': 'Time', 'val1':'30', 'val2':'31', 'strat_name':'Celltype', 'strat_values':'CD4'}
-#comp_dict = {'test1': test1, 'test2': test2}
-### Testing
 rule Excel_fgsea:
   input:
-    [results_dir + "DE/{test_name}/{strat_name}/{test_name}-{value1}-{value2}_GSEA_within_{strat_name}-{strat_values}.tsv".format(test_name = comp_dict[dkey]['test_name'], value1 = comp_dict[dkey]['value1'], value2 = comp_dict[dkey]['value2'], strat_name = comp_dict[dkey]['strat_name'], strat_values = comp_dict[dkey]['strat_values']) for dkey in comp_dict.keys()]
+    [results_dir + "DE/{test_name}/{strat_name1}/{test_name}-{value1}-{value2}_GSEA_Strat1-{strat_name1}-{strat_values1A}-{strat_values1B}_Strat2-{strat_name2}-{strat_values2A}-{strat_values2B}.tsv".format(test_name = comp_dict[dkey]['test_name'], value1 = comp_dict[dkey]['value1'], value2 = comp_dict[dkey]['value2'], strat_name1 = comp_dict[dkey]['strat_name1'], strat_values1A = comp_dict[dkey]['strat_values1A'], strat_values1B = comp_dict[dkey]['strat_values1B'], strat_name2 = comp_dict[dkey]['strat_name2'], strat_values2A = comp_dict[dkey]['strat_values2A'], strat_values2B = comp_dict[dkey]['strat_values2B']) for dkey in comp_dict.keys()]
   params:
-    scripts = config['SC_scripts'],
-    test = config['test']
+    scripts = config['SC_scripts']
   output:
     results_dir + "DE/GSEA.xls",
     results_dir + "DE/GSEA_sig.xls"
