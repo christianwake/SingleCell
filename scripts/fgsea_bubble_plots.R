@@ -11,6 +11,7 @@ library('fgsea')
 library('GSEABase')
 library('readxl')
 library('viridis')
+library('Seurat')
 
 source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
 source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/DE_functions.R')
@@ -19,15 +20,22 @@ source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
 if(interactive()){
   project <- '2021600_kristin'
   qc_name <- 'Run2023-05-14'
-  fgsea_files <- Sys.glob(file.path(paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/DE/*/*/*GSEA*.tsv')))
+  fgsea_files <- Sys.glob(file.path(paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', 
+                                           qc_name, '/DE/*/*/*GSEA*.tsv')))
+  sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, 
+                      '/Clustered.RDS')
+  
   gtf_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
-  out_pdf <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/DE/Bubble_plots.pdf') 
+  out_pdf <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, 
+                    '/DE/Bubble_plots.pdf') 
 } else{
   args = commandArgs(trailingOnly=TRUE)
-  out_pdf <- args[1]
-  gtf_file <- args[2]
-  fgsea_files <- args[3:length(args)]
+  sdat_file <- args[1]
+  out_pdf <- args[2]
+  gtf_file <- args[3]
+  fgsea_files <- args[4:length(args)]
 }
+
 font <- 'Times'
 fig_theme = theme_bw() + 
   theme(text = element_text(family = font, color = "black"),
@@ -39,6 +47,12 @@ fig_theme = theme_bw() +
         legend.key.size = unit(8, 'points'),
         legend.box.spacing = unit(0, 'points'),
         axis.ticks.length = unit(1, 'points'))
+
+### Read counts
+sdat <- readRDS(sdat_file)
+# norm_counts <- as.data.frame(sdat@assays$RNA@data)
+# norm_counts <- norm_counts[which(!(row.names(norm_counts) %in% exclude_gene_names)),]
+# rm(sdat)
 
 ### Do direct matching from gtf
 if(grepl('\\.gtf', gtf_file)){
@@ -87,6 +101,7 @@ for(test_strat in names(test_strat_group)){
   ### Reduce names but keep lost info in a plot description for title
   names(fgseas) <- sapply(names(fgseas), function(x) gsub(paste0('_GSEA_Strat1-', strat1_chunk[i]), '', x))
   names(fgseas) <- sapply(names(fgseas), function(x) gsub(paste0('_Strat2-', strat2_chunk[i]), '', x))
+  names(is) <- names(fgseas)
   #names(fgseas) <- sapply(names(fgseas), function(x) )
 
   plot_title <- paste0(test_name[i], ' tests')
@@ -176,6 +191,38 @@ for(test_strat in names(test_strat_group)){
     theme(panel.spacing = unit(1, "lines")) +
     guides(fill = guide_colourbar(title.position = "top", title.hjust = 0.5), size = guide_legend(title.position = "top", title.hjust = 0.5))
   
+  print(p)
+  ### Print one example Vln plot of mean expressions, for NES direction reference
+  # max_pathway <- 'Inflammatory Response'
+  # max_test <- plot_dat[which(plot_dat$pathway == max_pathway), 'fgsea_res'][1]
+  max_pathway <- plot_dat[which(abs(plot_dat$NES) == max(abs(plot_dat$NES))), 'pathway']
+  max_test <- plot_dat[which(abs(plot_dat$NES) == max(abs(plot_dat$NES))), 'fgsea_res'][1]
+  gene_names <- strsplit(plot_dat[which(plot_dat$pathway == max_pathway), 'leadingEdgeStr'], split = ',')[[1]]
+  gene_ids <- gtf[which(gtf$gene_name %in% gene_names), 'gene_id']
+  i <- is[max_test]
+  test <- test_name[i]
+  strat1 <- row.names(sdat@meta.data[which(sdat@meta.data[, strat_name1[i]] %in% c(strat_value1A[i], strat_value1B[i])),])
+  strat2 <- row.names(sdat@meta.data[which(sdat@meta.data[, strat_name2[i]] %in% c(strat_value2A[i], strat_value2B[i])),])
+  cell_ids <- intersect(strat1, strat2)
+  group1 <- row.names(sdat@meta.data[which(sdat@meta.data[, test_name[i]]  %in% test_value1[i] & 
+                                             sdat@meta.data[, 'Cell_ID'] %in% cell_ids), ])
+  group2 <- row.names(sdat@meta.data[which(sdat@meta.data[, test_name[i]]  %in% test_value2[i] & 
+                                             sdat@meta.data[, 'Cell_ID'] %in% cell_ids), ])
+  means1 <- as.data.frame(sapply(gene_ids, function(x) mean(sdat@assays$RNA@data[x, group1])))
+  means2 <- as.data.frame(sapply(gene_ids, function(x) mean(sdat@assays$RNA@data[x, group2])))
+  means1[, 2] <- row.names(means1)
+  means2[, 2] <- row.names(means2)
+  means1[, 3] <- test_value1[i]
+  means2[, 3] <- test_value2[i]
+  colnames(means1) <- c('means', 'gene', test_name[i])
+  colnames(means2) <- c('means', 'gene', test_name[i])
+  plot_dat2 <- rbind(means1, means2, make.row.names = F)
+  p <- ggplot(plot_dat2, aes(x = eval(parse(text = test_name[i])), y = means)) + 
+    geom_violin() + 
+    #geom_dotplot(binaxis='y', stackdir='center', dotsize =0.5) +
+    geom_boxplot(width=0.1) +
+    ggtitle(paste0(max_pathway, ' leading edge genes')) +
+    xlab(test_name[i])
   print(p)
 }
 
