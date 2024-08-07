@@ -21,3 +21,4 @@ if(interactive()){
 
 gtf <- read_gtf(gtf_file, feature_type = 'gene', atts_of_interest = c('gene_id', 'gene_name',  'gene_biotype'))
 saveRDS(gtf, rds_file)
+

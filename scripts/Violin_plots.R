@@ -7,7 +7,7 @@ library('plyr')
 library('dplyr')
 library('cowplot')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/sc_functions.R')
+source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
 source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
 
 if(interactive()){

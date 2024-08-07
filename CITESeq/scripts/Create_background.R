@@ -11,34 +11,31 @@ library('dsb')
 #library('tidyverse')
 #library('pastecs')
 library('reticulate')
-library('umap')
+#library('umap')
 library('gridExtra')
 library('cowplot')
-library('logspline')
+#library('logspline')
 library('readxl')
 library('WriteXLS')
 library('Matrix')
 library('VennDiagram')
 
 source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/sample_sheet_functions.R')
+source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sample_sheet_functions.R')
 source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
 source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
 
-# source('/Volumes/VRC1_DATA/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-# source('/Volumes/VRC1_DATA/douek_lab/wakecg/sample_sheet_functions.R')
-# source('/Volumes/VRC1_DATA/douek_lab/snakemakes/sc_functions.R')
-# source('/Volumes/VRC1_DATA/douek_lab/snakemakes/Utility_functions.R')
-
 if(interactive()){
-  project <- '2021614_21-002'
-  base_dir <- '/hpcdata/vrc/vrc1_data/douek_lab/'
-  qc_name <- 'DSB_by_sample'
-  runs_dir <- '/hpcdata/vrc/vrc1_data/douek_lab/Runs/'
-
-    # project <- '2022619_857.3b'
+  # project <- '2021614_21-002'
+  # qc_name <- 'DSB_by_sample'
+  # demux_method <- 'Custom'
+  
+  project <- '2024605_Hillary_test'
+  qc_name <- '2024-06-04'
+  demux_method <- 'Trough'
+  
+  # project <- '2022619_857.3b'
   # qc_name <- '2023-Mar'
-  # runs_dir <- '/hpcdata/vrc/vrc1_data/douek_lab/Runs/'
   # covs_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2022619_857.3b/Sample_sheet.csv'
   # labels_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2022619_857.3b/data/Cell_data.csv'
   # qc_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2022619_857.3b/QC_steps/DSB_background.csv'
@@ -49,10 +46,12 @@ if(interactive()){
   # #base_dir <- '/hpcdata/vrc/vrc1_data/douek_lab/'
   # project <- '2022619_857.3b'
   # qc_name <- 'QC_first_pass'
-  # runs_dir <- '/Volumes/VRC1_DATA/douek_lab/Runs/'
   
+  base_dir <- '/hpcdata/vrc/vrc1_data/douek_lab/'
+  runs_dir <- '/hpcdata/vrc/vrc1_data/douek_lab/Runs/'
   covs_file <- paste0(base_dir, '/projects/RNASeq/', project, '/Sample_sheet.csv')
-  labels_file <-  paste0(base_dir, '/projects/RNASeq/', project, '/data/Cell_data.csv')
+  #labels_file <-  paste0(base_dir, '/projects/RNASeq/', project, '/data/Dehash_calls_', demux_method, '.tsv')
+  labels_file <-  paste0(base_dir, '/projects/RNASeq/', project, '/results/', qc_name, '/Dehash/Dehash_calls_', demux_method, '.tsv')
   qc_file <-  paste0(base_dir, '/projects/RNASeq/', project, '/QC_steps/DSB_background.csv')
   gtf_file <- paste0(base_dir, 'projects/RNASeq/', project, '/data/gtf.RDS')
   out_rds <- paste0(base_dir, '/projects/RNASeq/', project, '/results/', qc_name, '/Background.RDS')
@@ -85,11 +84,16 @@ dat <- read.csv(covs_file, stringsAsFactors = F, header = T,
                 colClasses = 'character',
                 sep = ',')
 row.names(dat) <- dat$Sample_ID
+##### Standardize protein names
+### space then parentheses <- parentheses
+dat$HTO_index_name <- gsub(' \\(', '\\(', dat$HTO_index_name)
+### spaces, underscores to '.'
+dat$HTO_index_name<- make.names(dat$HTO_index_name, allow_ = 'F')
 
 htos <- unique(dat$HTO_index_name)
 
 ### Dehash info
-labels <- read.table(labels_file, header = T, sep = ',')
+labels <- read.table(labels_file, header = T, sep = '\t')
 #labels$cell_id <- sapply(labels$cell_id, function(x) paste0(strsplit(x, '_')[[1]][2], '_', gsub('-1', '', strsplit(x, '_')[[1]][1])))
 
 ### If created by the snakemake pipleine, this should be T, but we want to account for the situation where it is F
@@ -146,6 +150,21 @@ for(id in unique(dat$CR_ID)){
   ### Remove the trailing "-1"
   colnames(prot) <- gsub('-1$', '', colnames(prot))
   
+  ##### protein name standardization
+  ### Account for the '.1' appended to protein names if they are also a gene name.....
+  if(any(grepl("\\.1$", row.names(prot)))){
+    sub <- row.names(prot)[grepl("\\.1$", row.names(prot))]
+    key <- sapply(sub, function(x) gsub('\\.1$', '', x))
+    names(key) <- sub
+    ### Check that the ".1" is there because the version without is in RNA
+    key <- key[(key %in% row.names(CR_dat[['Gene Expression']])) & !(key %in% row.names(prot))]
+    ### Replace values in row.names that match names(key) with key
+    row.names(prot)[which(row.names(prot) %in% names(key))] <- key[ row.names(prot)[which(row.names(prot) %in% names(key))]]
+  }
+  ### space then parentheses <- parentheses
+  row.names(prot) <- gsub(' \\(', '\\(', row.names(prot))
+  ### spaces, underscores to '.'
+  row.names(prot) <- make.names(row.names(prot), allow_ = 'F')
   
   ### If dehashing labels don't contain the CellRanger Background calls (as they would if the snakemake pipeline was used for dehashing), 
   ### because the dehashing filtered them, we need that info back
@@ -231,10 +250,13 @@ addEmptyRows <- function(prot, markers){
 }
 ### adding empty rows 
 prot <- addEmptyRows(plist[[1]], markers)
-for(i in 2:length(plist)){
-  psub <- addEmptyRows(plist[[i]], markers)
-  prot <- cbind(prot,psub)
+if(length(plist) > 1){
+  for(i in 2:length(plist)){
+    psub <- addEmptyRows(plist[[i]], markers)
+    prot <- cbind(prot,psub)
+  }
 }
+
 colnames(prot) <- unlist(lapply(plist, function(x) colnames(x)))
 row.names(prot) <- gsub('-totalseq', '', row.names(prot))
 row.names(prot) <- gsub('_totalseq', '', row.names(prot))

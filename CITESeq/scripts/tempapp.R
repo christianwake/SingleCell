@@ -22,7 +22,6 @@ library('rsconnect')
 library('XML')
 library('MASS')
 
-# source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
 # load('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/snakemake/results/50Ab/App/Data.RData')
 # cseq_ab <- cseq
 # load('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/snakemake/results/Biolegend/App/Data.RData')

@@ -21,15 +21,11 @@ library('WriteXLS')
 library('Matrix')
 library('pastecs')
 
-# source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-# source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/sample_sheet_functions.R')
-# source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
-# source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
+source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sample_sheet_functions.R')
+source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
+source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
 
-source('/Volumes/VRC1_DATA/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/Volumes/VRC1_DATA/douek_lab/wakecg/sample_sheet_functions.R')
-source('/Volumes/VRC1_DATA/douek_lab/snakemakes/sc_functions.R')
-source('/Volumes/VRC1_DATA/douek_lab/snakemakes/Utility_functions.R')
 
 project <- '2022619_857.3b'
 # runs_dir <- '/hpcdata/vrc/vrc1_data/douek_lab/Runs/'

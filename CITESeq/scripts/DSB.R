@@ -11,10 +11,10 @@ library('dsb')
 #library('tidyverse')
 #library('pastecs')
 library('reticulate')
-library('umap')
+#library('umap')
 library('gridExtra')
 library('cowplot')
-library('logspline')
+#library('logspline')
 
 source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
 source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
@@ -28,13 +28,14 @@ if(interactive()){
   
   project <- '2021614_21-002'
   qc_name <- 'DSB_by_sample'
-  qc_name <- '2023-05-30'
+  qc_name <- '2024-01-20'
   # batch_value <- '2021-12-02'
   # batch_name <- 'Date_sort'
   # batch_value <- 'Su7_03_Innate'
   batch_value <- 'Su1_01_B_cells'
+  batch_value <- 'Su23_3_Innate'
   batch_name <- 'Sample_Name'
-  hto_string <- 'C0251,C0252,C0253,C0254,C0255,C0256,C0257,C0258,C0259,C0260'
+  #hto_string <- 'C0251,C0252,C0253,C0254,C0255,C0256,C0257,C0258,C0259,C0260'
   isotype_controls <- 'C0090,C0091,C0092,C0095'
   
   # project <- '2022619_857.3b'
@@ -45,7 +46,8 @@ if(interactive()){
 
   sdat_file <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/results/', qc_name, 
                       '/batches/', batch_value, '/Cell_filtered.RDS')
-  br_rds <- paste0(base_dir,'/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Background.RDS')
+  br_rds <- paste0(base_dir,'/douek_lab/projects/RNASeq/', project, '/results/', qc_name, 
+                   '/Background.RDS')
   covs_file <- paste0(base_dir,'/douek_lab/projects/RNASeq/', project, '/Sample_sheet.csv')
   labels_file <- paste0(base_dir,'douek_lab/projects/RNASeq/', project, '/data/Cell_data.csv')
   out_file <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/', batch_value, '/DSB_normalized_data.RDS')
@@ -59,12 +61,18 @@ if(interactive()){
   labels_file <- args[4]
   batch_value <- args[5]
   batch_name <- args[6]
-  hto_string <- args[7]
-  isotype_controls <- args[8]
-  out_file <- args[9]
+  #hto_string <- args[7]
+  isotype_controls <- args[7]
+  out_file <- args[8]
 }
 
 isotype_controls <- strsplit(isotype_controls, ',')[[1]]
+##### Standardize protein names
+### space then parentheses <- parentheses
+isotype_controls <- gsub(' \\(', '\\(', isotype_controls)
+### spaces, underscores to '.'
+isotype_controls <- make.names(isotype_controls, allow_ = 'F')
+
 ### This file uses the "count" slot of the prot assay for DSB, and prints DSB results to a separate file (not Seurat)
 
 ### Read covariates
@@ -82,8 +90,13 @@ background <- readRDS(br_rds)
 #row.names(background) <- gsub('_totalseq', '', row.names(background))
 DefaultAssay(sdat) <- 'RNA'
 
-print(all(row.names(background) == row.names(sdat@assays$prot@data)))
-
+if(!all(row.names(background) == row.names(sdat@assays$prot@data))){
+  warning('Proteins in the background and the data RDS objects do not exactly match')
+}
+if(!all(isotype_controls %in% row.names(sdat@assays$prot@data))){
+  warning('isotype controls input are not in the data RDS object')
+}
+print(row.names(sdat@assays$prot@data))
 ### Metadata is from dehashing, and has Negative droplets
 # metadata <- read.table(labels_file, header = T, sep = ',')
 # table(metadata$Assignment_CR, metadata$Assignment_simple)
@@ -105,8 +118,6 @@ print(mean(colSums(prot)))
 
 is.na(background)[1]
 ### Save as data frame. When read should be added to Seurat assay "data" slot
-print(isotype_controls)
-print(row.names(prot))
 dsb <- DSB_once(prot, md, negative_mtx_rawprot = background, isotype_controls = isotype_controls)
 
 print(mean(colSums(dsb)))

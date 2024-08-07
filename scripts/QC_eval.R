@@ -3,7 +3,7 @@ library('Seurat')
 library('stringr')
 library('pheatmap')
 library('ggplot2')
-library('umap')
+#library('umap')
 library('textshape')
 library('dplyr')
 library('biomaRt')
@@ -17,21 +17,18 @@ source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
 
 if(interactive()){
   # project <- '2021614_21-002'
-  # #project <- '2022619_857.3b'
-  # #qc_name <- 'DSB_by_sample'
-  # qc_name <- '2023-05-30'
+  # qc_name <- '2024-01-20'
   # candidates <- 'Sample_Name'
   # tests <- 'Arm,Visit'
   # strats <- 'Cell_subset-B_cells,Cell_subset-Innate'
-  
-  project <- '2021600_kristin'
-  qc_name <- '2023-05-14'
-  candidates <- 'Lane'
-  tests <- ''
-  strats <- ''
-  
+  # QC_input_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/Test_comparisons.csv')
+
+  project <- '2024605_Hillary_test'
+  qc_name <- '2024-06-04'
+  candidates <- 'CR_ID'
+  QC_input_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/Test_comparisons.csv')
   ### Before filtering
-  sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/All_data.RDS')
+  sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/All_data.RDS')
   plots_path <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/batch_plots/')
   txt_out <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/Batch.txt')
   pdf_out <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/Initial_QC.pdf')
@@ -41,54 +38,24 @@ if(interactive()){
   # txt_out <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Batch.txt')
   # pdf_out <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Post_QC.pdf')
   
-  
-  # sdat_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021618_galt/data/All_data.RDS'
-  # QC_input_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021618_galt/QC_steps/QC_steps.csv'
-  # candidates <- 'Lane'
-  # gtf_file <- '/hpcdata/vrc/vrc1_data/douek_lab/reference_sets/tenX/Homo_sapiens.GRCh38.93/GRCh38_protein_coding_only/genes/genes.gtf'
-  # plots_path <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021618_galt/plots/'
-  # txt_out2 <- "/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021618_galt/results/Go1/batch_evaluation.txt"
-  # pdf_out <- "/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021618_galt/results/Go1/batch_evaluation.pdf"
-  
-  # sdat_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021617_mis-c/data/All_data.RDS'
-  # QC_input_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021617_mis-c/QC_steps/QC_steps.csv'
-  # candidates <- 'Lane,CR_ID'
-  # gtf_file <- '/hpcdata/vrc/vrc1_data/douek_lab/reference_sets/tenX/Homo_sapiens.GRCh38.93/GRCh38_protein_coding_only/genes/genes.gtf'
-  # plots_path <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021617_mis-c/plots/'
-  # txt_out1 <- "/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021617_mis-c/results/QC_steps.csv"
-  # txt_out <- "/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021617_mis-c/results/batch_evaluation.txt"
-  # pdf_out <- "/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021617_mis-c/results/batch_evaluation.pdf"
-  
-  #sdat_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021600_kristin/data/All_data.RDS'
-  #QC_input_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021600_kristin/QC_steps.csv'
-  #candidates <- 'Lane'
-  #gtf_file <- '/hpcdata/vrc/vrc1_data/douek_lab/reference_sets/tenX/Homo_sapiens.GRCh38.93/GRCh38_protein_coding_only/genes/genes.gtf'
-  #plots_path <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021600_kristin/plots/'
-  #txt_out <- "/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021600_kristin/results/Run2022/batch_evaluation.txt"
-  #pdf_out <- "/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021600_kristin/results/Run2022/batch_evaluation.pdf"
-
-  #sdat_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2022619_857.3b/data/All_data.RDS'
-  #QC_input_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2022619_857.3b/QC_steps.csv'
-  #candidates <- 'Lane'
-  #gtf_file <- '/hpcdata/vrc/vrc1_data/douek_lab/reference_sets/tenX/Mmul_10_proteincoding/genes/genes.gtf'
-  #plots_path <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2022619_857.3b/plots/'
-  #txt_out <- "/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2022619_857.3b/results/Run2023/batch_evaluation.txt"
-  #pdf_out <- "/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2022619_857.3b/results/Run2023/batch_evaluation.pdf"
-}else{
+ }else{
   args = commandArgs(trailingOnly = TRUE)
   
   sdat_file <- args[1]
-  #QC_input_file <- args[2]
-  candidates <- args[2]  ### CiteSeq snakemake inputs just 1 batch definiteively, not candidates
-  tests <- args[3]
-  strats <- args[4]
-  plots_path <- args[5] 
+  QC_input_file <- args[2]
+  candidates <- args[3]  ### CiteSeq snakemake inputs just 1 batch definitively, not candidates
+  #tests <- args[3]
+  #strats <- args[4]
+  plots_path <- args[4] 
   #txt_out1 <- args[5]
-  txt_out <- args[6]
-  pdf_out <- args[7]
+  txt_out <- args[5]
+  pdf_out <- args[6]
 }
 
-# qc_input <- read.table(QC_input_file, sep = ',', header = T)
+qc_input <- read.table(QC_input_file, sep = ',', header = T)
+tests <- c(qc_input[, 'test_name'], qc_input[, 'strat_name1'], qc_input[, 'strat_name2'])
+tests <- unique(tests[which(!is.na(tests) & tests != '')])
+
 # qc_output <- as.data.frame(matrix(nrow = 4, ncol = 3))
 # colnames(qc_output) <- c('step_num', 'step_name', 'skip')
 # qc_output$step_name <- c('Sample filter', 'Imputation', 'Cell filter', 'Integration')
@@ -116,20 +83,12 @@ if(!interactive()){
   sdat <- readRDS(gsub('.RDS', paste0('_DownSampledTo', downsample_var, '.RDS'), sdat_file))
 }
 
-
 print('Batch:')
 print(candidates)
 if(!all(candidates %in% colnames(sdat@meta.data))){
   warning("An input batch candidate is not in the Seurat object")
 }
 print(table(sdat@meta.data[, candidates]))
-
-### string to array
-tests <- trimws(strsplit(tests, ',')[[1]])
-
-### string to array
-strats <- trimws(strsplit(strats, ',')[[1]])
-strat_vars <- unlist(unique(sapply(strats, function(strat) trimws(strsplit(strat, '-')[[1]][1]))))
 
 pdf(pdf_out)
 if('Cell_Count' %in% colnames(sdat@meta.data)){
@@ -153,7 +112,7 @@ if('Cell_Count' %in% colnames(sdat@meta.data)){
   Ncells$nCells_observed <- as.numeric(Ncells$nCells_observed)
   Ncells$nCells_actual <- as.numeric(Ncells$nCells_actual)
   ### Add tests and strat vars
-  for(cov in c(tests, strat_vars)){
+  for(cov in tests){
     col <- sapply(names(nCells_actual), function(sid) unique(sdat@meta.data[which(sdat$Sample_ID == sid), cov]))
     if(all(sapply(col, function(x) length(x)) == 1)){
       Ncells[, cov] <- col
@@ -165,13 +124,14 @@ if('Cell_Count' %in% colnames(sdat@meta.data)){
   if(length(Batch) > 10){
     color <- colnames(Ncells)[length(colnames(Ncells))]
   } else{
-    color <- Batch
+    color <- 'Batch'
   }
   Ncells$Sample_ID <- factor(row.names(Ncells), levels = row.names(Ncells[order(Ncells$nCells_actual),]))
   
   # p1 <- ggplot(Ncells, aes(x = nCells_actual, y = nCells_observed, color = color, label = row.names(Ncells))) + 
   #   geom_text(size = 3) + geom_abline(slope = 1) + ylim(0, maxvalue) + xlim(0, maxvalue)
-  p1 <- ggplot(Ncells, aes_string(x = 'nCells_actual', y = 'nCells_observed', color = color, label = 'row.names(Ncells)')) + 
+  p1 <- ggplot(Ncells, aes_string(x = 'nCells_actual', y = 'nCells_observed', color = color, 
+                                  label = 'row.names(Ncells)')) + 
     geom_text(size = 3) + geom_abline(slope = 1) + ylim(0, maxvalue) + xlim(0, maxvalue)
   
   #Ncells <- Ncells[order(Ncells$Ncells_actual),]
@@ -182,11 +142,13 @@ if('Cell_Count' %in% colnames(sdat@meta.data)){
     geom_bar(stat = "identity") + coord_flip() +
     theme(axis.text.y = element_text(size = axis_size))
   
-  sids <- unique(sdat$Sample_ID)
-  StoCR <- lapply(sids, function(sid) unique(sdat@meta.data[which(sdat@meta.data$Sample_ID == sid), 'CR_ID']))
-  all(sapply(StoCR, function(x) length(x)) == 1)
-  StoCR <- unlist(StoCR)
-  names(StoCR) <- sids
+  ### Key to convert from Sample ID to CR ID
+  ### Doesn't work if there are NAs, as the == returns character(0)
+  # sids <- unique(sdat$Sample_ID)
+  # StoCR <- lapply(sids, function(sid) unique(sdat@meta.data[which(sdat@meta.data$Sample_ID == sid), 'CR_ID']))
+  # all(sapply(StoCR, function(x) length(x)) == 1)
+  # StoCR <- unlist(StoCR)
+  # names(StoCR) <- sids
   
   sdat@meta.data[, 'nCells_RNA']
   ### Confirm that there is only 1 nCells_RNA value per CR_ID
@@ -197,21 +159,19 @@ if('Cell_Count' %in% colnames(sdat@meta.data)){
   
   ### Put those three info into a data frame
   Ncells_CR <- as.data.frame(cbind(CellRanger, Observed, Actual))
-  #Ncells$nCells_observed <- as.numeric(Ncells$nCells_observed)
-  #Ncells$nCells_actual <- as.numeric(Ncells$nCells_actual)
   ### Add tests and strat vars
-  for(cov in c(tests, strat_vars)){
+  for(cov in tests){
     col <- sapply(names(CellRanger), function(cr) length(unique(sdat@meta.data[which(sdat$CR_ID == cr), cov])))
     if(all(col == 1)){
       Ncells_CR[, cov] <- sapply(names(CellRanger), function(cr) unique(sdat@meta.data[which(sdat$CR_ID == cr), cov]))
     }
   }
   maxvalue <- max(Ncells_CR[, c('Observed', 'Actual', 'CellRanger')]) * 1.05
-  p4 <- ggplot(Ncells_CR, aes_string(x = 'Actual', y = 'Observed', color = color, label = 'row.names(Ncells_CR)')) + 
+  p4 <- ggplot(Ncells_CR, aes_string(x = 'Actual', y = 'Observed', label = 'row.names(Ncells_CR)')) + 
     geom_text(size = 3) + geom_abline(slope = 1) + ylim(0, maxvalue) + xlim(0, maxvalue)
-  p5 <- ggplot(Ncells_CR, aes_string(x = 'Actual', y = 'CellRanger', color = color, label = 'row.names(Ncells_CR)')) + 
+  p5 <- ggplot(Ncells_CR, aes_string(x = 'Actual', y = 'CellRanger', label = 'row.names(Ncells_CR)')) + 
     geom_text(size = 3) + geom_abline(slope = 1) + ylim(0, maxvalue) + xlim(0, maxvalue)
-  p6 <- ggplot(Ncells_CR, aes_string(x = 'Observed', y = 'CellRanger', color = color, label = 'row.names(Ncells_CR)')) + 
+  p6 <- ggplot(Ncells_CR, aes_string(x = 'Observed', y = 'CellRanger', label = 'row.names(Ncells_CR)')) + 
     geom_text(size = 3) + geom_abline(slope = 1) + ylim(0, maxvalue) + xlim(0, maxvalue)
   
   #pdf(gsub('.pdf', '_ncells.pdf', pdf_out))
@@ -234,7 +194,7 @@ candidates <- candidates[candidates %in% colnames(sdat@meta.data)]
 print(paste0('Batch candidates: ', toString(candidates)))
 
 ### Add test and strat variables
-candidates <- c(candidates, tests, strat_vars)
+candidates <- c(candidates, tests)
 candidates <- candidates[which(candidates %in% colnames(sdat@meta.data))]
 if(length(candidates) == 0){
   cat(paste0('Automated recommendation: Enter batch information in config file', ''), file = txt_out, sep = "\n", append = T)
@@ -258,7 +218,12 @@ if(length(candidates) == 0){
   }
   covs_numeric <- colnames(covs)[sapply(colnames(covs), function(x) typeof(covs[, x]) == 'double')]
   covs_factor <-  colnames(covs)[sapply(colnames(covs), function(x) typeof(covs[, x]) == 'integer')]
-
+  if(length(covs_numeric) == 0){
+    covs_numeric <- c()
+  }
+  if(length(covs_factor) == 0){
+    covs_factor <- c()
+  }
   ### Do pairwise association tests of input covariates
   cov_associations0 <- pairwise_associations(covs, pc = 'p', plots_path = plots_path,
                                              covs_numeric = covs_numeric, 
@@ -273,6 +238,9 @@ if(length(candidates) == 0){
     DimPlot(sdat, label = T) + NoLegend()
   }
   for(batch in candidates){
+    if(any(is.na(sdat@meta.data[, batch]))){
+      warning(paste0('There are NAs in the batch candiate ', batch))
+    }
     ### Make sure it has levels 
     bats <- unique(sdat@meta.data[, batch])[order(unique(sdat@meta.data[, batch]))]
     sdat@meta.data[, batch] <- factor(sdat@meta.data[, batch], levels = bats)
@@ -311,11 +279,16 @@ if(length(candidates) == 0){
   ### If any of these features are significantly (0.05) associated with one of the features to potentially integrate over...
   a <- rowMeans(adjps[candidates, batch_comparisons])
   
-  if(any(adjps[candidates, batch_comparisons] < 0.05)){
-    batch_feature <- names(a[which(a == min((a)))])
+  if(any(candidates %in% row.names(adjps))){
+    if(any(adjps[candidates, batch_comparisons] < 0.05)){
+      batch_feature <- names(a[which(a == min((a)))])
+    } else{
+      batch_feature <- 'None'
+    }
   } else{
     batch_feature <- 'None'
   }
+
   ### Print determination to txt_out
   cat(paste0('Automated recommendation for Harmony integration: ', batch_feature), file = txt_out, sep = "\n", append = T)
   cat(paste0('Harmony batch: ', batch_feature), file = txt_out, sep = "\n", append = T)

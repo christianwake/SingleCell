@@ -14,17 +14,28 @@ library('tinytex')
 library('reticulate')
 library('gridExtra')
 library('cowplot')
-library('logspline')
+#library('logspline')
 
 source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
 
 if(interactive()){
-  project <- '2021614_21-002'
-  qc_name <- '2023-05-30'
-  batch <- 'Sample_Name'
-  batches <- c('Su13_03_Innate', 'Su19_3_Innate', 'Su9_03_B_cells')
-  # batch <- 'Date_sort'
-  # batches <- c('2021-11-09', '2021-11-10','2021-12-02', '2022-08-11', '2022-08-12')
+  # project <- '2021614_21-002'
+  # qc_name <- '2023-05-30'
+  # batch <- 'Sample_Name'
+  # batches <- c('Su13_03_Innate', 'Su19_3_Innate', 'Su9_03_B_cells')
+
+  # project <- '2023600_21-0012'
+  # qc_name <- '2023-11-07'
+  # batch <- 'CR_ID'
+  # batches <- c('CR1-2', 'CR2-2')
+  # isotype_controls <- 'C0090,C0091,C0092,C0095'
+  
+  project <- '2024605_Hillary_test'
+  qc_name <- '2024-06-04'
+  batch <- 'CR_ID'
+  batches <- c('CR1')
+  isotype_controls <- ''
+  
   out_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', 
                      qc_name, '/DSB_normalized_data.RDS')
   pdf_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', 
@@ -34,18 +45,24 @@ if(interactive()){
   
   mat_files <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project,
                       '/results/', qc_name, '/batches/', batches, '/DSB_normalized_data.RDS')
-  sdat_files <- sdat_files[1:2]
-  mat_files <- mat_files[1:2]
 }else{
   args <- commandArgs(trailingOnly=TRUE)
   
   out_file <- args[1]
   pdf_file <- args[2]
   batch <- args[3]
-  all_files <- args[4:length(args)]
+  isotype_controls <- args[4]
+  all_files <- args[5:length(args)]
   sdat_files <- all_files[1:(length(all_files)/2)]
   mat_files <- all_files[((length(all_files)/2)+1):length(all_files)]
 }
+
+isotype_controls <- strsplit(isotype_controls, ',')[[1]]
+##### Standardize protein names
+### space then parentheses <- parentheses
+isotype_controls <- gsub(' \\(', '\\(', isotype_controls)
+### spaces, underscores to '.'
+isotype_controls <- make.names(isotype_controls, allow_ = 'F')
 
 ### RNA counts is integer values. RNA data is integer values (probably identical)
 ### Don't have @assays$prot@counts, has integer @assays$prot@data
@@ -62,7 +79,11 @@ for(i in 1:length(sdats)){
 
 ### merge.data = F will get rid of anything in 'data' and make them 'counts' instead. This is necessary if you have DSB normalized values in 'data'
 ### because it will try to normalize after the merge, which causes an error. Thus, Seurat objects normalized separately cannot be correctly merged.
-sdat <- merge(x = sdats[[1]], y = array(unlist(sdats[2:length(sdats)])), merge.data = F, project = 'SeuratProject')
+if(length(sdats) == 1){
+  sdat <- sdats[[1]]
+} else{
+  sdat <- merge(x = sdats[[1]], y = array(unlist(sdats[2:length(sdats)])), merge.data = F, project = 'SeuratProject')
+}
 DefaultAssay(sdat) <- 'prot'
 print('Merged')
 print(paste0('Mean counts: ', mean(colSums(sdats[[i]]@assays$prot@counts))))
@@ -70,15 +91,22 @@ print(paste0('Mean data: ', mean(colSums(sdats[[i]]@assays$prot@data))))
 row.names(sdat@assays$prot@data) <- gsub('-totalseq', '', row.names(sdat@assays$prot))
 row.names(sdat@assays$prot@counts) <- gsub('-totalseq', '', row.names(sdat@assays$prot))
 
+### Remove isotype controls (they aren't in the DSB outputs)
+to_keep <- row.names(sdat@assays$prot@data)[which(!row.names(sdat@assays$prot@data) %in% isotype_controls)]
+sdat@assays$prot@data <- sdat@assays$prot@data[to_keep, ]
+sdat@assays$prot@counts <- sdat@assays$prot@counts[to_keep, ]
 #rm(sdats)
 
 ### Read DSB normalized counts files
 mats <- lapply(mat_files, function(mat_file) readRDS(mat_file))
 ### Merge DSB counts
 mat <- mats[[1]]
-for(i in 2:length(mats)){
-  mat <- cbind(mat, mats[[i]])
+if(length(mats) > 1){
+  for(i in 2:length(mats)){
+    mat <- cbind(mat, mats[[i]])
+  }
 }
+
 mat <- mat[row.names(sdat@assays$prot),]
 print('matrix')
 print(mean(colSums(mat)))

@@ -3,7 +3,6 @@ library('Seurat')
 library('stringr')
 library('pheatmap')
 library('ggplot2')
-library('umap')
 library('textshape')
 library('dplyr')
 library('biomaRt')
@@ -16,12 +15,6 @@ library('scuttle')
 source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
 source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
 source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
-
-
-# source('/Volumes/VRC1_DATA/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-# source('/Volumes/VRC1_DATA/douek_lab/wakecg/sample_sheet_functions.R')
-# source('/Volumes/VRC1_DATA/douek_lab/snakemakes/sc_functions.R')
-# source('/Volumes/VRC1_DATA/douek_lab/snakemakes/Utility_functions.R')
 
 if(interactive()){
   # project <- '2021614_21-002'

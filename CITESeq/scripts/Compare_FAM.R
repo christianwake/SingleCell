@@ -3,7 +3,7 @@ library('Seurat')
 library('stringr')
 library('pheatmap')
 library('ggplot2')
-library('umap')
+#library('umap')
 library('textshape')
 library('dplyr')
 library('biomaRt')
@@ -13,7 +13,7 @@ library('rsconnect')
 library('data.table')
 library('lisi')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/sc_functions.R')
+source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
 source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
 
 get_topN_genes_fam <- function(dat, topN, celltype = NA){

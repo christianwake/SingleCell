@@ -15,7 +15,7 @@ library('SingleR')
 library('scuttle')
 library('scRNAseq')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/sc_functions.R')
+source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
 source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
 source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
 
@@ -32,12 +32,12 @@ if(interactive()){
   # cell_type <- 'T'
   # method <- 'SingleR'
   
-  project <- '2022620_857.1'
-  qc_name <- '2022-11-01'
+  project <- '2021614_21-002'
+  qc_name <- '2024-01-20'
   method <- 'SingleR'
   #reference <- 'celldex:HumanPrimaryCellAtlasData'
   reference_name <- 'celldex:ImmGenData'
-  sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filtered_clustered.RDS')
+  sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cluster_filtered.RDS')
   out_rds <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Mapped.RDS')
   out_pdf <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Mapping.pdf')
   gtf_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
@@ -62,13 +62,29 @@ if(grepl('\\.gtf', gtf_file)){
   gtf <- readRDS(gtf_file)
 }
 
-sdat <- readRDS(sdat_file)
-#sdat <- readRDS('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021600_kristin/results/Dropout_mitigated/Test_suberset.RDS')
+#sdat <- readRDS(sdat_file)
+downsample_var <- 0.2
+if(!interactive()){
+  ### Read Seurat data
+  sdat <- readRDS(sdat_file)
+  print('Done reading Seurat object')
+  ### Downsample so I can work interactiveley for testing
+  ssub <- DietSeurat(sdat, counts = F, assays = c('RNA', 'prot'))
+  cells <- sample(x = colnames(ssub), size = (length(colnames(ssub)) * downsample_var), replace = F)
+  
+  ssub <- subset(ssub, cells = cells)
+  saveRDS(ssub, file = gsub('.RDS', paste0('_DownSampledTo', downsample_var, '.RDS'), sdat_file))
+  print('saved downsampled version for testing')
+} else{
+  sdat <- readRDS(gsub('.RDS', paste0('_DownSampledTo', downsample_var, '.RDS'), sdat_file))
+}
 DefaultAssay(sdat) <- 'RNA'
 
 ### the Emily hack to fix the weird named list thing
 colnames(sdat@assays$RNA@data) <- rownames(sdat@meta.data)
-colnames(sdat@assays$RNA@counts) <- rownames(sdat@meta.data)
+if(dim(sdat@assays$RNA@counts)[1] > 0){
+  colnames(sdat@assays$RNA@counts) <- rownames(sdat@meta.data)
+}
 
 ### If the file exists and is not empty, read it
 if(file.exists(exclude_file) & file.info(exclude_file)$size != 0){
@@ -110,7 +126,6 @@ row.names(reference) <- res[row.names(reference), 'gene_id']
 
 reference <- reference[which(!is.na(row.names(reference))),]
 
-
 if(toupper(method) == 'SEURAT'){
   reference <- LoadH5Seurat(reference)
   sdat <-  seurat_annotation(sdat, reference)
@@ -118,6 +133,7 @@ if(toupper(method) == 'SEURAT'){
   ### Convert from Seurat object to SingleCellExperiment
   dat <- as.SingleCellExperiment(sdat)
   ### SingleR() expects reference datasets to be normalized and log-transformed.
+  ### Requires RNA 'counts' assay data
   dat <- logNormCounts(dat) 
   
   sdat_pred <- SingleR(test = dat, ref = reference, assay.type.test = 1, labels = reference$label.main)

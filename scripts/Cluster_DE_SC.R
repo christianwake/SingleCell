@@ -11,7 +11,7 @@ library('grid')
 library('scales')
 library('rsconnect')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/sc_functions.R')
+source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
 source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
 
 if(interactive()){
@@ -28,9 +28,10 @@ if(interactive()){
   args = commandArgs(trailingOnly=TRUE)
   sdat_file <- args[1]
   exclude_file <- args[2]
-  gtf_file <- args[3]
-  out_rds <- args[4]
-  out_tsv <- args[5]
+  exclude_file2 <- args[3]
+  gtf_file <- args[4]
+  out_rds <- args[5]
+  out_tsv <- args[6]
 }
 
 sdat <- readRDS(sdat_file)
@@ -40,6 +41,10 @@ if(file.exists(exclude_file) & file.info(exclude_file)$size != 0){
 } else{
   exclude_gene_names <- c()
 }
+### If the gene-exclusion file exists and is not empty, read it
+if(file.exists(exclude_file2) & file.info(exclude_file2)$size != 0){
+  exclude_gene_names <- c(read.table(exclude_file)[,1])
+} 
 
 ### Do direct matching from gtf
 if(grepl('\\.gtf', gtf_file)){

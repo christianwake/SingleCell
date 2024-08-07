@@ -18,11 +18,15 @@ source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
 if(interactive()){
   project <- '2021600_kristin'
   qc_name <- 'Run2023-05-14'
-  test <- 'RNA_clusters'
-  value1 <- '2'
-  value2 <- '3'
-  strat <- 'All'
-  strat_values <- 'All'
+  test <- 'time'
+  value1 <- '1'
+  value2 <- '0'
+  strat1 <- 'RNA_clusters'
+  strat_values1A <- '3'
+  strat_values1B <- '3'
+  strat2 <- 'StimCD8'
+  strat_values2A <- '1'
+  strat_values2B <- '1'
   species <- 'hsapiens'
   sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filtered_clustered.RDS')
   
@@ -36,15 +40,15 @@ if(interactive()){
   # res_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', 
   #                    qc_name, '/DE/', test, '/', strat, '/DE_results.tsv')
   res_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', 
-                     qc_name, '/DE/', test, '/', strat, '/', test, '-', value1, '-', value2, 
-                     '_DE_within_', strat, '-', strat_values, '.tsv')
+                     qc_name, '/DE/', test, '/', strat1, '/', test, '-', value1, '-', value2, 
+                     '_DE_Strat1-', strat1, '-', strat_values1A, '-', strat_values1B, '_Strat2-', strat2, '-', strat_values2A, '-', strat_values2B,  '.tsv')
   
   #res_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/DE/', test, '/', strat, '/DE_results.tsv')
   exclude_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Excluded_genes.txt')
   gtf_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
   #gmt_file <- '/hpcdata/vrc/vrc1_data/douek_lab/wakecg/genesets/c2.cp.v7.2.symbols.gmt'
-  #gmt_file <- '/hpcdata/vrc/vrc1_data/douek_lab/wakecg/genesets/h.all.v2022.1.Hs.symbols.gmt'
-  gmt_file <- '/hpcdata/vrc/vrc1_data/douek_lab/wakecg/genesets/c7.all.v2022.1.Hs.symbols.gmt'
+  gmt_file <- '/hpcdata/vrc/vrc1_data/douek_lab/wakecg/genesets/h.all.v2022.1.Hs.symbols.gmt'
+  #gmt_file <- '/hpcdata/vrc/vrc1_data/douek_lab/wakecg/genesets/c7.all.v2022.1.Hs.symbols.gmt'
   out_tsv <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/DE/', test, '/', strat, '/fgsea.tsv')
   out_pdf <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/DE/', test, '/', strat, '/fgsea.pdf')
   custom_sets <- NA
@@ -57,8 +61,8 @@ if(interactive()){
   gmt_file <- args[5]
   species <- args[6]
   out_tsv <- args[7]
-  #out_pdf <- args[8]
-  custom_sets <- args[8]
+  out_pdf <- args[8]
+  custom_sets <- args[9]
 }
 
 minSize <- 5
@@ -200,21 +204,16 @@ paste0('Of ', length(a_ids), ' ids, ', length(a_names), ' are in ', species, '-h
 
 print('Beginning fgsea')
 fgseaRes <- fgsea(pathways = DB, stats = ranks, minSize = minSize, maxSize = 500, nPermSimple = 10000)
-print('test1')
 fgseaRes <- as.data.frame(fgseaRes)
-print('test2')
 fgseaRes <- fgseaRes[order(fgseaRes$pval), ]
-print('test3')
+
 ### Convert the leadingEdge list of gene names into a comma delimited string, in order to print. 
 fgseaRes[, 'leadingEdgeStr'] <- apply(fgseaRes, 1, function(x) gsub(', ', ',', toString(x['leadingEdge'][[1]])))
 ### Subset significant results
-print('test4')
 sig <- fgseaRes[which(fgseaRes$padj < 0.05), ]
-print('test5')
 min(fgseaRes$pval)
 num_sig <- length(sig$padj)
 #print(paste0(num_sig, ' padj 0.05 significant GSEA results for -log(p) sorted ', names(res_file)))
-print('test6')
 
 ### Print significant GSEA results to a file
 write.table(fgseaRes[,c("pathway","pval","padj","ES","NES","size","leadingEdgeStr")], out_tsv, sep = '\t', row.names = F, quote = F)
@@ -222,15 +221,15 @@ write.table(fgseaRes[,c("pathway","pval","padj","ES","NES","size","leadingEdgeSt
 #fgseaRes <- fgseaRes[, which(colnames(fgseaRes) != 'leadingEdge')]
 #WriteXLS(ExcelFileName = out_xls, x = 'fgseaRes', row.names = F, col.names = T)
 
-### Plot of the most significant result
-# top <- fgseaRes[order(fgseaRes$pval, decreasing = F),][1, 'pathway']
-# ptext <- as.character(signif(fgseaRes[order(fgseaRes$pval, decreasing = F),][2, 'padj'][[1]], digits = 3 ))
-# pdf(out_pdf)
-# ### Top 10 most significant results
-# for(i in 1:10){
-#   ### Plot of the result
-#   top <- fgseaRes[order(fgseaRes$pval, decreasing = F),][i, 'pathway']
-#   ptext <- as.character(signif(fgseaRes[order(fgseaRes$pval, decreasing = F),][i, 'padj'][[1]], digits = 3 ))
-#   print(plotEnrichment(DB[[top]], ranks) + labs(title=top, subtitle = paste0(names(res_file),', padj: ',ptext)))
-# }
-# dev.off() 
+pdf(out_pdf)
+
+### Top 10 most significant results
+top <- fgseaRes[order(fgseaRes$pval, decreasing = F),][1, 'pathway']
+ptext <- as.character(signif(fgseaRes[order(fgseaRes$pval, decreasing = F),][2, 'padj'][[1]], digits = 3 ))
+for(i in 1:10){
+  ### Plot of the result
+  top <- fgseaRes[order(fgseaRes$pval, decreasing = F),][i, 'pathway']
+  ptext <- as.character(signif(fgseaRes[order(fgseaRes$pval, decreasing = F),][i, 'padj'][[1]], digits = 3 ))
+  print(plotEnrichment(DB[[top]], ranks) + labs(title=top, subtitle = paste0(names(res_file),', padj: ',ptext)))
+}
+dev.off()

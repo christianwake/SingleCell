@@ -10,10 +10,10 @@ library('tinytex')
 library('dsb')
 #library('tidyverse')
 #library('pastecs')
-library('umap')
+#library('umap')
 library('gridExtra')
 library('cowplot')
-library('logspline')
+#library('logspline')
 library('readxl')
 library('WriteXLS')
 library('Matrix')
@@ -41,6 +41,8 @@ filters <- read.table(filter_file, header = T, sep = ',')
 filters <- filters[which(filters$type == 'batch_remove'), ]
 
 sdat <- readRDS(sdat_file)
+print(row.names(sdat@assays$prot))
+
 
 #print(table(sdat$Date_sort, sdat$Sample_Name))
 #print('Su7_03_B_cells' %in% sdat$Sample_Name)
