@@ -1,7 +1,70 @@
-start of README
-2nd line
-3rd line
-4th line
-5th line 
-6th line
-7th line
+Snakefiles: 
+Snakefile
+CITESeq/Snakefile
+SmartSeq/Snakefile
+SmartSeq/preprocessing/Snakefile
+Common_prep.py
+
+Required inputs
+1. Personal config file into your home directory, “.config/snakemake/CITESeq/config.yaml”
+2. “project_config_file.yaml” in project directory
+3. Sample sheet in project directory
+  a. “Sample_ID”
+  b. “CR_ID”, ID used by Cellranger (right now, the pipeline assumes the data is hashed) 
+  c. “flowcell_full”, fullname of the flowcell subdirectory where the cellranger outputs can be found
+  d. “HTO_index_name”
+  e. Also any batch features you entered in project_config_file.yaml, and anything else you want in the Seurat object
+4. “QC_steps.csv”, location specified in project config file. It includes 1 line for each QC step, any of which can be missing and the step will be skipped. 
+5. For CITESeq, Cellranger outputs of feature, barcode, matrix information is required, both raw and filtered (for creating background for protein count normalization). It is assumed that they are in directories named “raw_feature_bc_matrix” and “filtered_feature_bc_matrix”, located in one of two places (where runs_dir is defined in the project config file, flowcell is the full name to the flowcell subdirectory, and id is the CR_ID of the cellranger sample named in the sample sheet): 
+  a. file.path(runs_dir, flowcell, 'multi_output', id, 'outs', 'multi', 'count','filtered_feature_bc_matrix')
+  b. file.path(runs_dir, flowcell, 'count_output', id, 'outs', 'filtered_feature_bc_matrix')
+
+Invocation from a project directory which contains 2), and 3):
+snakemake --snakefile /hpcdata/vrc/vrc1_data/douek_lab/snakemakes/CITESeq/Snakefile --profile CITESeq results/QC_first_pass/App/Data.RData -np
+
+Notes on calling snakemake:
+1. On an HPC, load snakemake module before invocation.
+2. –profile will refer to 1), the personal config file which specifies to snakemake how to submit job requests on the HPC.
+3. -np requests a dry run, useful for troubleshooting and showing you which snakemake rules would be run.
+4. The input “results/QC_first_pass/App/Data.RData” specifies which output of the pipeline you would like to create (or make sure is already created and up-to-date). This output is the final output, but you may also request an intermediate output, e.g. “results/QC_first_pass/Clustered.RDS” if you only want to do the QC and clustering and then evaluate before continuing.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+“SC_R” pipeline (2021/04/06)
+/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/SC_R/Snakefile
+Required inputs
+6. Personal config file into your home directory,“.config/snakemake/SC_R/config.yaml”
+7. “project_config_file.yaml”
+8. Sample sheet
+a. Required columns: “Sample_ID”, “flowcell_full”
+b. Required if hashed: “CR_ID”, “HTO_index_name”
+c. Also any batch features you entered in project_config_file.yaml, and anything else you want in the Seurat object
+9. “QC_steps.csv”. There is 1 line for each QC step, any of which can be missing and the step will be skipped.
+10. Cellranger data is assumed to be in one of either of these two places:
+a. file.path(runs_dir, flowcell, 'multi_output', id, 'outs', 'multi', 'count','filtered_feature_bc_matrix')
+b. file.path(runs_dir, flowcell, 'count_output', id, 'outs', 'filtered_feature_bc_matrix')
+
+Invocation from project directory that contains 2) and 3):
+snakemake --snakefile /hpcdata/vrc/vrc1_data/douek_lab/snakemakes/SC_R/Snakefile --profile SC_R results/QC_first_pass/App/Data.RData -np
