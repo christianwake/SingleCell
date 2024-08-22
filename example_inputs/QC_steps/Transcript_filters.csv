@@ -1,0 +1,7 @@
+type,feature,value
+gene,pattern,"^IG"
+gene,pattern_exceptions,"^IGF"
+gene,fraction_cells,NA
+gene,counts,NA
+gene,cells,50
+Analysis only,pattern,"^RPS,^RPL"

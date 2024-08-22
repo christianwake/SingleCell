@@ -1,0 +1,4 @@
+type,feature,value
+cell,prot_size_max,2.75
+cell,prot_size_min,1.25
+cell,ngene_max,50

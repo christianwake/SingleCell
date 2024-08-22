@@ -1,0 +1,9 @@
+step,file
+0,QC_steps/DSB_background.csv
+1,sample_filter
+2,imputation
+3,downsample
+4,QC_steps/Transcript_filters.csv
+5,QC_steps/Cell_filters.csv
+6,integration
+7,cluster_filter
