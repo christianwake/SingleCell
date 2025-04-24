@@ -1,11 +1,10 @@
 library('sys')
 library('Seurat')
-library('SeuratDisk')
 library('stringr')
 library('pheatmap')
 library('ggplot2')
-library('umap')
-library('textshape')
+#library('umap')
+#library('textshape')
 library('dplyr')
 library('biomaRt')
 library('grid')
@@ -13,13 +12,21 @@ library('scales')
 library('data.table')
 library('SingleR')
 library('scuttle')
-library('scRNAseq')
+#library('SeuratDisk')
+#library('scRNAseq')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
+source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
 
 if(interactive()){
+  
+  project <- '2024615_Boswell'
+  qc_name <- 'FirstRun'
+  species <- 'hsapiens'
+  cell_type <- 'T'
+  method <- 'SingleR'
+  
   # project <- '2021617_mis-c'
   # qc_name <- 'Dropout_mitigated'
   # species <- 'hsapiens'
@@ -32,16 +39,16 @@ if(interactive()){
   # cell_type <- 'T'
   # method <- 'SingleR'
   
-  project <- '2021614_21-002'
-  qc_name <- '2024-01-20'
-  method <- 'SingleR'
-  #reference <- 'celldex:HumanPrimaryCellAtlasData'
+  # project <- '2021614_21-002'
+  # qc_name <- '2024-01-20'
+  # method <- 'SingleR'
+  # #reference <- 'celldex:HumanPrimaryCellAtlasData'
   reference_name <- 'celldex:ImmGenData'
-  sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cluster_filtered.RDS')
-  out_rds <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Mapped.RDS')
-  out_pdf <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Mapping.pdf')
-  gtf_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
-  exclude_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Excluded_genes.txt')
+  sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cluster_filtered.RDS')
+  out_rds <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Mapped.RDS')
+  out_pdf <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Mapping.pdf')
+  gtf_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
+  exclude_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Excluded_genes.txt')
 }else{
   args = commandArgs(trailingOnly=TRUE)
   sdat_file <- args[1]
@@ -69,7 +76,11 @@ if(!interactive()){
   sdat <- readRDS(sdat_file)
   print('Done reading Seurat object')
   ### Downsample so I can work interactiveley for testing
-  ssub <- DietSeurat(sdat, counts = F, assays = c('RNA', 'prot'))
+  assays <- c('RNA', 'prot')
+  assays <- assays[which(assays %in% names(sdat@assays))]
+  layers <- c('counts', 'data')
+  layers <- layers[which(layers %in% names(sdat@assays$RNA@layers))]
+  ssub <- DietSeurat(sdat, layers = layers, assays = assays)
   cells <- sample(x = colnames(ssub), size = (length(colnames(ssub)) * downsample_var), replace = F)
   
   ssub <- subset(ssub, cells = cells)
@@ -81,9 +92,9 @@ if(!interactive()){
 DefaultAssay(sdat) <- 'RNA'
 
 ### the Emily hack to fix the weird named list thing
-colnames(sdat@assays$RNA@data) <- rownames(sdat@meta.data)
-if(dim(sdat@assays$RNA@counts)[1] > 0){
-  colnames(sdat@assays$RNA@counts) <- rownames(sdat@meta.data)
+colnames(sdat@assays$RNA@layers$data) <- rownames(sdat@meta.data)
+if(dim(sdat@assays$RNA@layers$counts)[1] > 0){
+  colnames(sdat@assays$RNA@layers$counts) <- rownames(sdat@meta.data)
 }
 
 ### If the file exists and is not empty, read it
@@ -97,10 +108,10 @@ features <- row.names(sdat)[which(!(row.names(sdat) %in% exclude_gene_names))]
 #sdat <- DietSeurat(sdat, counts = T, assays = c('RNA', 'RNA_orig'))
 # sdat <- subset(x = sdat, downsample = 1000)
 # print(dim(sdat))
-# saveRDS(sdat, file = '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021617_mis-c/results/Dropout_mitigated/Test_suberset.RDS')
+# saveRDS(sdat, file = '/data/vrc_his/douek_lab/projects/RNASeq/2021617_mis-c/results/Dropout_mitigated/Test_suberset.RDS')
 
 # if(method == 'Seurat'){
-#   reference <- LoadH5Seurat("/hpcdata/vrc/vrc1_data/douek_lab/reference_sets/pbmc/pbmc_multimodal.h5seurat")
+#   reference <- LoadH5Seurat("/data/vrc_his/douek_lab/reference_sets/pbmc/pbmc_multimodal.h5seurat")
 #   method <- 'Seurat'
 # }
 ### Single R with celldex HPCA reference
@@ -185,12 +196,12 @@ saveRDS(sdat, out_rds)
 
 ### To create a test set for interactive use
 # csub <- subset(x = sdat, downsample = 10000)
-# saveRDS(csub, file = '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021614_21-002/results/Go2/Test_subset.RDS')
+# saveRDS(csub, file = '/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/Go2/Test_subset.RDS')
 
 ### To create a test set for interactive use
 # csub <- subset(x = sdat, downsample = 1000)
 # print(dim(csub))
-# saveRDS(csub, file = '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021614_21-002/results/Go2/Test_suberset.RDS')
+# saveRDS(csub, file = '/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/Go2/Test_suberset.RDS')
 # 
 # cols <- c('MT_sum', 'orig.ident', 'propmt', 'rna_size', 'ngene', 'bc')
 # for(c in cols){

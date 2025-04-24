@@ -7,7 +7,7 @@ library('dplyr')
 library('viridis')
 library('data.table')
 library('patchwork')
-library('PKI')
+#library('PKI')
 library('tinytex')
 #library('tidyverse')
 #library('pastecs')
@@ -16,28 +16,31 @@ library('gridExtra')
 library('cowplot')
 #library('logspline')
 library('WriteXLS')
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
 
 if(interactive()){
-  project <- '2021614_21-002'
-  # qc_name <- '2023-Jan'
+  project <- '2021600_kristin'
+  qc_name <- 'Run2025-04-10'
+  batches <- c('HF5V3DRXY', 'HCJW5DRXY')
+  # project <- '2021614_21-002'
+  # # qc_name <- '2023-Jan'
+  # # batches <- c('2021-11-09', '2021-11-10', '2021-12-02', '2022-08-11', '2022-08-12')
+  # qc_name <- '2024-01-20'
   # batches <- c('2021-11-09', '2021-11-10', '2021-12-02', '2022-08-11', '2022-08-12')
-  qc_name <- '2024-01-20'
-  batches <- c('2021-11-09', '2021-11-10', '2021-12-02', '2022-08-11', '2022-08-12')
-  batches <- c('Su13_03_Innate', 'Su19_3_Innate', 'Su9_03_B_cells')
+  # batches <- c('Su13_03_Innate', 'Su19_3_Innate', 'Su9_03_B_cells')
   
   # project <- '2022619_857.3b'
   # qc_name <- 'QC_first_pass'
   # batches <- c('2022-02-14', '2022-02-15', '2022-02-16', '2022-02-17', '2022-02-18', '2022-02-22', '2022-02-24', '2022-02-25')
   
-  txt_out <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cell_filtered.txt')
-  txt_out2 <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Batches_cells_remaining.txt')
-  xls_out <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cell_filtered.xls')
-  
-  ex_out <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Excluded_genes.txt')
-  filter_files <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, 
+  txt_out <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cell_filtered.txt')
+  txt_out2 <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Batches_cells_remaining.txt')
+  xls_out <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cell_filtered.xls')
+  pdf_out <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cell_filtered.pdf')
+  ex_out <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Excluded_genes.txt')
+  filter_files <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, 
                          '/results/', qc_name, '/batches/', batches, '/Cell_filtered.txt')
-  ex_files <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, 
+  ex_files <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, 
                      '/results/', qc_name, '/', batches, '/Excluded_genes.txt')
   
   
@@ -65,6 +68,7 @@ if(interactive()){
 
 read_ncells <- function(batch_files, batch){
   batch_file <- batch_files[batch]
+  print(batch_file)
   tab <- read.table(batch_file, sep = ',')
   tab$batch <- batch
   tab$filter <- row.names(tab)
@@ -117,7 +121,7 @@ plot_dat$N_filtered <- plot_dat$original - plot_dat$remaining
 sample_order <- plot_dat[order(plot_dat$N_filtered, decreasing = T), 'batch']
 plot_dat <- plot_dat[, c('batch', 'original', 'remaining')]
 
-plot_dat <- melt(plot_dat)
+plot_dat <- reshape2::melt(plot_dat)
 colnames(plot_dat) <- c('batch', 'pre_or_post', 'cells')
 ggplot(plot_dat, aes(x = cells, color = pre_or_post)) + geom_histogram() +
   ylab('N samples') + xlab('N cells')

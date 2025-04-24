@@ -1,0 +1,303 @@
+import pandas as pd
+import subprocess
+import os
+from collections import defaultdict
+configfile: 'project_config_file.yaml'
+
+config = defaultdict(str, config)
+#config['filter'] = defaultdict(defaultdict, config['filter'])
+#config['filter']['cell'] = defaultdict(str, config['filter']['cell'])
+#config['filter']['feature'] = defaultdict(str, config['filter']['feature'])
+
+
+sample_sheet = os.path.join(os.getcwd(), config['sample_sheet'])
+samples = pd.read_table(sample_sheet, sep = ',').set_index('Sample_ID', drop = False)
+batchs = list(set(samples[config['batch']]))
+QC_name = config['QC_name']
+results_dir = os.path.join('results', QC_name) + '/'
+print(results_dir)
+#QC_file1 = os.path.join(os.getcwd(), config['QC_step1'])
+#QC_file2 = os.path.join(os.getcwd(), config['QC_step2'])
+#QC_file3 = os.path.join(os.getcwd(), config['QC_step3'])
+#QC_file4 = os.path.join(os.getcwd(), config['QC_step4'])
+#QC_file5 = os.path.join(os.getcwd(), config['QC_step5'])
+### Read QC summary file (input to batch_eval checkpoint) and creates dictionary to hold the file paths held within
+QC_file = os.path.join(os.getcwd(), config['QC_file'])
+qcdat = pd.read_csv(QC_file)
+### step number is key, value is file name
+QC_files = defaultdict(str)
+for i in range(0, len(qcdat)):
+  QC_files['step' + str(qcdat.step.iloc[i])] = qcdat.file.iloc[i]
+post_qc_filenames = ['data/All_data.RDS'] + [results_dir + f for f in ['PostQC1.RDS', 'PostQC2.RDS', 'PostQC3.RDS', 'PostQC4.RDS']]
+
+QC_rds = defaultdict(str)
+for i in range(0, len(post_qc_filenames)):
+  QC_rds['step' + str(i)] = post_qc_filenames[i]
+print(QC_files)
+print(QC_rds)
+### If the last line of the second output of cluster_filters (Filters.txt) specifies that 0 cells were filtered, skip re-clustering
+def maybe_skip_second_cluster(wildcards):
+  checkp = checkpoints.cluster_filter.get().output[1]
+  with open(checkp) as f:
+    for line in f:
+      pass
+    last_line = line
+  if(bool(re.search('filtered,0', last_line))):
+    print('Skip second cluster.')
+    return results_dir + 'Filtered.RDS'
+  else:
+    print('Do second cluster.')
+    return results_dir + 'Processed_data.RDS'
+
+### Should output two things (inputs for Impute rule):
+### 1. Which RDS object it will use (either data/All_data.RDS or results_dir + /Filter0_data.RDS
+### 2. The filter.txt file that specifies the imputation details, so that if the user changes them, Snakemake will know to repeat the Impute step
+def maybe_skip_QC1(wildcards):
+  ### txt output from batch_evaluations rule
+  checkp = checkpoints.QC_checkpoint.get().output[0]
+  qc = pd.read_csv(checkp)
+  if(qc['skip'][0]):
+    rds = 'data/All_data.RDS'
+  else:
+    rds = results_dir + 'PostQC1.RDS'
+  return(rds)
+
+def maybe_skip_QC_step1(*wildcards):
+  stepN = 1
+  ### txt output from batch_evaluations rule
+  #with checkpoints.QC_checkpoint.get(**wildcards).output[0].open() as f:
+  #  for line in f:
+  #    print(line)
+  checkp = checkpoints.QC_checkpoint.get().output[0]
+  qc = pd.read_csv(checkp)
+  ### Slice the data frame to include only up to input stepN
+  qc = qc[:(stepN + 1)]
+  ### Select the step name of the last step that is not skipped (column 'skip' = F). Use that step name as key in the RDS dictionary.
+  rds = QC_rds[qc[qc.skip == False].iloc[-1,0]]
+  rds = QC_rds['step1']
+  #qc_file = QC_files['step2']
+  return(rds)
+
+def maybe_skip_QC_step2(wildcards):
+  stepN = 2
+  ### txt output from batch_evaluations rule
+  checkp = checkpoints.QC_checkpoint.get().output[0]
+  qc = pd.read_csv(checkp)
+  ### Slice the data frame to include only up to input stepN
+  qc = qc[:(stepN + 1)]
+  ### Select the step name of the last step that is not skipped (column 'skip' = F). Use that step name as key in the RDS dictionary.
+  rds = QC_rds[qc[qc.skip == False].iloc[-1,0]]
+  return(rds)
+
+def maybe_skip_QC_step3(wildcards):
+  stepN = 3
+  ### txt output from batch_evaluations rule
+  checkp = checkpoints.QC_checkpoint.get().output[0]
+  qc = pd.read_csv(checkp)
+  ### Slice the data frame to include only up to input stepN
+  qc = qc[:(stepN + 1)]
+  ### Select the step name of the last step that is not skipped (column 'skip' = F). Use that step name as key in the RDS dictionary.
+  rds = QC_rds[qc[qc.skip == False].iloc[-1,0]]
+  return(rds)
+
+def maybe_skip_QC_step4(wildcards):
+  stepN = 4
+  ### txt output from batch_evaluations rule
+  checkp = checkpoints.QC_checkpoint.get().output[0]
+  qc = pd.read_csv(checkp)
+  ### Slice the data frame to include only up to input stepN
+  qc = qc[:(stepN + 1)]
+  ### Select the step name of the last step that is not skipped (column 'skip' = F). Use that step name as key in the RDS dictionary.
+  rds = QC_rds[qc[qc.skip == False].iloc[-1,0]]
+  return(rds)
+
+def maybe_skip_QC_stepN(stepN, wildcards):
+  ### txt output from batch_evaluations rule
+  checkp = checkpoints.QC_checkpoint.get().output[0]
+  qc = pd.read_csv(checkp)
+  ### Slice the data frame to include only up to input stepN
+  qc = qc[:(stepN + 1)]
+  ### Select the step name of the last step that is not skipped (column 'skip' = F). Use that step name as key in the RDS dictionary.
+  rds = QC_rds[qc[qc.skip == False].iloc[-1,0]]
+  return(rds)
+
+rule all:
+  input: 'results/App/Data.RData'
+
+rule Dehash:
+  input:
+    samples = sample_sheet
+  params:
+    scripts = config['scripts_dir'],
+    runs_dir = config['runs_dir']
+  output:
+    "data/Cell_data.csv"
+  shell:
+    "Rscript {params.scripts}/Dehash.R {input} {params.runs_dir} {output}"
+
+rule Create_cells_Seurat:
+  input:
+    samples = sample_sheet,
+    csv = "data/Cell_data.csv"
+  params:
+    script = config['scripts_dir'],
+    runs_dir = config['runs_dir'],
+    results_dir = results_dir
+  output:
+    "data/All_data.RDS" 
+  resources:
+    mem_mb=30000 
+  shell:
+    """
+    mkdir -p {params.results_dir}
+    Rscript {params.script}/Create_Seurat_RDS.R {params.runs_dir} {input} {output}
+    """
+
+#rule batch_evaluation:
+checkpoint QC_checkpoint:
+  input:
+    "data/All_data.RDS",
+    QC_file ### So if the user edits this file to add or subtract an entire QC step, the DAG will be re-evaluating updating the following QC rules
+  params:
+    script = config['scripts_dir'],
+    batch_candidates = config['batch_candidates'],
+    plots_path = "plots/"
+  output:
+    results_dir + "QC_steps.csv",
+    results_dir + "batch_evaluation.txt",
+    results_dir + "batch_evaluation.pdf",
+    touch('data/checkpoint.done') ### Makes rule 'Filter_whole_samples' dependednt on this checkpoint
+  shell:
+    "Rscript {params.script}/QC_checkpoint.R {input} '{params.batch_candidates}' '{params.plots_path}' {output}"
+
+### For the case that the later QC steps reveal some wholly bad samples
+rule Filter_whole_samples:
+  input:
+    "data/checkpoint.done",
+    rds = "data/All_data.RDS",
+    #results_dir + "QC_steps.txt", ### This is the automated recommendation of QC steps from previous step
+    qc = QC_files['step1'] ### This is the user-input QC steps. User should have consulted the automated recommendation.
+  params:
+    script = config['scripts_dir']
+  output:
+    results_dir + "PostQC1.RDS"
+  shell:
+    "Rscript {params.script}/Filter_samples.R {input.rds} {input.qc} {output}"
+
+#### These next three are for handling high dropout
+rule Impute:
+  input:
+    maybe_skip_QC_step1, ### Returns RDS file input, and file with QC details
+    QC_files['step2']
+  params:
+    scripts = config['scripts_dir']
+  output:
+    results_dir + "PostQC2.RDS",
+    results_dir + "Imputed.pdf"
+  resources: mem_mb=240000 
+  shell:
+    """
+    echo {input}
+    Rscript {params.scripts}/Impute.R {input} {output}
+    """
+
+rule Cell_filter:
+  input:
+    maybe_skip_QC_step2, ### Returns RDS file input, and file with QC details
+    QC_files['step3']
+  output:
+    results_dir + "PostQC3.RDS",
+    results_dir + "Cell_filters.pdf",
+    results_dir + "Excluded_genes.txt",
+    results_dir + "Filters_Ncells.txt"
+  params:
+    script = config['scripts_dir'],
+    gtf = config['gtf']
+  shell:
+    #"Rscript {params.script}/Cell_filters.R {input} '{params.gtf}' '{params.pattern}' '{params.fraction_cells}' '{params.nFeature_RNA}' '{params.MT_prop}' '{params.nCount_RNA}' '{params.diversity}' {output}"
+    "Rscript {params.script}/Cell_filters.R {input} '{params.gtf}' {output}"
+
+### Scale and Integrate
+rule Integrate:
+  input:
+    #results_dir + "Cell_filtered.RDS",
+    #results_dir + "Excluded_genes.txt"
+    maybe_skip_QC_step3, ### Returns RDS file input, and file with QC details
+    QC_files['step4']
+  params:
+    scripts = config['scripts_dir']
+  output:
+    results_dir + "PostQC4.RDS",
+    results_dir + "Integration.pdf"
+  shell:
+    "Rscript {params.scripts}/Harmony.R {input} {output}"
+
+rule cluster:
+  input:
+    #"results/Cell_filtered.RDS",
+    #results_dir + "Integrated.RDS",
+    #results_dir + "Excluded_genes.txt"
+    maybe_skip_QC_step4 ### Returns RDS file input
+  params:
+    script = config['scripts_dir'],
+    negative_markers = config['negative_markers'],
+    gene_file = config['gene_file'],
+    clust_resolution = config['clust_resolution']
+  output:
+    results_dir + "Clustered.RDS",
+    results_dir + "Clusters.pdf"
+  shell:
+    "Rscript {params.script}/Clustering_SC.R {input} '{params.negative_markers}' '{params.gene_file}' '{params.clust_resolution}' {output}"
+
+### Triggers DAG evaluation after successful execution of this rule
+checkpoint cluster_filter:
+  input:
+    results_dir + "Clustered.RDS"
+  params:
+    script = config['scripts_dir'],
+    negative_markers = config['negative_markers'],
+    positive_markers = config['positive_markers']
+  output:
+    results_dir + "Filtered.RDS",
+    results_dir + "Filters.txt",
+    results_dir + "Cluster_filters.pdf"
+  shell:
+    "Rscript {params.script}/Cluster_filters_SC.R {input} '{params.negative_markers}' '{params.positive_markers}' {output}"
+
+### This rule may be skipped, after evalution of cluster_filter checkpoint
+rule post_filter_cluster:
+  input:
+    results_dir + "Filtered.RDS",
+    results_dir + "Excluded_genes.txt"
+  params:
+    script = config['scripts_dir'],
+    negative_markers = config['negative_markers'],
+    gene_file = config['gene_file'],
+    clust_resolution = config['clust_resolution']
+  output:
+    results_dir + "Processed_data.RDS",
+    results_dir + "Clusters_filtered.pdf"
+  shell:
+    "Rscript {params.script}/Clustering_SC.R {input} '{params.negative_markers}' '{params.gene_file}' '{params.clust_resolution}'  {output}"
+
+rule Cluster_DE:
+  input:
+    #results_dir + "Processed_data.RDS",
+    maybe_skip_second_cluster,
+    results_dir + "Excluded_genes.txt"
+  params:
+    script = config['scripts_dir'],
+    project = config['project'],
+    username = config['username'],
+    server = config['server']
+  output:
+    results_dir + "App/Data.RData"
+  resources: mem_mb=30000
+  shell:
+    """
+    mkdir -p results/App/
+    #cp {params.script}/App.R results/App/
+    Rscript {params.script}/Cluster_DE_SC.R {input} {output} '{params.project}' '{params.username}' '{params.server}'
+    """
+
+

@@ -6,14 +6,11 @@ from collections import defaultdict
 import csv
 import sys
 
-#project_config_file = sys.argv[1]
-#print(project_config_file)
 configfile: 'project_config_file.yaml'
-#configfile: project_config_file
 ### Read configuration file
 config = defaultdict(str, config)
 
-print(config['QC_name'])
+print('Input QC name: ' + config['QC_name'])
 QC_name = config['QC_name']
 results_dir = os.path.join('results', QC_name) + '/'
 log_dir = os.path.join(results_dir, 'logs/')
@@ -26,9 +23,11 @@ if(config['annotation_reference'] != ''):
 ### Which data types are included?
 assays_list = ['RNA']
 clusters_list = ['RNA_clusters']
+prot = False
 if(config['Data_type'] == 'CITESeq'):
   assays_list = assays_list + ['prot']
   clusters_list = clusters_list + ['prot_clusters', 'wnn_clusters']
+  prot = True
 if(do_annot):
   clusters_list = clusters_list + ['predicted.celltype.l1']
 
@@ -55,7 +54,7 @@ else:
   dehash_calls_tsv = {}
   dehash_threshs_csv = {}
   dehash_CRint_calls_tsv = {}
-
+print('\nDehash tsv files: ')
 print(dehash_CRint_calls_tsv)
 
 ### If not input, assume the method to continue with is the first one input in the string of options
@@ -63,7 +62,41 @@ if(config['dehash_method'] == ''):
   utilized_method_name = config['dehash_method_comparisons'].split(',')[0]
 else:
   utilized_method_name = config['dehash_method']
-print(utilized_method_name)
+print('\nUsing dehash method ' + utilized_method_name)
+
+### If LIBRASeq is not input set libraseq to F, otherwsie to T
+libraseq = config['LIBRASeq'] != ''
+### Libraseq probes
+if libraseq:
+  prot = True
+  methods = config['libraseq_method_comparisons'].split(',')
+  libraseq_calls_tsv = defaultdict(str)
+  libraseq_threshs_csv = defaultdict(str)
+  libraseq_calls_tsv_raw = defaultdict(str)
+  libraseq_threshs_csv_raw = defaultdict(str)
+  for method in methods:
+    ### If the input method is a file, lets assume they are hashing results from some custom method. For now, we have to assume the cell IDs will match those in the Cell Ranger outputs
+    if(os.path.isfile(method)):
+      libraseq_threshs_csv[method] = method
+      libraseq_file = results_dir + 'Libraseq/' + os.path.basename(re.sub("thresholds_", 'calls_', re.sub('csv$', 'tsv', method)))
+      libraseq_calls_tsv[method] = libraseq_file
+    else: ### Otherwise, define the result output based on the input method name
+      libraseq_calls_tsv[method] = results_dir + 'Libraseq/norm/calls_' + method + '.tsv'
+      libraseq_threshs_csv[method] = results_dir + 'Libraseq/norm/thresholds_' + method + '.csv'
+      libraseq_calls_tsv_raw[method] = results_dir + 'Libraseq/raw/calls_' + method + '.tsv'
+      libraseq_threshs_csv_raw[method] = results_dir + 'Libraseq/raw/thresholds_' + method + '.csv'
+else:
+  libraseq_calls_tsv = {}
+  libraseq_threshs_csv = {}
+
+### If not input, assume the method to continue with is the first one input in the string of options
+if(config['libraseq_method'] == ''):
+  libraseq_method_name = config['libraseq_method_comparisons'].split(',')[0]
+else:
+  libraseq_method_name = config['libraseq_method']
+if(libraseq):
+  print('Using Libraseq calling method: ' + libraseq_method_name)
+
 
 
 ### If the second cluster resolution is not specified in the config file, use the first cluster resolution.
@@ -73,48 +106,54 @@ if 'prot_resolution2' not in config.keys():
   config['prot_resolution2'] = config['prot_resolution']
 
 comp_dict = defaultdict(int)
-with open(config['comparison_file'], newline = '') as csvfile:
-  reader = csv.DictReader(csvfile)
-  keyint = 0
-  for row in reader:
-    comp_dict[keyint] = row
-    ### If no input strat_name, set dictionary values to 'All'
-    if(comp_dict[keyint]['strat_name1'] == ''):
-      comp_dict[keyint]['strat_name1'] = 'All'
-      comp_dict[keyint]['strat_values1A'] = 'All'
-      comp_dict[keyint]['strat_values1B'] = 'All'
-    else: ### If strat_name is input, and strat_valueA is input but strat_value B is not, set the second value to the first
-      if(comp_dict[keyint]['strat_values1A'] != '' and comp_dict[keyint]['strat_values1B'] == ''):
-        comp_dict[keyint]['strat_values1B'] = comp_dict[keyint]['strat_values1A']
-    ### If no input strat_name, set dictionary values to 'All'
-    if(comp_dict[keyint]['strat_name2'] == ''):
-      comp_dict[keyint]['strat_name2'] = 'All'
-      comp_dict[keyint]['strat_values2A'] = 'All'
-      comp_dict[keyint]['strat_values2B'] = 'All'
-    else: ### If strat_name is input, and strat_valueA is input but strat_value B is not, set the second value to the first
-      if(comp_dict[keyint]['strat_values2A'] != '' and comp_dict[keyint]['strat_values2B'] == ''):
-        comp_dict[keyint]['strat_values2B'] = comp_dict[keyint]['strat_values2A']
-    ### If either test value is empty, set to NA
-    ### If either test value is empty, set to NA
-    if(comp_dict[keyint]['value1'] == ''): 
-      comp_dict[keyint]['value1'] = 'NA'
-    if(comp_dict[keyint]['value2'] == ''): 
-      comp_dict[keyint]['value2'] = 'NA'
-    keyint += 1
+if os.path.isfile(config['comparison_file']):
+  with open(config['comparison_file'], newline = '') as csvfile:
+    reader = csv.DictReader(csvfile)
+    keyint = 0
+    for row in reader:
+      comp_dict[keyint] = row
+      ### If no input strat_name, set dictionary values to 'All'
+      if(comp_dict[keyint]['strat_name1'] == ''):
+        comp_dict[keyint]['strat_name1'] = 'All'
+        comp_dict[keyint]['strat_values1A'] = 'All'
+        comp_dict[keyint]['strat_values1B'] = 'All'
+      else: ### If strat_name is input, and strat_valueA is input but strat_value B is not, set the second value to the first
+        if(comp_dict[keyint]['strat_values1A'] != '' and comp_dict[keyint]['strat_values1B'] == ''):
+          comp_dict[keyint]['strat_values1B'] = comp_dict[keyint]['strat_values1A']
+     ### If no input strat_name, set dictionary values to 'All'
+      if(comp_dict[keyint]['strat_name2'] == ''):
+        comp_dict[keyint]['strat_name2'] = 'All'
+        comp_dict[keyint]['strat_values2A'] = 'All'
+        comp_dict[keyint]['strat_values2B'] = 'All'
+      else: ### If strat_name is input, and strat_valueA is input but strat_value B is not, set the second value to the first
+        if(comp_dict[keyint]['strat_values2A'] != '' and comp_dict[keyint]['strat_values2B'] == ''):
+          comp_dict[keyint]['strat_values2B'] = comp_dict[keyint]['strat_values2A']
+      ### If either test value is empty, set to NA
+      ### If either test value is empty, set to NA
+      if(comp_dict[keyint]['value1'] == ''): 
+        comp_dict[keyint]['value1'] = 'NA'
+      if(comp_dict[keyint]['value2'] == ''): 
+        comp_dict[keyint]['value2'] = 'NA'
+      keyint += 1
 
 ### Read list of clusters to sub-cluster
 sc_file = os.path.join(os.getcwd(), config['sub_cluster'])
-if os.path.exists(sc_file):
+print(sc_file)
+if os.path.isfile(sc_file):
   sc = pd.read_csv(sc_file)
   ### Because cluster names are likely numbers only
   sc['cluster'] = sc['cluster'].astype(str)
-sub_clusters = ['-'.join(list(row)) for index,row in sc.iterrows()]
+  sub_clusters = ['-'.join(list(row)) for index,row in sc.iterrows()]
+else:
+ sub_clusters = []
 print('Sub clustering: ')
 print(sub_clusters)
 
 ### Read QC summary file (input to batch_eval checkpoint) and creates dictionary to hold the file paths held within
 QC_file = os.path.join(os.getcwd(), config['QC_file'])
+print(QC_file)
 qcdat = pd.read_csv(QC_file)
+print(qcdat)
 #### Add missing steps to qcdat with '' file column, including step 0 (no QC done yet)
 #step_names = ['Base data', 'DSB background', 'Sample filter', 'Imputation', 'Downsample', 'Transcript filter', 'Cell filter', 'Integration', 'Feature filter', 'Cluster filter']
 #step_names = ['Base data', 'Sample filter', 'Imputation', 'Cell filter', 'Integration', 'Cluster filter']
@@ -129,6 +168,7 @@ qcdat['post_name'] = [results_dir + 'PostQC' + str(q) + '.RDS' for q in qcdat.st
 qcdat = qcdat.set_index('step')
 qcdat = qcdat.sort_index(ascending = True)
 ### Add step_name
+print(step_names)
 qcdat['step_name'] = step_names
 ### Add original RDS file
 #qcdat.iloc[0, qcdat.columns.get_loc('post_name')] = 'data/All_data.RDS'
@@ -139,6 +179,7 @@ qcdat['skip'] = [not os.path.exists(f) for f in qcdat.file]
 qcdat.iloc[0, qcdat.columns.get_loc('skip')] = False
 
 print(qcdat)
+print(qcdat[qcdat.step_num == 'step6'].file.values[0])
 QC_specs = defaultdict(str, zip(qcdat.step_num, qcdat.file))
 
 ### For RStudio Connect publication ...sigh
@@ -198,4 +239,8 @@ def maybe_skip_integration(qcdat):
     out = results_dir + 'PostQC4.RDS'
   return(out)
 
+def aggregate_txt_inputs(wildcards):
+  checkpoint_output = checkpoints.set_batches.get(**wildcards).output[0]
+  txt = expand(results_dir + "batches/{i}/Cell_filtered.txt", i = glob_wildcards(os.path.join(checkpoint_output, "{i}", sheet_filename)).i)
+  return txt
 

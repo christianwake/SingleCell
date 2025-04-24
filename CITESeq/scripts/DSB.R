@@ -5,7 +5,7 @@ library('dplyr')
 library('viridis')
 library('data.table')
 library('patchwork')
-library('PKI')
+#library('PKI')
 library('tinytex')
 library('dsb')
 #library('tidyverse')
@@ -16,15 +16,15 @@ library('gridExtra')
 library('cowplot')
 #library('logspline')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
+source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
 
 # source('/Volumes/VRC1_DATA/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
 # source('/Volumes/VRC1_DATA/douek_lab/snakemakes/sc_functions.R')
 
 if(interactive()){
   base_dir <- '/Volumes/VRC1_DATA/'
-  base_dir <- '/hpcdata/vrc/vrc1_data/'
+  base_dir <- '/data/vrc_his/'
   
   project <- '2021614_21-002'
   qc_name <- 'DSB_by_sample'

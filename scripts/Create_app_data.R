@@ -4,7 +4,7 @@ library('stringr')
 library('pheatmap')
 library('ggplot2')
 library('umap')
-library('textshape')
+#library('textshape')
 library('dplyr')
 library('biomaRt')
 library('grid')
@@ -13,9 +13,9 @@ library('rsconnect')
 library('readxl')
 library('cowplot')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
+source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
 
 if(interactive()){
   # project <- '2021618_galt'
@@ -24,26 +24,26 @@ if(interactive()){
   # 
   project <- '2021600_kristin'
   qc_name <- 'Run2023-05-14'
-  additional <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021600_kristin/SampleSheets/Additional.csv' # columns - cell id then more stuff
-  gene_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/220921_transcriptome_analysis.xlsx')
+  additional <- '/data/vrc_his/douek_lab/projects/RNASeq/2021600_kristin/SampleSheets/Additional.csv' # columns - cell id then more stuff
+  gene_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/220921_transcriptome_analysis.xlsx')
   
   # project <- '2022620_857.1'
   # qc_name <- '2023-01-09'
-  # additional <- '/hpcdata/vrc/vrc1_data/douek_lab/wakecg/2020213_NHP857.1/preprocessing_2021-02-04_metadata.csv'
+  # additional <- '/data/vrc_his/douek_lab/wakecg/2020213_NHP857.1/preprocessing_2021-02-04_metadata.csv'
   
-  sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Mapped.RDS')
-  #de_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cluster_DE.RDS')
-  additional <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/SampleSheets/Additional.csv')
-  out_rdata <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/App/Data.RData')
-  out_pdf <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Extra_plots.pdf')
-  gene_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/genes.xlsx')
-  gtf_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
-  exclude_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Excluded_genes.txt')
+  sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Mapped.RDS')
+  #de_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cluster_DE.RDS')
+  additional <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/SampleSheets/Additional.csv')
+  out_rdata <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/App/Data.RData')
+  out_pdf <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Extra_plots.pdf')
+  gene_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/genes.xlsx')
+  gtf_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
+  exclude_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Excluded_genes.txt')
   
-  cluster_compare <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cluster_DE/Singles.txt')
-  rds_files <- c(paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cluster_DE.RDS'),
-                 paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/SubClusters/RNA_clusters-0.RDS'),
-                 paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/SubClusters/RNA_clusters-3.RDS'))
+  cluster_compare <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cluster_DE/Singles.txt')
+  rds_files <- c(paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cluster_DE.RDS'),
+                 paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/SubClusters/RNA_clusters-0.RDS'),
+                 paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/SubClusters/RNA_clusters-3.RDS'))
 
   username <- ''
   server <- 'rstudio-connect.niaid.nih.gov'
@@ -92,16 +92,16 @@ sdat <- readRDS(sdat_file)
 if(project == '2020213_NHP857.1'){
   mis <- c('34941_wk2_3', '36186_wk2_2', '16C301_wk6_1')
   plates <- unique(sdat$plate_name)
-  dat <- read.csv('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2022620_857.1/Cell_sheet.csv')
+  dat <- read.csv('/data/vrc_his/douek_lab/projects/RNASeq/2022620_857.1/Cell_sheet.csv')
   all(plates %in% dat$plate_name)
   mis %in% dat$plate_name
   table(dat$plate_name)
   table(dat[which(dat$plate_name %in% mis), 'plate_name'])
   for(plate in unique(sdat$plate_name)){
     cells <- row.names(sdat@meta.data[which(sdat$plate_name == plate),])
-    dat <- sdat@assays$RNA@counts[, cells]
-    write.csv(dat, paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/BCRSeq/2020213_NHP857.1/tempForDeposit/COUNTS-B-', plate, '.csv'), quote =F)
-    gzip(paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/BCRSeq/2020213_NHP857.1/tempForDeposit/COUNTS-B-', plate, '.csv'))
+    dat <- sdat@assays$RNA@layers$counts[, cells]
+    write.csv(dat, paste0('/data/vrc_his/douek_lab/projects/BCRSeq/2020213_NHP857.1/tempForDeposit/COUNTS-B-', plate, '.csv'), quote =F)
+    gzip(paste0('/data/vrc_his/douek_lab/projects/BCRSeq/2020213_NHP857.1/tempForDeposit/COUNTS-B-', plate, '.csv'))
   } 
 }
 
@@ -264,7 +264,7 @@ dev.off()
 
 
 ### App data
-sdat <- DietSeurat(sdat, counts = F, dimreducs = umaps, assays = c('RNA'))
+sdat <- DietSeurat(sdat, layers = c('counts'), dimreducs = umaps, assays = c('RNA'))
 rna_by_rna <- readRDS(cluster_de_files[1])
 
 save.image(out_rdata)

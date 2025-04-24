@@ -12,9 +12,9 @@ library('GSEABase')
 library('readxl')
 library('Seurat')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/DE_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/DE_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
 
 if(interactive()){
   project <- '2021600_kristin'
@@ -22,15 +22,15 @@ if(interactive()){
   test <- 'TCR.status'
   strats <- c('seurat_clusters-0', 'seurat_clusters-3')
   species <- 'hsapiens'
-  sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filtered_clustered.RDS')
+  sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filtered_clustered.RDS')
 
-  de_files <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/DE/', test, '/', strats, '/DE_results.tsv')
-  exclude_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Excluded_genes.txt')
-  gtf_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
-  #gmt_file <- '/hpcdata/vrc/vrc1_data/douek_lab/wakecg/genesets/c2.cp.v7.2.symbols.gmt'
-  #gmt_file <- '/hpcdata/vrc/vrc1_data/douek_lab/wakecg/genesets/h.all.v2022.1.Hs.symbols.gmt'
-  gmt_file <- '/hpcdata/vrc/vrc1_data/douek_lab/wakecg/genesets/c7.all.v2022.1.Hs.symbols.gmt'
-  out_rds <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Classified.RDS')
+  de_files <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/DE/', test, '/', strats, '/DE_results.tsv')
+  exclude_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Excluded_genes.txt')
+  gtf_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
+  #gmt_file <- '/data/vrc_his/douek_lab/wakecg/genesets/c2.cp.v7.2.symbols.gmt'
+  #gmt_file <- '/data/vrc_his/douek_lab/wakecg/genesets/h.all.v2022.1.Hs.symbols.gmt'
+  gmt_file <- '/data/vrc_his/douek_lab/wakecg/genesets/c7.all.v2022.1.Hs.symbols.gmt'
+  out_rds <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Classified.RDS')
 } else{
   args = commandArgs(trailingOnly=TRUE)
   sdat_file <- args[1]
@@ -57,7 +57,8 @@ sdat <- readRDS(sdat_file)
 if('TCR.status' %in% colnames(sdat@meta.data)){
   sdat$TCR.status[which(sdat$TCR.status == 'confirmed')] <- 'high confidence'
 }
-Idents(sdat) <- sdat[[test]]
+#Idents(sdat) <- sdat[[test]]
+Idents(sdat) <- test
 idents <- levels(Idents(sdat))
 
 # norm_counts <- as.data.frame(sdat@assays$RNA@data)
@@ -161,7 +162,7 @@ acc_tab <- table(sdat[[test]][[1]], sdat[[paste0(test, '_classification')]][[1]]
 acc_tab
 (acc_tab[1,2] + acc_tab[2,1]) / sum(acc_tab)
 
-pdf('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021600_kristin/specificity/Classification_by_top1gene.pdf')
+pdf('/data/vrc_his/douek_lab/projects/RNASeq/2021600_kristin/specificity/Classification_by_top1gene.pdf')
 DimPlot(sdat, group.by = test, label = T, reduction = 'umap')
 DimPlot(sdat, group.by = paste0(test, '_classification'), label = T, reduction = 'umap')
 dev.off()

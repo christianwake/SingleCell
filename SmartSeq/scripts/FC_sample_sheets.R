@@ -10,8 +10,8 @@ library('tools')
 library('readxl')
 library('tools')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/sample_sheet_functions.R')
-#source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
+source('/data/vrc_his/douek_lab/wakecg/sample_sheet_functions.R')
+#source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
 
 args = commandArgs(trailingOnly=TRUE)
 project <- args[1]
@@ -23,18 +23,18 @@ csv_file <- args[5]
 project <- '2021600_kristin'
 investigator <- 'Boswell'
 reference <- 'hsapiens'
-run_path <- '/hpcdata/vrc/vrc1_data/douek_lab/Runs/'
-csv_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/All_covariates.csv')
+run_path <- '/data/vrc_his/douek_lab/Runs/'
+csv_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/All_covariates.csv')
 
 project <- '2021618_galt'
 investigator <- 'Mexico'
 reference <- 'hsapiens'
-run_path <- '/hpcdata/vrc/vrc1_data/douek_lab/Runs/'
-csv_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/All_covariates.csv')
+run_path <- '/data/vrc_his/douek_lab/Runs/'
+csv_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/All_covariates.csv')
 
 # ## bcl2fastq sample sheets from excel docs
-# excel_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/', project, '/RD_TLbulkrnaseq_052721.xlsx')
-# excel_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021612_finch/RD_TLbulkrnaseq_052721.xlsx'
+# excel_file <- paste0('/data/vrc_his/douek_lab/wakecg/', project, '/RD_TLbulkrnaseq_052721.xlsx')
+# excel_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2021612_finch/RD_TLbulkrnaseq_052721.xlsx'
 # csv_file <- paste0(file_path_sans_ext(excel_file), '.csv')
 
 ### Read csv

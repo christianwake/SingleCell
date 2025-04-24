@@ -4,14 +4,14 @@ library('stringr')
 library('pheatmap')
 library('ggplot2')
 #library('umap')
-library('textshape')
+#library('textshape')
 library('dplyr')
 library('biomaRt')
 library('grid')
 library('scales')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
+source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
 
 # source('/Volumes/VRC1_DATA/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
 # source('/Volumes/VRC1_DATA/douek_lab/snakemakes/sc_functions.R')
@@ -24,7 +24,7 @@ source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
 if(interactive()){
   project <- '2021614_21-002'
   qc_name <- '2024-01-20'
-  base_dir <- '/hpcdata/vrc/vrc1_data/' 
+  base_dir <- '/data/vrc_his/' 
   sdat_file <- paste0(base_dir,'/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Clustered.RDS')
   filter_file <- paste0(base_dir,'douek_lab/projects/RNASeq/', project, '/QC_steps/cluster_filters.csv')
   out_rds <- paste0(base_dir,'douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filtered.RDS')
@@ -54,7 +54,11 @@ if(!interactive()){
   sdat <- readRDS(sdat_file)
   print('Done reading Seurat object')
   ### Downsample so I can work interactiveley for testing
-  ssub <- DietSeurat(sdat, counts = F, assays = c('RNA', 'prot'))
+  assays <- c('RNA', 'prot')
+  assays <- assays[which(assays %in% names(sdat@assays))]
+  layers <- c('counts', 'data')
+  layers <- layers[which(layers %in% names(sdat@assays$RNA@layers))]
+  ssub <- DietSeurat(sdat, layers = layers, assays = assays)
   cells <- sample(x = colnames(ssub), size = (length(colnames(ssub)) * downsample_var), replace = F)
   
   ssub <- subset(ssub, cells = cells)

@@ -111,7 +111,7 @@ def maybe_skip_annotation(annotation):
     out = maybe_skip_second_cluster
   return out
         
-include: "/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/SingleCell/Snakefile"
+include: "/data/vrc_his/douek_lab/snakemakes/SingleCell/Snakefile"
 
 rule all:
   input: results_dir + 'App/Data.RData'

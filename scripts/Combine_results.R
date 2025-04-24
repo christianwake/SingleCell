@@ -3,8 +3,8 @@ library('readr')
 library('WriteXLS')
 library('data.table')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/DE_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/DE_functions.R')
 
 
 ### Return the members of list dats that contain gene/geneset gs
@@ -48,30 +48,30 @@ if(interactive()){
             'results/Run2023-05-14/DE/Stim/RNA_clusters/Stim-SEB-S42+S205+N88+M37+M45+N33_DE_Strat1-RNA_clusters-0-0_Strat2-All-All-All.tsv'
     )
 
-    # args <- c('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021612_finch/results/Treatment_DESeq2.xls',
-  #           '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021612_finch/results/Treatment_DESeq2_sig.xls',
+    # args <- c('/data/vrc_his/douek_lab/projects/RNASeq/2021612_finch/results/Treatment_DESeq2.xls',
+  #           '/data/vrc_his/douek_lab/projects/RNASeq/2021612_finch/results/Treatment_DESeq2_sig.xls',
   #           '0.05',
-  #           '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021612_finch/results/Treatment/All/DESeq2_results.txt',
-  #           '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021612_finch/results/Treatment/Euth_Age-D6/DESeq2_results.txt',
-  #           '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021612_finch/results/Treatment/Euth_Age-D18/DESeq2_results.txt',
-  #           '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021612_finch/results/Treatment/Euth_Age-D35/DESeq2_results.txt',
-  #           '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021612_finch/results/Treatment/Euth_Age-D90/DESeq2_results.txt')
+  #           '/data/vrc_his/douek_lab/projects/RNASeq/2021612_finch/results/Treatment/All/DESeq2_results.txt',
+  #           '/data/vrc_his/douek_lab/projects/RNASeq/2021612_finch/results/Treatment/Euth_Age-D6/DESeq2_results.txt',
+  #           '/data/vrc_his/douek_lab/projects/RNASeq/2021612_finch/results/Treatment/Euth_Age-D18/DESeq2_results.txt',
+  #           '/data/vrc_his/douek_lab/projects/RNASeq/2021612_finch/results/Treatment/Euth_Age-D35/DESeq2_results.txt',
+  #           '/data/vrc_his/douek_lab/projects/RNASeq/2021612_finch/results/Treatment/Euth_Age-D90/DESeq2_results.txt')
   
-  # args <- c('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021612_finch/results/Treatment_GSEA.xls',
-  #           '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021612_finch/results/Treatment_GSEA_sig.xls',
+  # args <- c('/data/vrc_his/douek_lab/projects/RNASeq/2021612_finch/results/Treatment_GSEA.xls',
+  #           '/data/vrc_his/douek_lab/projects/RNASeq/2021612_finch/results/Treatment_GSEA_sig.xls',
   #           '0.05',
-  #           '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021612_finch/results/Treatment/All/fgsea_results.txt',
-  #           '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021612_finch/results/Treatment/Euth_Age-D6/fgsea_results.txt',
-  #           '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021612_finch/results/Treatment/Euth_Age-D18/fgsea_results.txt',
-  #           '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021612_finch/results/Treatment/Euth_Age-D35/fgsea_results.txt',
-  #           '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021612_finch/results/Treatment/Euth_Age-D90/fgsea_results.txt')
+  #           '/data/vrc_his/douek_lab/projects/RNASeq/2021612_finch/results/Treatment/All/fgsea_results.txt',
+  #           '/data/vrc_his/douek_lab/projects/RNASeq/2021612_finch/results/Treatment/Euth_Age-D6/fgsea_results.txt',
+  #           '/data/vrc_his/douek_lab/projects/RNASeq/2021612_finch/results/Treatment/Euth_Age-D18/fgsea_results.txt',
+  #           '/data/vrc_his/douek_lab/projects/RNASeq/2021612_finch/results/Treatment/Euth_Age-D35/fgsea_results.txt',
+  #           '/data/vrc_his/douek_lab/projects/RNASeq/2021612_finch/results/Treatment/Euth_Age-D90/fgsea_results.txt')
 
-    # args <- c('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2022612_Petrovas/results/Strain_GSEA.xls',
-    #         '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2022612_Petrovas/results/Strain_GSEA_sig.xls',
+    # args <- c('/data/vrc_his/douek_lab/projects/RNASeq/2022612_Petrovas/results/Strain_GSEA.xls',
+    #         '/data/vrc_his/douek_lab/projects/RNASeq/2022612_Petrovas/results/Strain_GSEA_sig.xls',
     #         '0.05',
-    #         '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2022612_Petrovas/results/Strain/All/fgsea_results.txt',
-    #         '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2022612_Petrovas/results/Strain/Cell_type-pre_Tfh/fgsea_results.txt',
-    #         '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2022612_Petrovas/results/Strain/Cell_type-Tfh/fgsea_results.txt')
+    #         '/data/vrc_his/douek_lab/projects/RNASeq/2022612_Petrovas/results/Strain/All/fgsea_results.txt',
+    #         '/data/vrc_his/douek_lab/projects/RNASeq/2022612_Petrovas/results/Strain/Cell_type-pre_Tfh/fgsea_results.txt',
+    #         '/data/vrc_his/douek_lab/projects/RNASeq/2022612_Petrovas/results/Strain/Cell_type-Tfh/fgsea_results.txt')
 }else{
   args = commandArgs(trailingOnly=TRUE)
 }

@@ -1,3 +1,4 @@
+
 rule make_gtf_R_object:
   input:
     config['refgtf']
@@ -31,27 +32,142 @@ rule QC_eval:
     touch {output.cp}
     """
 
-### QC step0 (not optional for CITESeq)
-### Background cells are those that are called that way both by CellRanger and by the dehashing step, and then are filtered further.
-rule Create_DSB_background:
-  input:
-    samples = sample_sheet,
-    tsv = dehash_calls_tsv[utilized_method_name],
-    qc = QC_specs['step0'], 
-    gtf = 'data/gtf.RDS'
-  params:
-    scripts = config['CITESeq_scripts'],
-    runs_dir = config['runs_dir'],
-    project = config['project'],
-    results_dir = results_dir
-  output:
-    results_dir + "Background.RDS",
-    results_dir + "Background.pdf"
-  shell:
-    """
-    mkdir -p {params.results_dir}
-    Rscript {params.scripts}/Create_background.R '{params.runs_dir}' '{params.project}' {input} {output}
-    """
+if libraseq:
+  ### Libraseq here if using DSB counts
+  rule libraseq_thresholds_raw:
+    input: 
+      samples = results_dir + sheet_filename,
+      gtf = 'data/gtf.RDS',
+      rds = results_dir + "All_data.RDS" 
+    params:
+      scripts = config['SC_scripts'],
+      project = config['project'],
+      runs_dir = config['runs_dir'],
+    resources: mem_mb=240000
+    output:
+      results_dir + 'Libraseq/raw/thresholds_{method}.csv',
+      results_dir + 'Libraseq/raw/thresholds_{method}.pdf'
+    shell:
+      "Rscript {params.scripts}/Libraseq_thresholds.R {input} {params.runs_dir} {params.project} 'TRUE' {wildcards.method} {output}"
+
+  rule libraseq_calls_raw:
+    input:
+      #results_dir + "All_data.RDS",
+      results_dir + "PostQC1.RDS",
+      results_dir + 'Libraseq/raw/thresholds_{method}.csv'
+    params:
+      scripts = config['SC_scripts'],
+      probes = config['LIBRASeq']
+    resources: mem_mb=240000
+    output:
+      results_dir + 'Libraseq/raw/calls_{method}.RDS',
+      results_dir + 'Libraseq/raw/calls_{method}.tsv',
+      results_dir + 'Libraseq/raw/calls_{method}.pdf'
+    shell:
+      "Rscript {params.scripts}/Libraseq_calls.R {input} {output} {params.probes} 'TRUE'"
+
+  rule Libraseq_method_comparison_raw:
+    input:
+      samples = results_dir + sheet_filename,
+      rds = ancient(results_dir + "All_data.RDS"), 
+      call_files = list(libraseq_calls_tsv_raw.values())
+    params:
+      scripts = config['SC_scripts'],
+      runs_dir = config['runs_dir'],
+      project = config['project'],
+      method = config['libraseq_method_comparisons'],
+      probes = config['LIBRASeq'],
+      thresh_files = list(libraseq_threshs_csv_raw.values())
+    resources: mem_mb=50000
+    output:
+      results_dir + "Libraseq/raw/comparisons_threshs.pdf",
+      results_dir + "Libraseq/raw/comparisons.csv"
+    shell:
+      "Rscript {params.scripts}/Libraseq_method_comparison.R '{params.runs_dir}' '{params.project}' '{params.method}' '{params.probes}' 'TRUE' {output} {input} {params.thresh_files}"
+
+  ### Libraseq here if using DSB counts
+  rule libraseq_thresholds:
+    input: 
+      samples = results_dir + sheet_filename,
+      gtf = 'data/gtf.RDS',
+      rds = ancient(results_dir + "Combined_batches.RDS"), 
+    params:
+      scripts = config['SC_scripts'],
+      runs_dir = config['runs_dir'],
+      project = config['project']
+    resources: mem_mb=240000
+    output:
+      results_dir + 'Libraseq/norm/thresholds_{method}.csv',
+      results_dir + 'Libraseq/norm/thresholds_{method}.pdf'
+    shell:
+      "Rscript {params.scripts}/Libraseq_thresholds.R {input} {params.runs_dir} {params.project} 'FALSE' {wildcards.method} {output}"
+
+  rule libraseq_calls:
+    input:
+      results_dir + "Combined_batches.RDS",
+      results_dir + 'Libraseq/norm/thresholds_{method}.csv'
+    params:
+      scripts = config['SC_scripts'],
+      probes = config['LIBRASeq']
+    resources: mem_mb=240000
+    output:
+      results_dir + 'Libraseq/norm/calls_{method}.RDS',
+      results_dir + 'Libraseq/norm/calls_{method}.tsv',
+      results_dir + 'Libraseq/norm/calls_{method}.pdf'
+    shell:
+      "Rscript {params.scripts}/Libraseq_calls.R {input} {output} {params.probes} 'FALSE'"
+
+  rule Libraseq_method_comparison:
+    input:
+      samples = results_dir + sheet_filename,
+      rds = ancient(results_dir + "Combined_batches.RDS"), 
+      call_files = list(libraseq_calls_tsv.values())
+    params:
+      scripts = config['SC_scripts'],
+      runs_dir = config['runs_dir'],
+      project = config['project'],
+      method = config['libraseq_method_comparisons'],
+      probes = config['LIBRASeq'],
+      thresh_files = list(libraseq_threshs_csv.values())
+    resources: mem_mb=50000
+    output:
+      results_dir + "Libraseq/norm/comparisons_threshs.pdf",
+      results_dir + "Libraseq/norm/comparisons.csv"
+    shell:
+      "Rscript {params.scripts}/Libraseq_method_comparison.R '{params.runs_dir}' '{params.project}' '{params.method}' '{params.probes}' 'FALSE' {output} {input} {params.thresh_files}"
+
+  rule aggregate_libraseq_comparisons:
+    input: 
+      results_dir + "Libraseq/raw/comparisons.csv",
+      results_dir + "Libraseq/norm/comparisons.csv"
+    output:
+      results_dir + "Libraseq/txt.txt"
+    shell:
+      "ls {input} > {output}"
+
+if 'prot' in assays_list:
+  ### QC step (not optional for CITESeq)
+  ### Background cells are those that are called that way both by CellRanger and by the dehashing step, and then are filtered further.
+  rule Create_DSB_background:
+    input:
+      samples = sample_sheet,
+      tsv = dehash_calls_tsv[utilized_method_name],
+      #qc = QC_specs['step0'], 
+      qc = config['DSB_background'],
+      gtf = 'data/gtf.RDS'
+    params:
+      scripts = config['CITESeq_scripts'],
+      runs_dir = config['runs_dir'],
+      project = config['project'],
+      results_dir = results_dir
+    output:
+      results_dir + "Background.RDS",
+      results_dir + "Background.pdf"
+    shell:
+      """
+      mkdir -p {params.results_dir}
+      Rscript {params.scripts}/Create_background.R '{params.runs_dir}' '{params.project}' {input} {output}
+      """
 
 ### QC step1, sample filter e.g. entire batches gone wrong
 rule Filter_whole_samples_for_Seurat:
@@ -59,11 +175,9 @@ rule Filter_whole_samples_for_Seurat:
     **maybe_skip_QC_stepN(qcdat, 1) ### Returns RDS file as 'rds' and file with QC details as 'qc', and 'touch'
     #"data/All_data.RDS"
   params:
-    scripts = config['SC_scripts'],
-    samples = samples
+    scripts = config['SC_scripts']
   output:
     rds = results_dir + "PostQC1.RDS"
-    #csv = results_dir + "Sample_sheet.csv"
   resources: mem_mb=240000
   run:
     shell('Rscript {params.scripts}/Filter_samples.R {input.rds} {input.qc} {output.rds}')
@@ -72,9 +186,9 @@ rule Filter_whole_samples_for_Sample_sheet:
   input:
     sample_sheet = sample_sheet 
   output:
-    csv = results_dir + "Sample_sheet.csv"
+    csv = results_dir + sheet_filename
   run:
-    samples = pd.read_table(input['sample_sheet'], sep = ',').set_index('Sample_ID', drop = False)
+    samples = pd.read_table(input['sample_sheet'], sep = ',').set_index(sheet_ID, drop = False)
     qc_skip = qcdat[qcdat.step_num == 'step1'].skip.values[0]
     ### If Sample filter file is input, subset and print sample sheet into the results/qc_name directory
     if(qc_skip == False):
@@ -107,13 +221,13 @@ rule Filter_whole_samples_for_Sample_sheet:
 
 checkpoint set_batches:
   input:
-    sample_sheet = results_dir + "Sample_sheet.csv"
+    sample_sheet = results_dir + sheet_filename
   output:
     batch_dir = directory(results_dir + 'batches/')
   run:
     ### Create directory
     os.mkdir(output['batch_dir'])
-    samples = pd.read_table(input['sample_sheet'], sep = ',').set_index('Sample_ID', drop = False)
+    samples = pd.read_table(input['sample_sheet'], sep = ',').set_index(sheet_ID, drop = False)
     ### The batches based on the sample sheet output from the previous step (filtered)
     batchs = list(set(samples[config['batch']]))
     for batch in batchs:
@@ -122,7 +236,7 @@ checkpoint set_batches:
       ### Get sample sheet subset
       sub = samples[samples[config['batch']] == batch]
       ### Print
-      sub.to_csv(os.path.join(output['batch_dir'], batch, 'Sample_sheet.csv'))
+      sub.to_csv(os.path.join(output['batch_dir'], batch, sheet_filename))
 
 ### MOD - optionally input gtf to better determine MT genes for quantification
 rule Impute:
@@ -156,6 +270,7 @@ rule Downsample:
 rule Feature_filters:
   input:
     **maybe_skip_QC_stepN(qcdat, 4),
+    gtf = 'data/gtf.RDS'
   params:
     scripts = config['SC_scripts'],
     results_dir = results_dir
@@ -165,57 +280,29 @@ rule Feature_filters:
     results_dir + "PostQC4.RDS",
     results_dir + "Excluded_genes.tsv"
   resources: mem_mb=get_mem_mb
-  log:
-    log_dir + "Feature_filters.log"
   shell:
     """
-    Rscript {params.scripts}/Transcript_filters.R {input.rds} {input.qc} {output} > {log}
+    Rscript {params.scripts}/Transcript_filters.R {input.rds} {input.qc} {input.gtf} {output} > {log}
     """
 
-### QC step 5, remove cells based on RNA content
-rule Cell_filters:
-  input:
-    **maybe_skip_QC_stepN(qcdat, 5), ### Returns RDS file as 'rds' and file with QC details as 'qc', and 'touch'
-    samples = results_dir + "Sample_sheet.csv",
-    exclude = results_dir + "Excluded_genes.txt",
-    gtf = 'data/gtf.RDS'
-  params:
-    scripts = config['SC_scripts'],
-    batch_name = config['batch'],
-    results_dir = results_dir
-  output:
-    results_dir + "batches/{batch}/Cell_filtered.RDS",
-    results_dir + "batches/{batch}/Cell_filtered.pdf",
-    results_dir + "batches/{batch}/Cell_filtered.txt"
-  resources: mem_mb=get_mem_mb
-  log:
-    results_dir + "batches/{batch}/Cell_filtered.log"
-  shell:
-    """
-    mkdir -p {params.results_dir}/batches/{wildcards.batch}/
-    Rscript {params.scripts}/Cell_filters.R {input.rds} {input.qc} {input.samples} {input.exclude} {input.gtf} '{wildcards.batch}' '{params.batch_name}' {output}
-    """
-
-### Per batch, run DSB protein normalization
-rule DSB:
-  input:
-    #runs_dir = config['runs_dir'],
-    sdat = results_dir + "batches/{batch}/Cell_filtered.RDS",
-    background = results_dir + "Background.RDS",
-    samples = results_dir + "Sample_sheet.csv",
-    #samples = sample_sheet,
-    #csv = "data/Cell_data.csv",
-    tsv = dehash_calls_tsv[utilized_method_name],
-    #"data/Unnormalized_data.RDS"
-  output:
-    results_dir + "batches/{batch}/DSB_normalized_data.RDS"
-  params:
-    scripts = config['CITESeq_scripts'],
-    batch_name = config['batch'],
-    #htos = config['hashtags'],
-    isocont = config['isotype_controls']
-  shell:
-    "Rscript {params.scripts}/DSB.R {input} '{wildcards.batch}' '{params.batch_name}' '{params.isocont}' {output}"
+if 'prot' in assays_list:
+  ### Per batch, run DSB protein normalization
+  rule DSB:
+    input:
+      #runs_dir = config['runs_dir'],
+      sdat = results_dir + "batches/{batch}/Cell_filtered.RDS",
+      background = results_dir + "Background.RDS",
+      samples = results_dir + sheet_filename,
+      tsv = dehash_calls_tsv[utilized_method_name],
+    output:
+      results_dir + "batches/{batch}/DSB_normalized_data.RDS"
+    params:
+      scripts = config['CITESeq_scripts'],
+      batch_name = config['batch'],
+      #htos = config['hashtags'],
+      isocont = config['isotype_controls']
+    shell:
+      "Rscript {params.scripts}/DSB.R {input} '{wildcards.batch}' '{params.batch_name}' '{params.isocont}' {output}"
 
 rule Combine_batches:
   input:
@@ -223,9 +310,10 @@ rule Combine_batches:
     #[os.path.join(results_dir, str(Batch), 'RNA_cell_filtered.RDS') for Batch in batchs],
     #[os.path.join(results_dir, str(Batch), 'DSB_normalized_data.RDS') for Batch in batchs]
   params:
-    scripts = config['CITESeq_scripts'],
+    scripts = config['SC_scripts'],
     batch_name = config['batch'],
-    isocont = config['isotype_controls']
+    isocont = config['isotype_controls'],
+    prot = prot 
   output:
     results_dir + "Combined_batches.RDS",
     results_dir + "Combined_batches.pdf"
@@ -234,8 +322,17 @@ rule Combine_batches:
     log_dir + "Combine_batches.log"
   shell:
     """
-    Rscript {params.scripts}/DSB_combine.R {output} {params.batch_name} '{params.isocont}' {input}
+    Rscript {params.scripts}/Combine_batches.R {output} {params.batch_name} '{params.isocont}' '{params.prot}' {input}
     """
+
+rule Combine_multiqc_txt:
+  input:
+    aggregate_multiqc_inputs
+  output:
+    results_dir + 'multiqc_input_files.txt'
+  shell:
+    "cat {input} | sort | uniq > {output}"
+
 
 rule RNA_Normalization:
   input: 
@@ -261,7 +358,7 @@ rule batch_evaluation_again:
     batch = config['batch'],
     plots_path = results_dir + '/post_DSB/'
   output:
-    txt = results_dir + 'Batch.txt',
+    txt = results_dir + 'batch_evaluation_2nd.txt',
     pdf1 = results_dir + 'Post_QC.pdf'
     #pdf2 = results_dir + 'Batch.pdf'
   resources: mem_mb=get_mem_mb

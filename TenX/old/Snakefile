@@ -1,0 +1,139 @@
+import pandas as pd
+import subprocess
+import os
+from collections import defaultdict
+configfile: 'project_config_file.yaml'
+
+config = defaultdict(str, config)
+config['filter'] = defaultdict(defaultdict, config['filter'])
+config['filter']['cell'] = defaultdict(str, config['filter']['cell'])
+config['filter']['feature'] = defaultdict(str, config['filter']['feature'])
+
+rule all:
+  input: 'results/App/Data.RData'
+
+rule Cell_filter:
+  input:
+    "data/Seurat_raw.RDS"
+  output:
+    "results/RNA_cell_filtered.RDS",
+    "results/MT_nFeatures.pdf",
+    "results/Excluded_genes.txt",
+    "results/Filters_Ncells.txt"
+  params:
+    script = config['scripts_dir'],
+    gtf = config['gtf'],
+    pattern = config['filter']['feature']['pattern'],
+    fraction_cells = config['filter']['feature']['fraction_cells'],
+    nFeature_RNA = config['filter']['cell']['nFeature_RNA'],
+    MT_sum = config['filter']['cell']['MT_sum'],
+    nCount_RNA = config['filter']['feature']['nCount_RNA'],
+    diversity = config['filter']['cell']['Shannon_diversity']
+  shell:
+    "Rscript {params.script}/Cell_filter.R {input} '{params.gtf}' '{params.pattern}' '{params.fraction_cells}' '{params.nFeature_RNA}' '{params.MT_sum}' '{params.nCount_RNA}' '{params.diversity}' {output}"
+
+rule cluster:
+  input:
+    "results/RNA_cell_filtered.RDS",
+    "results/Excluded_genes.txt"
+  params:
+    script = config['scripts_dir'],
+    negative_markers = config['negative_markers'],
+    gene_file = config['gene_file'],
+    clust_resolution = config['clust_resolution']
+  output:
+    "results/Clustered.RDS",
+    "results/RNA_clusters.pdf"
+  shell:
+    "Rscript {params.script}/Clustering_SC.R {input} '{params.negative_markers}' '{params.gene_file}' '{params.clust_resolution}' {output}"
+
+rule Gene_plots:
+  input:
+    "results/Clustered.RDS"
+  params:
+    script = config['scripts_dir'],
+    gene_file = config['gene_file']
+  output:
+    "results/Genes.pdf"
+  shell:
+    "Rscript {params.script}/Gene_plots.R {input} '{params.gene_file}' {output}"
+
+rule batch_evaluation:
+  input:
+    "results/Clustered.RDS"
+  params:
+    script = config['scripts_dir'],
+    batch_candidates = config['batch_candidates'],
+    batch_method = config['batch_method'],
+    plots_path = "plots/"
+  output:
+    "results/batch_evaluation.txt",
+    "results/batch_evaluation.pdf"
+  shell:
+    "Rscript {params.script}/Batch_evaluation.R {input} '{params.batch_candidates}' '{params.batch_method}' '{params.plots_path}' {output}"
+
+rule cluster_filter:
+  input:
+    "results/Clustered.RDS"
+  params:
+    script = config['scripts_dir'],
+    negative_markers = config['negative_markers'],
+    positive_markers = config['positive_markers']
+  output:
+    "results/Filtered.RDS",
+    "results/Filters.txt",
+    "results/Cluster_filters.pdf"
+  shell:
+    "Rscript {params.script}/Cluster_filters_SC.R {input} '{params.negative_markers}' '{params.positive_markers}' {output}"
+
+rule post_filter_cluster:
+  input:
+    "results/Filtered.RDS",
+    "results/Excluded_genes.txt"
+  params:
+    script = config['scripts_dir'],
+    negative_markers = config['negative_markers'],
+    gene_file = config['gene_file'],
+    clust_resolution = config['clust_resolution']
+  output:
+    "results/Processed_data.RDS",
+    "results/RNA_clusters_filtered.pdf"
+  shell:
+    "Rscript {params.script}/Clustering_SC.R {input} '{params.negative_markers}' '{params.gene_file}' '{params.clust_resolution}'  {output}"
+
+#rule UMAPs_unfiltered:
+#  input:
+#    "results/{panel}/Clustered.RDS"
+#  output:
+#    "results/{panel}/UMAPs_unfiltered.pdf"
+#  shell:
+#    "Rscript scripts/UMAPs.R {input} {output}"
+
+#rule UMAPs:
+#  input:
+#    "results/{panel}/Filtered_clustered.RDS"
+#  output:
+#    "results/{panel}/UMAPs.pdf"
+#  shell:
+#    "Rscript scripts/UMAPs.R {input} {output}"
+    
+rule Cluster_DE:
+  input:
+    "results/Processed_data.RDS",
+    "results/Excluded_genes.txt"
+  params:
+    script = config['scripts_dir'],
+    project = config['project'],
+    username = config['username'],
+    server = config['server']
+  output:
+    "results/App/Data.RData"
+  resources: mem_mb=30000
+  shell:
+    """
+    mkdir -p results/App/
+    #cp {params.script}/App.R results/App/
+    Rscript {params.script}/Cluster_DE_SC.R {input} {output} '{params.project}' '{params.username}' '{params.server}'
+    """
+
+

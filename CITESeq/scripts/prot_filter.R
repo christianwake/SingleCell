@@ -3,7 +3,7 @@ library('Seurat')
 library('stringr')
 library('pheatmap')
 library('ggplot2')
-library('textshape')
+#library('textshape')
 library('dplyr')
 library('biomaRt')
 library('grid')
@@ -11,9 +11,9 @@ library('scales')
 library('data.table')
 library('VennDiagram')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
+source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
 
 args = commandArgs(trailingOnly=TRUE)
 batch_name <- args[1]
@@ -26,15 +26,15 @@ filter_file <- args[7]
 batch_files <- args[8:length(args)]
 
 # batch_name <- 'Date_Sort'
-# out_rds <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021614_21-002/results/RNA_cell_filtered.RDS')
-# out_pdf <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021614_21-002/results/MT_nFeatures.pdf')
-# out_txt <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021614_21-002/results/Filtered_Ncells.txt')
-# sdat_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021614_21-002/results/DSB_normalized_data.RDS'
-# covs_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021614_21-002/All_covariates.csv'
-# filter_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021614_21-002/filters.csv'
-batch_files <- c('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021614_21-002/results/2021-11-09/Filters_Ncells.txt',
-                 '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021614_21-002/results/2021-11-10/Filters_Ncells.txt',
-                 '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021614_21-002/results/2021-12-02/Filters_Ncells.txt')
+# out_rds <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/RNA_cell_filtered.RDS')
+# out_pdf <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/MT_nFeatures.pdf')
+# out_txt <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/Filtered_Ncells.txt')
+# sdat_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/DSB_normalized_data.RDS'
+# covs_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/All_covariates.csv'
+# filter_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/filters.csv'
+batch_files <- c('/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/2021-11-09/Filters_Ncells.txt',
+                 '/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/2021-11-10/Filters_Ncells.txt',
+                 '/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/2021-12-02/Filters_Ncells.txt')
 
 filters <- read.table(filter_file, header = T, sep = ',')
 nFeature_RNA <- filters[which(filters$type == 'cell' & filters$feature == 'nFeature_RNA'), 'value']

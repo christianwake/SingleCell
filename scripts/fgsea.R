@@ -11,9 +11,9 @@ library('fgsea')
 library('GSEABase')
 library('readxl')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/DE_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/DE_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
 
 if(interactive()){
   project <- '2021600_kristin'
@@ -28,29 +28,29 @@ if(interactive()){
   strat_values2A <- '1'
   strat_values2B <- '1'
   species <- 'hsapiens'
-  sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filtered_clustered.RDS')
+  sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filtered_clustered.RDS')
   
   # project <- '2022620_857.1'
   # qc_name <- '2022-12-09'
   # test <- 'timepoint'
   # strat <- 'seurat_clusters-1'
   # species <- 'mmulatta'
-  # sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filtered.RDS')
+  # sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filtered.RDS')
   
-  # res_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', 
+  # res_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', 
   #                    qc_name, '/DE/', test, '/', strat, '/DE_results.tsv')
-  res_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', 
+  res_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', 
                      qc_name, '/DE/', test, '/', strat1, '/', test, '-', value1, '-', value2, 
                      '_DE_Strat1-', strat1, '-', strat_values1A, '-', strat_values1B, '_Strat2-', strat2, '-', strat_values2A, '-', strat_values2B,  '.tsv')
   
-  #res_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/DE/', test, '/', strat, '/DE_results.tsv')
-  exclude_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Excluded_genes.txt')
-  gtf_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
-  #gmt_file <- '/hpcdata/vrc/vrc1_data/douek_lab/wakecg/genesets/c2.cp.v7.2.symbols.gmt'
-  gmt_file <- '/hpcdata/vrc/vrc1_data/douek_lab/wakecg/genesets/h.all.v2022.1.Hs.symbols.gmt'
-  #gmt_file <- '/hpcdata/vrc/vrc1_data/douek_lab/wakecg/genesets/c7.all.v2022.1.Hs.symbols.gmt'
-  out_tsv <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/DE/', test, '/', strat, '/fgsea.tsv')
-  out_pdf <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/DE/', test, '/', strat, '/fgsea.pdf')
+  #res_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/DE/', test, '/', strat, '/DE_results.tsv')
+  exclude_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Excluded_genes.txt')
+  gtf_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
+  #gmt_file <- '/data/vrc_his/douek_lab/wakecg/genesets/c2.cp.v7.2.symbols.gmt'
+  gmt_file <- '/data/vrc_his/douek_lab/wakecg/genesets/h.all.v2022.1.Hs.symbols.gmt'
+  #gmt_file <- '/data/vrc_his/douek_lab/wakecg/genesets/c7.all.v2022.1.Hs.symbols.gmt'
+  out_tsv <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/DE/', test, '/', strat, '/fgsea.tsv')
+  out_pdf <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/DE/', test, '/', strat, '/fgsea.pdf')
   custom_sets <- NA
 } else{
   args = commandArgs(trailingOnly=TRUE)
@@ -75,7 +75,8 @@ if(file.exists(exclude_file) & file.info(exclude_file)$size != 0){
 
 ### Read counts
 sdat <- readRDS(sdat_file)
-norm_counts <- as.data.frame(sdat@assays$RNA@data)
+norm_counts <- as.data.frame(sdat@assays$RNA@layers$data)
+row.names(norm_counts) <- row.names(sdat)
 norm_counts <- norm_counts[which(!(row.names(norm_counts) %in% exclude_gene_names)),]
 rm(sdat)
 
@@ -127,7 +128,7 @@ if(species != 'hsapiens'){
   }
 }
 
-# biomart_results_file <-  '/hpcdata/vrc/vrc1_data/douek_lab/wakecg/2020213_NHP857.1/Biomart_output.RDS'
+# biomart_results_file <-  '/data/vrc_his/douek_lab/wakecg/2020213_NHP857.1/Biomart_output.RDS'
 # ids <- row.names(sdat)[which(!(row.names(sdat) %in% exclude_gene_names))]
 # id_key <- readRDS(biomart_results_file)
 # ### (For now) Only keep one-to-one orthologs.

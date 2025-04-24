@@ -5,15 +5,15 @@ import re
 from collections import defaultdict
 import csv
 
-
-step_names =  ['DSB_background', 'Sample filter', 'Imputation', 'Downsample', 'Transcript filter', 'Cell filter', 'Integration', 'cluster filter']
+### Define possible QC steps
+#step_names =  ['Base dat','DSB_background', 'Sample filter', 'Imputation', 'Downsample', 'Transcript filter', 'Cell filter', 'Integration', 'cluster filter']
+step_names =  ['Base dat', 'Sample filter', 'Imputation', 'Downsample', 'Transcript filter', 'Cell filter', 'Integration', 'cluster filter']
 ### Cell filter -> DSB are within batches
 ### RNA normalization can go where? Just after Downsample?
 ### I'm thinking after Transcript Filter, though it seems my earlier SC pipeline normalized just before cell and feature filtering.
 
 
-include: "/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/SingleCell/Common_prep.py"
-#include: "/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/SingleCell/Snakefile"
+include: "/data/vrc_his/douek_lab/snakemakes/SingleCell/Common_prep.py"
 
 ### Panel info may be a panel name, or if multiple panels, a file with columns per panel, rows per feature and values 0 or 1 indicating membership.
 #panel_info = config['panel_info']
@@ -38,7 +38,9 @@ include: "/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/SingleCell/Common_prep.py"
 
 ### Read sample sheet
 sample_sheet = os.path.join(os.getcwd(), config['sample_sheet'])
-samples = pd.read_table(sample_sheet, sep = ',').set_index('Sample_ID', drop = False)
+sheet_ID = 'Sample_ID'
+samples = pd.read_table(sample_sheet, sep = ',').set_index(sheet_ID, drop = False)
+sheet_filename = 'Sample_sheet.csv'
 
 ### Read list of cluster comparisons to do
 #cc_file = os.path.join(os.getcwd(), config['cluster_compare'])
@@ -64,6 +66,11 @@ def aggregate_txt_inputs(wildcards):
   txt = expand(results_dir + "batches/{i}/Cell_filtered.txt", i = glob_wildcards(os.path.join(checkpoint_output, "{i}", "Sample_sheet.csv")).i)
   return txt
 
+def aggregate_multiqc_inputs(wildcards):
+  checkpoint_output = checkpoints.set_batches.get(**wildcards).output[0]
+  fqc = expand(results_dir + "batches/{i}/multiqc_input_files.txt", i = glob_wildcards(os.path.join(checkpoint_output, "{i}", "Sample_sheet.csv")).i)
+  return fqc
+
 ### If the last line of the second output of cluster_filters (Filters.txt) specifies that 0 cells were filtered, skip re-clustering
 #def maybe_skip_second_cluster(wildcards):
 #  cp = checkpoints.cluster_filter.get().output[1]
@@ -85,7 +92,7 @@ def aggregate_txt_inputs(wildcards):
 #    out = results_dir + 'Processed_data.RDS'
 #  return out
 
-include: '/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/SingleCell/Snakefile'
+include: '/data/vrc_his/douek_lab/snakemakes/SingleCell/Snakefile'
 
 rule all:
   input: results_dir + 'App/Data.RData'
@@ -119,6 +126,7 @@ rule Dehash:
     """
 
 print(list(dehash_calls_tsv.values()))
+print(list(libraseq_calls_tsv.values()))
 rule Dehash_method_comparison:
   input:
     samples = sample_sheet,
@@ -267,5 +275,29 @@ rule CS_App_data:
     cp {params.scripts}/App.R {params.results_dir}/App/
     cp {params.scripts}/../../../sc_functions.R {params.results_dir}/App/
     Rscript {params.scripts}/Create_app_data.R {output} '{params.pdf_file}' '{params.gene_file}' '{params.project}' '{params.username}' '{params.server}' {input}
+    """
+
+### QC step 5, remove cells based on RNA content
+rule Cell_filters:
+  input:
+    **maybe_skip_QC_stepN(qcdat, 5), ### Returns RDS file as 'rds' and file with QC details as 'qc', and 'touch'
+    samples = results_dir + sheet_filename,
+    exclude = results_dir + "Excluded_genes.txt",
+    gtf = 'data/gtf.RDS'
+  params:
+    scripts = config['SC_scripts'],
+    batch_name = config['batch'],
+    results_dir = results_dir
+  output:
+    results_dir + "batches/{batch}/Cell_filtered.RDS",
+    results_dir + "batches/{batch}/Cell_filtered.pdf",
+    results_dir + "batches/{batch}/Cell_filtered.txt"
+  resources: mem_mb=get_mem_mb
+  log:
+    results_dir + "batches/{batch}/Cell_filtered.log"
+  shell:
+    """
+    mkdir -p {params.results_dir}/batches/{wildcards.batch}/
+    Rscript {params.scripts}/Cell_filters.R {input.rds} {input.qc} {input.samples} {input.exclude} {input.gtf} '{wildcards.batch}' '{params.batch_name}' {output} > {log}
     """
 

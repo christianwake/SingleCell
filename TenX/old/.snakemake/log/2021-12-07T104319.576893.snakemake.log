@@ -1,0 +1,3 @@
+WorkflowError in line 5 of /hpcdata/vrc/vrc1_data/douek_lab/snakemakes/SC_R/Snakefile:
+Config file project_config_file.yaml not found.
+  File "/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/SC_R/Snakefile", line 5, in <module>

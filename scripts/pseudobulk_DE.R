@@ -5,8 +5,8 @@ library('ggplot2')
 library('dplyr')
 library('viridis')
 library('data.table')
-library('PKI')
-library('tinytex')
+#library('PKI')
+#library('tinytex')
 library('biomaRt')
 library('fgsea')
 library('GSEABase')
@@ -14,7 +14,7 @@ library('WriteXLS')
 library('logistf')
 library('readxl')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
 
 if(interactive()){
   # project <- '2021600_kristin'
@@ -28,7 +28,21 @@ if(interactive()){
   # strat_name2 <- 'All'
   # strat_values2A <- 'All'
   # strat_values2B <- 'All'
-  # sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filtered_clustered.RDS')
+  # sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filtered_clustered.RDS')
+  
+  project <- '2024615_Boswell'
+  qc_name <- 'Run2025-04-10'
+  test_name <- 'Stim'
+  value1 <- 'SEB'
+  value2 <- 'S42+N27+S302'
+  strat_name1 <- 'RNA_clusters'
+  strat_values1A <- '3'
+  strat_values1B <- '2'
+  strat_name2 <- 'All'
+  strat_values2A <- 'All'
+  strat_values2B <- 'All'
+  sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cluster_filtered.RDS')
+  
   
   project <- '2021614_21-002'
   qc_name <- '2023-05-30'
@@ -41,7 +55,7 @@ if(interactive()){
   strat_name2 <- 'All'
   strat_values2A <- 'All'
   strat_values2B <- 'All'
-  sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, 
+  sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, 
                       '/Mapped_DownSampledTo0.3.RDS')
   
   # project <- '2022620_857.1'
@@ -49,10 +63,10 @@ if(interactive()){
   # test <- 'timepoint'
   # strat_name <- 'All'
   # strat_name <- 'seurat_clusters-1+3'
-  #sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filtered.RDS')
-  exclude_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Excluded_genes.txt')
-  gtf_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
-  out_tsv <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/DE/', 
+  #sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filtered.RDS')
+  exclude_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Excluded_genes.txt')
+  gtf_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
+  out_tsv <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/DE/', 
                     test_name, '/', strat_name1, '/DE_results.tsv')
   } else{
   args = commandArgs(trailingOnly=TRUE)
@@ -75,6 +89,8 @@ if(interactive()){
 
 ### Read Seurat object
 sdat <- readRDS(sdat_file)
+print(colnames(sdat@meta.data))
+
 ### If the gene-exclusion file exists and is not empty, read it
 if(file.exists(exclude_file) & file.info(exclude_file)$size != 0){
   exclude_gene_names <- read.table(exclude_file)[,1]
@@ -161,9 +177,10 @@ if(grepl('+', value2)){
 sdat <- do_strat(sdat, test_name, strat_name1, strat_values1A, strat_values1B)
 sdat <- do_strat(sdat, test_name, strat_name2, strat_values2A, strat_values2B)
 ### Specific to Kristin's T cell data
-# if('TCR.status' %in% colnames(sdat@meta.data)){
-#   sdat$TCR.status[which(sdat$TCR.status == 'confirmed')] <- 'high confidence'
-# }
+if('TCR.status' %in% colnames(sdat@meta.data)){
+  print(table(sdat$TCR.status))
+  #sdat$TCR.status[which(sdat$TCR.status == 'confirmed')] <- 'high confidence'
+}
 
 ### Check that the input data is present
 if(test_name %in% colnames(sdat@meta.data)){
@@ -191,12 +208,12 @@ if(test_name %in% colnames(sdat@meta.data)){
       positive_smaller <- vals[1]
     }
     positive_larger <- vals[which(vals != positive_smaller)]
-    
+
     ### Reorder the factor
     sdat@meta.data[, test_name] <- factor(sdat@meta.data[, test_name], levels = c(positive_smaller, positive_larger))
   }
-
-  Idents(sdat) <- sdat[[test_name]]
+  #Idents(sdat) <- sdat[[test_name]]
+  Idents(sdat) <- test_name
   idents <- levels(Idents(sdat))
   ### First, account for "NA" as value1 and value2 if only the test_name is input because it is binary
 
@@ -215,21 +232,19 @@ if(test_name %in% colnames(sdat@meta.data)){
     # c1 <- row.names(sdat@meta.data[which(sdat$Stim %in% value1),])
     # c2 <- row.names(sdat@meta.data[which(sdat$Stim %in% value2),])
     # de2 <- FindMarkers(sdat, features = features, ident.1 = c1, ident.2 = c2, min.pct = 0, logfc.threshold = 0, min.cells.group = 0, test.use = 'LR')
-    
     ### Determine whether 'gene_name' or 'gene_id' better matches those in the seurat object
     gtf_cols <- c('gene_name', 'gene_id')
     de$gene_name <- gtf[row.names(de), 'gene_name']
     de <- de[, c('gene_name', colnames(de)[which(colnames(de) != 'gene_name')])]
-    
     write.table(de, out_tsv, sep = '\t', quote = F, row.names = T, col.names = T)
-    
     id <- row.names(de)[1]
     ptext <- paste0('adjp: ', signif(de[id, 'p_val_adj'], digits = 3))
     fctext <- paste0('FC: ',signif(de[id, 'avg_log2FC'], digits = 3))
-    ymax <- max(sdat@assays$RNA@data[id, ]) * 1.09
-    ytext1 <- max(sdat@assays$RNA@data[id, ]) * 1.01
-    ytext2 <- max(sdat@assays$RNA@data[id, ]) * 1.05
-    
+    ### Newer version of Seurat doesn't have row.names in layers by default....
+    row.names(sdat@assays$RNA@layers$data) <- row.names(sdat)
+    ymax <- max(sdat@assays$RNA@layers$data[id, ]) * 1.09
+    ytext1 <- max(sdat@assays$RNA@layers$data[id, ]) * 1.01
+    ytext2 <- max(sdat@assays$RNA@layers$data[id, ]) * 1.05
     pdf(out_pdf)
     p <- VlnPlot(sdat, features = id, split.by = test_name, y.max = ymax) + ggtitle(id) + ylab('TPM') + 
       annotate("text", x = 1.5, y = ytext1, label = ptext) + 

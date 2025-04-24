@@ -1,0 +1,436 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+  pdf_document: default
+---
+
+```{r include = F}
+
+library('sys')
+library('Seurat')
+library('ggplot2')
+library('dplyr')
+library('viridis')
+library('data.table')
+library('PKI')
+library('tinytex')
+library('biomaRt')
+library('data.table')
+library('cowplot')
+library('geosphere')
+library('rdist')
+library('harmony')
+library('grid')
+library('gridExtra')
+library('lisi')
+library('plyr')
+library('readxl')
+#library('limma')
+
+#source('C:/Users/wakecg/Documents/SCSeq/sc_functions.R')
+source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/sc_functions.R')
+```
+
+```{r include = F}
+base_dir <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project)
+#base_dir <- 'C:/Users/wakecg/Documents/SCSeq/'
+MT_thresh <- NA
+NFeat_thresh <- NA
+#project <- '2020213_NHP857.1'
+project <- '2021600_kristin'
+#project <- '2020009_unified_nCov'
+### If interactive or knitting R markdown. Else inputs have been by command line.
+if(interactive() | isTRUE(getOption('knitr.in.progress'))){
+    remove_t_cluster <- F
+    date <- '2021-11-20'
+    MT_thresh <- c(-1, 110000)
+    NFeat_thresh <- c(1800,4100)
+    cluster_filter = c()
+    gene_filter <- c()
+    do_integration <- T
+    stratification <- T
+    #stratification_keep <- c('CD8')
+    #names(stratification_keep) <- c('CD4_CD8')
+    #stratification_exclude <- c('SEB')
+    #names(stratification_exclude) <- c('Stim')
+    stratification_keep <- c('SEB')
+    names(stratification_keep) <- c('Stim')
+    stratification_exclude <- c()
+    names(stratification_exclude) <- c()
+    species <- 'hsapiens'
+    gene_file <- file.path(base_dir, project, paste0('genes_', stratification_keep[1], '.xlsx'))
+} else{
+  args <- commandArgs(trailingOnly=TRUE)
+  project <- args[1]
+  remove_t_cluster <- args[2]
+}
+
+
+#print(paste0(base_dir, '/', project, '/preprocessing_', date, ".RData"))
+load(paste0(base_dir, '/', project, '/preprocessing_', date, ".RData"))
+#load("H:/My Documents/2021600_kristin/preprocessing_2021-02-09.RData")
+
+
+out_dir <- file.path(base_dir, project, 'plots/')
+
+#covs_numeric = c('nCount_RNA', 'nFeature_RNA', 'MT_sum', 'N_reads', 'N_mapped', 'N_multimapped')
+covs_numeric = c('nFeature_RNA', 'MT_sum', 'N_reads', 'N_mapped', 'N_multimapped')
+covs_factor = c('sample', 'plate', 'seurat_clusters', 'status', 'isotype', 'flowcell', 'animal', 'timepoint', 'gate')
+covs_binary = c()
+### Reduce to those actually in the seurat object
+covs_numeric <- covs_numeric[which(covs_numeric %in% colnames(sdat@meta.data))]
+covs_factor <- covs_factor[which(covs_factor %in% colnames(sdat@meta.data))]
+covs_binary <- covs_binary[which(covs_binary %in% colnames(sdat@meta.data))]
+
+```
+
+### Cell filtering 
+```{r}
+pdf(paste0(base_dir, '/data/testing.pdf'))
+VlnPlot(sdat, group.by = "Sample_Name", features = "nFeature_RNA")
+VlnPlot(sdat, group.by = "Sample_Name", features = 'MT_sum')
+
+cor(sdat$nFeature_RNA, sdat$MT_sum)
+plot(sdat$nFeature_RNA, sdat$MT_sum, xlab = 'N genes', ylab = 'Sum MT TPM')
+FeatureScatter(sdat, feature1 = "nFeature_RNA", feature2 = "MT_sum", group.by = "Sample_Name")
+
+plot(sdat$nFeature_RNA, sdat$MT_sum, xlab = 'N genes', ylab = 'Sum MT TPM') +
+  abline(v = NFeat_thresh[1], col = 'red') +
+  abline(v = NFeat_thresh[2], col = 'red') +
+  abline(h = MT_thresh, col = 'red')
+dev.off()
+sdat_full <- sdat
+sdat <- subset(x = sdat, subset = nFeature_RNA >  NFeat_thresh[1])
+sdat <- subset(sdat, subset = nFeature_RNA <  NFeat_thresh[2])
+sdat <- subset(sdat, subset = MT_sum >  MT_thresh[1])
+sdat <- subset(sdat, subset = MT_sum < MT_thresh[2])
+plot(sdat$nFeature_RNA, sdat$MT_sum, xlab = 'N genes', ylab = 'Sum MT TPM')
+#sdat_removed <- subset(sdat_full, cells = colnames(sdat_full)[!colnames(sdat_full) %in% colnames(sdat)])
+
+### Fraction kept by each sample. The first two lines are necessary in the case that an entire sample is filtered
+temp <- table(sdat$sample)
+temp[unique(sdat_full$sample)[which(!unique(sdat_full$sample) %in% unique(sdat$sample))]] <- 0
+temp/table(sdat_full$sample)[names(temp)]
+#table(sdat_removed$sample)/table(sdat_full$sample)
+
+# a <- as.data.frame(table(sdat$flowcell))
+# a$Freq <- as.character(a$Freq)
+# a$MT_sum <- 60000
+# #a$flowcell <- names(table(sdat$flowcell))
+# maxy <- max(sdat$MT_sum) 
+# 
+# pdf(paste0(base_dir, 'MT.pdf'))
+# VlnPlot(sdat, features = 'MT_sum', group.by = 'flowcell') + xlab("Flowcell") + theme(legend.position = "none") +
+#   annotate(geom = 'text', x = 1:length(unique(sdat$flowcell)), y = maxy, label = table(sdat$flowcell), size = 3)
+# 
+# VlnPlot(sdat, features = 'MT_sum', group.by = 'seqdate') + xlab("Seq Date")
+# VlnPlot(sdat, features = 'MT_sum', group.by = 'sortdate') + xlab("Sort Date")
+# dev.off()
+
+
+```
+### Stratification
+```{r}
+if(stratification == T){
+  for(x in names(stratification_exclude)){
+    cells_exclude <- row.names(sdat@meta.data)[which(!sdat@meta.data[, x] == stratification_exclude[x])]
+    sdat <- subset(sdat, cells = cells_exclude)
+  }
+  for(x in names(stratification_keep)){
+    cells_keep <- row.names(sdat@meta.data)[which(sdat@meta.data[, x] == stratification_keep[x])]
+    sdat <- subset(sdat, cells = cells_keep)
+  }
+}
+
+
+```
+
+### Data clustering and association tests
+```{r include = F}
+sdat <- NormalizeData(sdat) ### we had count data or FPKM? When was the batch 'integration' done?
+sdat <- FindVariableFeatures(sdat, assay = 'RNA', selection.method = "vst")
+#VariableFeaturePlot(sdat)
+
+sdat <- ScaleData(sdat, assay = "RNA")
+
+sdat <- RunPCA(sdat, verbose = F, assay = "RNA", npcs = 50)
+#ElbowPlot(sdat, ndims = 50)
+
+sdat <- FindNeighbors(sdat, dims = 1:25)
+sdat  <- FindClusters(sdat, resolution = 0.3)
+#sdat  <- RunTSNE(sdat, dims = 1:26, method = 'FIt-SNE')
+sdat <- RunUMAP(sdat, dims = 1:26, reduction = "pca", assay = "RNA")
+
+### Do pairwise association tests of input covariates
+sdat_meta <- sdat@meta.data
+sdat_meta$cell_id <- row.names(sdat_meta)
+plots_path <- paste0(base_dir, project, '/plots/cov_associations/')
+dir.create(plots_path,  recursive = T)
+cov_associations0 <- pairwise_associations(sdat_meta, pc = 'p', plots_path = plots_path,
+                                          covs_numeric = covs_numeric, 
+                                          covs_factor = covs_factor,
+                                          covs_binary = c())
+adjps <- cov_associations0[['res']]
+test_names <- cov_associations0[['test']]
+#cov_associations
+```
+
+### Evaluate plate/sample
+```{r }
+### Variables that will be checked for association with nFeature_RNA, MT_sum and N_mapped
+#batch_features <- c('plate', 'sample')
+fc_match <- 1:length(unique(sample_info$flowcell))
+names(fc_match) <- unique(sample_info$flowcell)
+sdat$flowcell_plot <- fc_match[sdat$flowcell]
+batch_features <- c('plate', 'flowcell_plot')
+batch_features <- batch_features[which(batch_features %in% colnames(sdat@meta.data))]
+
+DimPlot(sdat, label = T) + NoLegend()
+for(batch in batch_features){
+  adjps[batch, 'nFeature_RNA']
+  print(VlnPlot(sdat, group.by = batch, features = 'nFeature_RNA') + theme(legend.position = "none") +
+    ggtitle(paste0('N features by ', batch), subtitle = paste0(signif(adjps[batch, 'nFeature_RNA']), ' (', test_names[batch, 'nFeature_RNA'], ' adjusted p)')))
+  
+  print(VlnPlot(sdat, group.by = batch, features = 'MT_sum') + theme(legend.position = "none") +
+    ggtitle(paste0('MT TPM sum by ', batch), subtitle = paste0(signif(adjps[batch, 'MT_sum']), ' (', test_names[batch, 'MT_sum'], ' adjusted p)')))
+  
+  print(VlnPlot(sdat, group.by = batch, features = 'N_mapped') + theme(legend.position = "none") +
+    ggtitle(paste0('N mapped reads by ', batch), subtitle = paste0(signif(adjps[batch, 'N_mapped']), ' (', test_names[batch, 'N_mapped'], ' adjusted p)')))
+  
+  print(VlnPlot(sdat, group.by = batch, features = c('N_multimapped')) + theme(legend.position = "none") +
+    ggtitle(paste0('N multimapped reads by ', batch), subtitle = paste0(signif(adjps[batch, 'N_multimapped']), ' (', test_names[batch, 'N_multimapped'], ' adjusted p)')))
+  print(DimPlot(sdat, group.by = batch))
+  
+  a <- table(sdat$seurat_clusters, sdat@meta.data[, batch])
+  ### 857 - Plates which have more than 2x the Cluster 1 average
+  #names(plate_match[which(plate_match %in% colnames(a)[which(a['1', ] > 2*mean(a['1', ]))])])
+}
+
+```
+
+```{r Data integration}
+### If any of these 3 features are significantly (0.05) associated with one of the features to potentially integrate over, do that integration
+a <- rowMeans(adjps[batch_features, c('nFeature_RNA', 'MT_sum', 'N_mapped')])
+batch_feature <- names(a[which(a == min((a)))])
+if(do_integration == T & any(adjps[batch_feature, c('nFeature_RNA', 'MT_sum', 'N_mapped')] < 0.05)){
+  print(paste0('Integrating over ', batch_feature))
+  options(repr.plot.height = 2.5, repr.plot.width = 6)
+
+  sdat <- RunHarmony(sdat, batch_feature, plot_convergence = TRUE)
+  options(repr.plot.height = 5, repr.plot.width = 12)
+  p1 <- DimPlot(object = sdat, reduction = "harmony", pt.size = .1, group.by = batch_feature)
+  p2 <- VlnPlot(object = sdat, features = "harmony_1", group.by = batch_feature, pt.size = .1) + theme(legend.position = "none")
+  print(p1)
+  print(p2)
+  
+  p3 <- DimPlot(sdat, group.by = batch_feature) + ggtitle('before integration') + NoLegend() + theme(axis.title.x = element_blank())
+  print(p3)
+
+  sdat <- FindNeighbors(sdat, dims = 1:25, reduction = 'harmony')
+  sdat <- FindClusters(sdat, resolution = 0.3, reduction = 'harmony')
+  ### Keep the PCA umap embeddings prior to integration
+  sdat@reductions$umap0 <- sdat@reductions$umap
+  sdat <- RunUMAP(sdat, dims = 1:26, assay = "RNA", reduction = 'harmony')
+  
+  p4 <- DimPlot(sdat, group.by = batch_feature) + ggtitle('after integration')
+  print(p4)
+  plegend <- get_legend(p4)
+  p <- plot_grid(p3, p4 + NoLegend(), ncol = 1)
+  #pdf(file.path(out_dir, 'Integration_DimPlots.pdf'))
+  plot_grid(p, plegend, ncol = 2 , rel_widths = c(1, 0.2))
+  #plot_grid(p3, p4 + NoLegend(), plegend, ncol = 1, rel_heights = c(1, 1, 0.1))
+  
+  #png(file.path(out_dir, 'Integration_DimPlots.png'), width = 800, height = 1200)
+  #grid_arrange_shared_legend(p3, p4, ncol = 1, nrow = 2)
+  #dev.off()
+  #png(file.path(out_dir, 'Integration_iLISI.png'))
+  p <- plot_ilisi(sdat, batch_feature = batch_feature)
+  print(p)
+  dev.off()
+  #dev.off()
+}
+```
+
+
+```{r Dimensionality Plots}
+
+DimPlot(sdat, label = T) + NoLegend()
+
+### Visualize quantitative features' relationship with cluster with FeaturePlot and VlnPlot
+for(cov in covs_numeric){
+  print(FeaturePlot(sdat, features = cov) + ggtitle(cov, subtitle = paste0(signif(adjps['seurat_clusters', cov]), ' (', test_names['seurat_clusters', cov], ' adjusted p)')))
+  print(VlnPlot(sdat, group.by = 'seurat_clusters', features = cov))
+}
+
+### Visualize factor/binary features' relationship with cluster with DimPlot
+for(cov in c(covs_factor[which(covs_factor != 'seurat_clusters')], covs_binary)){
+  print(DimPlot(sdat, group.by = cov) + ggtitle(cov, subtitle = paste0(signif(adjps['seurat_clusters', cov]), ' (', test_names['seurat_clusters', cov], ' adjusted p)'))) + theme(legend.position="bottom")
+}
+
+#if(baldr_present){
+#  VlnPlot(sdat, group.by = 'status', features = 'N_reads') + ggtitle('N total reads by status', subtitle = paste0(signif(adjps['status', 'N_reads']), ' (', test_names['status', 'N_reads'], ' adjusted p)'))
+#}
+
+
+```
+### BiomaRt, used to match ensembl IDs to gene names
+```{r}
+biomart_results_file <-  paste0(base_dir, '/', project, '/Biomart_output.RDS')
+if(file.exists(biomart_results_file)){
+  sdat_names <- readRDS(biomart_results_file)
+} else{
+  sdat_names <- run_biomaRt(as.data.frame(sdat@assays$RNA@counts), to_merge = F, species = species) 
+  saveRDS(sdat_names, biomart_results_file)
+}
+### Remove unneeded columns, then reduce rows
+sdat_names <- sdat_names[, c('gene_name', 'ens_short', 'Chr', 'Description')]
+sdat_names <-sdat_names[!duplicated(sdat_names), ]
+## Only those with an attached gene name
+sdat_names <- sdat_names[which(sdat_names$gene_name != ''),]
+### To upper case
+sdat_names$gene_name <- toupper(sdat_names$gene_name)
+sum(sdat_names$gene_name == '')
+```
+
+### Cluster Differential Expression
+```{r include = T}
+# ### Return either NA or the name of a lonesome cluster (further from any other cluster than those cluster are from one another)
+# lone_cluster <- locate_lone_cluster(xy = sdat@reductions$umap@cell.embeddings, labels = sdat$seurat_clusters, distance_factor = .75)
+# if(!is.na(lone_cluster)){
+#   print(paste0('Cluster ', lone_cluster, ' is separate from all others'))
+#   other_clusters <- levels(sdat$seurat_clusters)[which(levels(sdat$seurat_clusters) != lone_cluster)]
+#   de <- FindMarkers(sdat, ident.1 = c(lone_cluster), ident.2 = other_clusters, min.pct = 0.25)
+#   head(de, n = 5)
+#   ### N DE features
+#   de_sig <- de[which(de$p_val_adj < 0.05 & de$avg_logFC > 1), ]
+#   dim(de_sig)
+# 
+#   ### Add to de the gene_names from the biomaRt matching of ensembl IDs to gene names
+#   names_sub <- sdat_names[which(sdat_names$ens_short %in% row.names(de)), ]
+#   row.names(names_sub) <- names_sub$ens_short
+#   de[row.names(names_sub), 'gene_name'] <- names_sub$gene_name
+# }
+```
+
+
+### Find and remove T cluster and re-evaluate plate
+```{r include = T}
+### Get the cell_ids  for each cluster
+cluster_names <- levels(sdat$seurat_clusters)
+cluster_list <- lapply(cluster_names, function(cluster) names(sdat$seurat_clusters[which(sdat$seurat_clusters == cluster)]))
+### Get the mean of the CD3E TPMs for each cluster
+cd3es <- c('ENSG00000198851', 'ENSMMUG00000017593')
+cd3e <- cd3es[which(cd3es %in% row.names(sdat@assays$RNA))]
+cluster_list <- sapply(cluster_list, function(cluster) mean(as.numeric(sdat@assays$RNA[cd3e, cluster])))
+names(cluster_list) <- cluster_names
+### cluster name with the largest CD3E value
+tclust <- names(cluster_list)[which(cluster_list == max(cluster_list))]
+### Ratio of highest T cluster to second highest
+trat <- cluster_list[order(cluster_list, decreasing = T)][1]/ cluster_list[order(cluster_list, decreasing = T)][2]
+
+###857 specific
+FeaturePlot(sdat, feature = cd3e)
+VlnPlot(sdat, feature = cd3e)
+mean(sdat@assays$RNA@counts[cd3e, ])
+
+### Save in another object
+sdat_pref <- sdat
+### If some cell filtering option was input
+if(length(c(cluster_filter, gene_filter)) > 0){
+  ### If T is among the cluster_filter input, and there is a cluster that appears to be T cells (x3 CD3E)
+  if(trat > 3 & 'T' %in% cluster_filter){
+    print(paste0('Removing cluster ', tclust, ', as its CD3E levels are ', trat, 'x larger than the next highest cluster, indicating that it is T cells.'))
+    pdf(paste0(base_dir, project, '/plots/Unfiltered.pdf'))
+    ### DimPlot then Gene violin plots
+    plots_to_pdf(sdat, biomart_dat = sdat_names, gene_file)
+    dev.off()
+    ### Subset
+    removed1 <- colnames(sdat[,which(sdat$seurat_clusters == tclust)])
+    sdat <- subset(sdat, seurat_clusters != tclust)
+    sdat_meta <- sdat@meta.data
+    sdat_meta$cell_id <- row.names(sdat_meta)
+    print(paste0(length(removed1), ' cells removed by cluster matching ', cluster_filter))
+  }
+  if(length(gene_filter) > 1){
+    gene_ids <- sdat_names[which(sdat_names$gene_name %in% gene_filter), 'ens_short']
+    removed2 <- colnames(sdat)[which(colSums(sdat[gene_ids, ]) > 0)]
+    cell_ids <- colnames(sdat)[which(colSums(sdat[gene_ids, ]) == 0)]
+    sdat <- subset(sdat, cells = cell_ids)
+    print(paste0(length(removed2), ' cells removed by >0 expression of ', toString(gene_filter)))
+  }
+  pdf_file <- paste0(base_dir, project, '/plots/Filtered.pdf')
+  sdat <- after_filtering(sdat, batch_features, biomart_dat = sdat_names, pdf_file, base_dir, covs_numeric, covs_factor, covs_binary, do_integration, gene_file)
+  
+}
+
+```
+
+### Specific gene violin plots
+```{r}
+if(file.exists(gene_file)){
+  genes <- read_excel(gene_file, sheet = 1)
+  colnames(genes) <- c('gene_name', 'category')
+  ### Merge with biomart data
+  genes <- merge(genes, sdat_names[which(sdat_names$gene_name %in% genes$gene_name), ], by = 'gene_name', all = T)
+
+  to_grep <- unique(c(genes[which(is.na(genes$ens_short)), 'gene_name'], genes[which(genes$category == 'Grep'), 'gene_name']))
+  if(length(to_grep) > 0){
+    ### Input genes that are not within the biomaRt dataframe, or have input category 'Grep', will be searched for similar matches in the biomart dataframe
+    grep_res <- grep_biomart(to_grep, sdat_names)
+    if(length(grep_res[,1]) > 0){
+      grep_res$category <- 'Inexact match'
+      genes <- rbind(genes, grep_res)
+    }
+    ### Remove those without an ensembl ID. They are not within our data.
+    print(paste0('Input genes are not within the data: ', toString(genes[which(is.na(genes$ens_short)), 'gene_name'])))
+    genes <- genes[which(!is.na(genes$ens_short)), ]  
+  }
+
+  ### For each category, plot genes together (up to 4 each)
+  for(cat in unique(genes$category)){
+    ### Gene names of this category
+    gene_names <- genes[which(genes$category == cat), 'gene_name']
+    ### Split into groups if there are more than 4.
+    if(length(gene_names) > 4){
+      groups <- split(gene_names, cut(1:length(gene_names), length(gene_names) %/% 4 + 1))
+    } else{
+      groups <- list(gene_names)
+    }
+
+    title <- ggdraw() + draw_label(cat, fontface = 'bold', x = 0, hjust = 0) + theme(plot.margin = margin(0, 0, 0, 250))
+    ### For each group (may be only 1) of up to four genes, plot violin plots together
+    for(names in groups){
+      vplots <- lapply(names, function(gene_name) my_vln_plot(sdat, gene_name, de = NA, genes, groupby = 'seurat_clusters'))
+      pmain <- plot_grid(plotlist = vplots)
+      print(plot_grid(title, pmain, ncol =1 , rel_heights = c(0.1, 1)))
+    }
+  }
+}
+
+
+```
+
+```{r include = F}
+
+print(table(sdat_full$timepoint))
+print(table(sdat_pref$timepoint))
+print(table(sdat$timepoint))
+
+date <- format(Sys.time(), "%Y-%m-%d")
+if(stratification){
+  savefile <- paste0(base_dir, '/', project, '/filtered_', gsub(', ', '_', toString(stratification_keep)), '_', date, ".RData")
+} else{
+  savefile <- paste0(base_dir, '/', project, '/filtered_', date, ".RData")
+}
+
+to_keep <- c('balldr', 'cov_associations', 'de', 'names_sub', 'sample_info', 'sdat', 'data_dir', 'gtf_r_file', 'project', 'plots_path', 'base_dir', 'savefile', 'genes')
+to_remove  <- ls()[which(!ls() %in% to_keep)]
+rm(list = to_remove)
+
+
+save.image(savefile)
+
+```

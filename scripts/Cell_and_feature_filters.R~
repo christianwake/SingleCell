@@ -32,17 +32,17 @@ if(interactive()){
   sdat_step <- paste0('data/All_data.RDS')
   
   sdat_file <- paste0(rootPath, '/projects/RNASeq/', project, '/', sdat_step)
-  filter_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/QC_steps/step3_cell_and_feature_filters.csv')
-  gtf_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
-  out_rds <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/PostQC3.RDS')
-  out_pdf <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cell_filters.pdf')
-  out_txt0 <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filters_Nfeatures.txt')
-  out_txt1 <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Excluded_genes.txt')
-  out_txt2 <-  paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filters_Ncells.txt')
+  filter_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/QC_steps/step3_cell_and_feature_filters.csv')
+  gtf_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
+  out_rds <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/PostQC3.RDS')
+  out_pdf <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cell_filters.pdf')
+  out_txt0 <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filters_Nfeatures.txt')
+  out_txt1 <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Excluded_genes.txt')
+  out_txt2 <-  paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filters_Ncells.txt')
 } else{
   args = commandArgs(trailingOnly=TRUE)
 
-  rootPath <- "/hpcdata/vrc/vrc1_data/douek_lab"
+  rootPath <- "/data/vrc_his/douek_lab"
   
   sdat_file <- args[1]
   filter_file <- args[2]
@@ -55,8 +55,8 @@ if(interactive()){
 }
 
 source( paste0(rootPath,'/snakemakes/sc_functions.R') )
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
+source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
 
 print('Reading seurat object')
 sdat <- readRDS(sdat_file)

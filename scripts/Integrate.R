@@ -6,7 +6,7 @@ library('stringr')
 library('pheatmap')
 library('ggplot2')
 #library('umap')
-library('textshape')
+#library('textshape')
 library('dplyr')
 library('biomaRt')
 library('grid')
@@ -15,9 +15,9 @@ library('vegan')
 library('data.table')
 library('cowplot')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
+source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
 
 run_harmony_integration <- function(sdat, batch_feature, exclude_gene_names){
   ### NormalizeData uses 'count' slot and overrides the 'data' slot
@@ -51,7 +51,7 @@ run_seurat_integration <- function(sdat, batch_feature, exclude_gene_names, norm
     }) 
   } else if(norm_method == 'TPM'){
     sdat_list <- lapply(X = sdat_list, FUN = function(x) {
-      x@assays$RNA@data <- as.matrix(log(x@assays$RNA@counts + 1))
+      x@assays$RNA@layers$data <- as.matrix(log(x@assays$RNA@layers$counts + 1))
     })
   }
   ### Identify variable features for each dataset independently
@@ -88,12 +88,12 @@ if(interactive()){
   #qc_name <- 'Filter1'
   project <- '2022620_857.1'
   qc_name <- '2022-12-09'
-  sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/PostQC3.RDS')
-  QC_input_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/QC_steps/step4_integration.csv')
-  exclude_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/Excluded_genes.txt')
+  sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/PostQC3.RDS')
+  QC_input_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/QC_steps/step4_integration.csv')
+  exclude_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/Excluded_genes.txt')
   norm_method <- 'TPM'
-  out_rds <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/PostQC4.RDS')
-  out_pdf <-  paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/Integration.pdf')
+  out_rds <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/PostQC4.RDS')
+  out_pdf <-  paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/Integration.pdf')
 } else{
   args = commandArgs(trailingOnly=TRUE)
   sdat_file <- args[1]

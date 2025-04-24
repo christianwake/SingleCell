@@ -5,7 +5,7 @@ library('dplyr')
 library('viridis')
 library('data.table')
 library('patchwork')
-library('PKI')
+#library('PKI')
 library('tinytex')
 library('dsb')
 #library('tidyverse')
@@ -20,10 +20,10 @@ library('WriteXLS')
 library('Matrix')
 library('VennDiagram')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sample_sheet_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
+source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/sample_sheet_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
 
 if(interactive()){
   # project <- '2021614_21-002'
@@ -36,19 +36,19 @@ if(interactive()){
   
   # project <- '2022619_857.3b'
   # qc_name <- '2023-Mar'
-  # covs_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2022619_857.3b/Sample_sheet.csv'
-  # labels_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2022619_857.3b/data/Cell_data.csv'
-  # qc_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2022619_857.3b/QC_steps/DSB_background.csv'
-  # out_rds <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2022619_857.3b/results/', qc_name, '/Background.RDS')
-  # out_pdf <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2022619_857.3b/results/', qc_name, '/Background.pdf')
+  # covs_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2022619_857.3b/Sample_sheet.csv'
+  # labels_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2022619_857.3b/data/Cell_data.csv'
+  # qc_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2022619_857.3b/QC_steps/DSB_background.csv'
+  # out_rds <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/2022619_857.3b/results/', qc_name, '/Background.RDS')
+  # out_pdf <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/2022619_857.3b/results/', qc_name, '/Background.pdf')
   
   # base_dir <- '/Volumes/VRC1_DATA/douek_lab/'
-  # #base_dir <- '/hpcdata/vrc/vrc1_data/douek_lab/'
+  # #base_dir <- '/data/vrc_his/douek_lab/'
   # project <- '2022619_857.3b'
   # qc_name <- 'QC_first_pass'
   
-  base_dir <- '/hpcdata/vrc/vrc1_data/douek_lab/'
-  runs_dir <- '/hpcdata/vrc/vrc1_data/douek_lab/Runs/'
+  base_dir <- '/data/vrc_his/douek_lab/'
+  runs_dir <- '/data/vrc_his/douek_lab/Runs/'
   covs_file <- paste0(base_dir, '/projects/RNASeq/', project, '/Sample_sheet.csv')
   #labels_file <-  paste0(base_dir, '/projects/RNASeq/', project, '/data/Dehash_calls_', demux_method, '.tsv')
   labels_file <-  paste0(base_dir, '/projects/RNASeq/', project, '/results/', qc_name, '/Dehash/Dehash_calls_', demux_method, '.tsv')
@@ -75,7 +75,7 @@ if(interactive()){
 
 cellranger_quant <- c('multi', 'count')
 print(out_rds)
-project_dir <- paste0("/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/", project)
+project_dir <- paste0("/data/vrc_his/douek_lab/projects/RNASeq/", project)
 # project_dir <- paste0("/Volumes/VRC1_DATA/douek_lab/projects/RNASeq/", project)
 
 ### Read covariates

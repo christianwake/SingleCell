@@ -1,42 +1,53 @@
+
 library('sys')
 library('Seurat')
 library('stringr')
 library('pheatmap')
 library('ggplot2')
 #library('umap')
-library('textshape')
+#library('textshape')
 library('dplyr')
 library('biomaRt')
 library('grid')
 library('scales')
 library('data.table')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
+source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
 
 if(interactive()){
+  project <- '2024615_Boswell'
+  qc_name <- 'FirstRun'
+  candidates <- 'FC_ID'
+  QC_input_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/Test_comparisons.csv')
+  
+  project <- '2021600_kristin'
+  qc_name <- 'Run2025-03-03'
+  candidates <- 'Lane'
+  QC_input_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/Test_comparisons.csv')
+  
   # project <- '2021614_21-002'
   # qc_name <- '2024-01-20'
   # candidates <- 'Sample_Name'
   # tests <- 'Arm,Visit'
   # strats <- 'Cell_subset-B_cells,Cell_subset-Innate'
-  # QC_input_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/Test_comparisons.csv')
+  # QC_input_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/Test_comparisons.csv')
 
-  project <- '2024605_Hillary_test'
-  qc_name <- '2024-06-04'
-  candidates <- 'CR_ID'
-  QC_input_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/Test_comparisons.csv')
+  # project <- '2024605_Hillary_test'
+  # qc_name <- '2024-06-04'
+  # candidates <- 'CR_ID'
+  # QC_input_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/Test_comparisons.csv')
   ### Before filtering
-  sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/All_data.RDS')
-  plots_path <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/batch_plots/')
-  txt_out <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/Batch.txt')
-  pdf_out <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/Initial_QC.pdf')
+  sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/All_data.RDS')
+  plots_path <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/plots/')
+  txt_out <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/Batch.txt')
+  pdf_out <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/Initial_QC.pdf')
   ### After filtering
-  # sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/DSB_normalized_data.RDS')
-  # plots_path <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/post_DSB/')
-  # txt_out <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Batch.txt')
-  # pdf_out <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Post_QC.pdf')
+  # sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/DSB_normalized_data.RDS')
+  # plots_path <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/post_DSB/')
+  # txt_out <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Batch.txt')
+  # pdf_out <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Post_QC.pdf')
   
  }else{
   args = commandArgs(trailingOnly = TRUE)
@@ -73,7 +84,11 @@ if(!interactive()){
   sdat <- readRDS(sdat_file)
   print('Done reading Seurat object')
   ### Downsample so I can work interactiveley for testing
-  ssub <- DietSeurat(sdat, counts = F, assays = c('RNA', 'prot'))
+  assays <- c('RNA', 'prot')
+  assays <- assays[which(assays %in% names(sdat@assays))]
+  layers <- c('counts', 'data')
+  layers <- layers[which(layers %in% names(sdat@assays$RNA@layers))]
+  ssub <- DietSeurat(sdat, layers = layers, assays = assays)
   cells <- sample(x = colnames(ssub), size = (length(colnames(ssub)) * downsample_var), replace = F)
   
   ssub <- subset(ssub, cells = cells)
@@ -83,6 +98,7 @@ if(!interactive()){
   sdat <- readRDS(gsub('.RDS', paste0('_DownSampledTo', downsample_var, '.RDS'), sdat_file))
 }
 
+print(colnames(sdat@meta.data))
 print('Batch:')
 print(candidates)
 if(!all(candidates %in% colnames(sdat@meta.data))){
@@ -233,13 +249,16 @@ if(length(candidates) == 0){
   adjps <- cov_associations0[['res']]
   test_names <- cov_associations0[['test']]
   
-  ### If there are dimentionsality reductions, lets look at one
+  ### If there are dimensionality reductions, lets look at one
   if(length(names(sdat@reductions)) > 0){
     DimPlot(sdat, label = T) + NoLegend()
   }
   for(batch in candidates){
     if(any(is.na(sdat@meta.data[, batch]))){
       warning(paste0('There are NAs in the batch candiate ', batch))
+      ### Make sure to keep the NAs (but as character) so that they can be plotted
+      levels(sdat@meta.data[, batch]) <- c(levels(sdat@meta.data[, batch]), 'NA')
+      sdat@meta.data[which(is.na(sdat@meta.data[, batch])), batch] <- 'NA'
     }
     ### Make sure it has levels 
     bats <- unique(sdat@meta.data[, batch])[order(unique(sdat@meta.data[, batch]))]

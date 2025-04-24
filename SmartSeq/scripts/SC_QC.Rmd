@@ -31,11 +31,11 @@ library('readxl')
 #library('limma')
 
 #source('C:/Users/wakecg/Documents/SCSeq/sc_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/sc_functions.R')
+source('/data/vrc_his/douek_lab/wakecg/sc_functions.R')
 ```
 
 ```{r include = F}
-base_dir <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project)
+base_dir <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project)
 #base_dir <- 'C:/Users/wakecg/Documents/SCSeq/'
 MT_thresh <- NA
 NFeat_thresh <- NA

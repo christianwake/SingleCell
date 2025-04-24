@@ -13,9 +13,9 @@ library('rsconnect')
 library('readxl')
 library('cowplot')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
+source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
 
 if(interactive()){
   # project <- '2021618_galt'
@@ -24,21 +24,21 @@ if(interactive()){
   # 
   project <- '2021600_kristin'
   qc_name <- 'Run2022-11-14'
-  additional <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021600_kristin/SampleSheets/Additional.csv' # columns - cell id then more stuff
-  gene_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/220921_transcriptome_analysis.xlsx')
+  additional <- '/data/vrc_his/douek_lab/projects/RNASeq/2021600_kristin/SampleSheets/Additional.csv' # columns - cell id then more stuff
+  gene_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/220921_transcriptome_analysis.xlsx')
   
   # project <- '2022620_857.1'
   # qc_name <- '2022-11-01'
-  #additional <- '/hpcdata/vrc/vrc1_data/douek_lab/wakecg/2020213_NHP857.1/preprocessing_2021-02-04_metadata.csv' 
+  #additional <- '/data/vrc_his/douek_lab/wakecg/2020213_NHP857.1/preprocessing_2021-02-04_metadata.csv' 
   
-  sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Mapped.RDS')
-  de_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cluster_DE.RDS')
-  additional <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/SampleSheets/Additional.csv')
-  out_rdata <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/App/Data.RData')
-  out_pdf <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Extra_plots.pdf')
-  gene_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/genes.xlsx')
-  gtf_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
-  exclude_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Excluded_genes.txt')
+  sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Mapped.RDS')
+  de_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cluster_DE.RDS')
+  additional <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/SampleSheets/Additional.csv')
+  out_rdata <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/App/Data.RData')
+  out_pdf <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Extra_plots.pdf')
+  gene_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/genes.xlsx')
+  gtf_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
+  exclude_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Excluded_genes.txt')
   
   username <- 'wakecg'
   server <- 'rstudio-connect.niaid.nih.gov'

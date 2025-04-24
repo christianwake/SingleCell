@@ -5,7 +5,7 @@ library('dplyr')
 library('viridis')
 library('data.table')
 library('patchwork')
-library('PKI')
+#library('PKI')
 library('tinytex')
 library('dsb')
 #library('tidyverse')
@@ -19,35 +19,35 @@ library('readxl')
 library('WriteXLS')
 library('Matrix')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sample_sheet_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
+source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/sample_sheet_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
 
 if(interactive()){
   # project <- '2021614_21-002'
   # qc_name <- 'B_cells_2024-04-05'
   # cell_type <- 'B'
   # demux_method <- 'Custom'
-  # covs_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, 
+  # covs_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, 
   #                     '/Sample_sheet_B_cells.csv')
   
   project <-'2024605_Hillary_test'
   qc_name <- '2024-06-04'
   cell_type <- 'B'
   demux_method <- 'Trough'
-  covs_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, 
+  covs_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, 
                       '/Sample_sheet.csv')
   
-  runs_dir <- '/hpcdata/vrc/vrc1_data/douek_lab/Runs/'
-  labels_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, 
+  runs_dir <- '/data/vrc_his/douek_lab/Runs/'
+  labels_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, 
                         '/data/Dehash_CRint_calls_', demux_method, '.tsv')
-  labels_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, 
+  labels_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, 
                         '/results/', qc_name, '/Dehash/Dehash_CRint_calls_', demux_method, '.tsv')
   
-  out_rds <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/All_data.RDS')
-  out_pdf <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/All_data.pdf')
-  out_pdf2 <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filter_info.pdf')
+  out_rds <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/All_data.RDS')
+  out_pdf <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/All_data.pdf')
+  out_pdf2 <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filter_info.pdf')
   } else{
   args = commandArgs(trailingOnly=TRUE)
   
@@ -62,7 +62,7 @@ if(interactive()){
 }
 
 #print(out_rds)
-project_dir <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project)
+project_dir <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project)
 cellranger_quant <- c('multi', 'count')
 
 ### Read covariates

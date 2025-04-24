@@ -5,7 +5,7 @@ library('dplyr')
 library('viridis')
 library('data.table')
 library('patchwork')
-library('PKI')
+#library('PKI')
 library('tinytex')
 #library('dsb')
 #library('tidyverse')
@@ -20,46 +20,46 @@ library('readxl')
 library('Matrix')
 library('pastecs')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sample_sheet_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/dehash_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
+source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/sample_sheet_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/dehash_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
 
 if(interactive()){
-  # project <- '2021614_21-002'
-  # runs_dir <- '/hpcdata/vrc/vrc1_data/douek_lab/Runs/'
-  # #demux_method <- 'Custom'
-  # demux_method <- 'MULTIseqDemux'
-  # covs_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/Sample_sheet.csv')
-  # out_labels <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/Dehash_calls_', demux_method, '.tsv')
-  # thresh_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/Dehash_threshs_', demux_method, '.csv')
-  # out_metrics <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/', project, '/cellranger_count_metrics.tsv')
-  # batch <- 'Date_sort'
+  project <- '2021614_21-002'
+  runs_dir <- '/data/vrc_his/douek_lab/Runs/'
+  #demux_method <- 'Custom'
+  demux_method <- 'MULTIseqDemux'
+  covs_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/Sample_sheet.csv')
+  out_labels <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/Dehash_calls_', demux_method, '.tsv')
+  thresh_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/Dehash_threshs_', demux_method, '.csv')
+  out_metrics <- paste0('/data/vrc_his/douek_lab/projects/', project, '/cellranger_count_metrics.tsv')
+  batch <- 'Date_sort'
   
   # project <- '2023600_21-0012'
-  # runs_dir <- '/hpcdata/vrc/vrc1_data/douek_lab/Runs/'
+  # runs_dir <- '/data/vrc_his/douek_lab/Runs/'
   # demux_method <- 'Custom'
-  # covs_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/Sample_sheet.csv')
-  # out_labels <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/Dehash_calls_', demux_method, '.tsv')
-  # thresh_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/Dehash_threshs_', demux_method, '.csv')
-  # out_metrics <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/', project, '/cellranger_count_metrics.tsv')
+  # covs_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/Sample_sheet.csv')
+  # out_labels <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/Dehash_calls_', demux_method, '.tsv')
+  # thresh_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/Dehash_threshs_', demux_method, '.csv')
+  # out_metrics <- paste0('/data/vrc_his/douek_lab/projects/', project, '/cellranger_count_metrics.tsv')
   # batch <- 'Date_sort'
   
   
-  project <- '2024605_Hillary_test'
-  runs_dir <- '/hpcdata/vrc/vrc1_data/douek_lab/Runs/'
-  #demux_method <- 'Custom'
-  demux_method <- 'Trough'
-  covs_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/Sample_sheet.csv')
-  out_labels <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/Dehash_calls_', demux_method, '.tsv')
-  thresh_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/Dehash_threshs_', demux_method, '.csv')
-  out_metrics <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/', project, '/cellranger_count_metrics.tsv')
-  batch <- 'FC_ID'
+  # project <- '2024605_Hillary_test'
+  # runs_dir <- '/data/vrc_his/douek_lab/Runs/'
+  # #demux_method <- 'Custom'
+  # demux_method <- 'Trough'
+  # covs_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/Sample_sheet.csv')
+  # out_labels <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/Dehash_calls_', demux_method, '.tsv')
+  # thresh_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/Dehash_threshs_', demux_method, '.csv')
+  # out_metrics <- paste0('/data/vrc_his/douek_lab/projects/', project, '/cellranger_count_metrics.tsv')
+  # batch <- 'FC_ID'
   
-  out_pdf1 <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/Dehash_feature_counts_', demux_method, '.pdf')
-  out_pdf2 <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/Dehash_cell_counts_', demux_method, '.pdf')
-  gtf_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
+  out_pdf1 <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/Dehash_feature_counts_', demux_method, '.pdf')
+  out_pdf2 <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/Dehash_cell_counts_', demux_method, '.pdf')
+  gtf_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
 }else{
   args <- commandArgs(trailingOnly=TRUE)
   
@@ -124,7 +124,7 @@ if(!demux_method %in% method_options){
 demux_method <- method_options[which(toupper(method_options) == toupper(demux_method))]
 
 print(paste0('Using method ', demux_method))
-project_dir <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project)
+project_dir <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project)
 ### Read covariates
 dat <- read.csv(covs_file, stringsAsFactors = F, header = T,
                  check.names = F, 
@@ -136,10 +136,10 @@ dat <- read.csv(covs_file, stringsAsFactors = F, header = T,
 # }
 row.names(dat) <- dat$Sample_ID
 ##### Standardize protein names
-### space then parentheses <- parentheses
+### space then parentheses -> parentheses
 dat$HTO_index_name <- gsub(' \\(', '\\(', dat$HTO_index_name)
 ### spaces, underscores to '.'
-dat$HTO_index_name<- make.names(dat$HTO_index_name, allow_ = 'F')
+dat$HTO_index_name <- make.names(dat$HTO_index_name, allow_ = 'F')
 
 ### Do direct matching from gtf
 if(grepl('\\.gtf', gtf_file)){
@@ -156,7 +156,7 @@ names(label_list) <- unique(dat$CR_ID)
 ### For each cellranger count output, read and demultiplex
 for(id in unique(dat$CR_ID)){
   print(id)
-  #pdf_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/', id, '_hash.pdf')
+  #pdf_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/', id, '_hash.pdf')
   pdf_file <- NA
   ### Dehash Wrapper
   label_list[[id]] <- dehash_CR_ID(dat, id, runs_dir, project_dir, demux_method = demux_method, 
@@ -164,7 +164,6 @@ for(id in unique(dat$CR_ID)){
                                    CR_version)
 }
 
-#downdir <- "/hpcdata/vrc/vrc1_data/douek_lab/Runs/211123_A00243_0139_BHLKCFDSX2/count_output/CR1/outs/downsampled_prot/"
 labels <- rbindlist(label_list)
 labels <- as.data.frame(labels)
 print(table(labels$Assignment_CR, labels$Assignment_simple))
@@ -257,7 +256,7 @@ if('Cell_Count' %in% colnames(dat)){
   print(p5) 
   
   plotdat$CR_ID <- row.names(plotdat)
-  pdat <- melt(plotdat)
+  pdat <- reshape2::melt(plotdat)
   colnames(pdat) <- c('CR_ID', 'type', 'count')
   pdat$type_abbrev <- sapply(pdat$type, function(x) substr(x, 1, 1))
   pdat$log2_count <- log2(as.numeric(pdat$count))

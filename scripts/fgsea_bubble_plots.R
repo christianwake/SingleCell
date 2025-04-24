@@ -13,24 +13,24 @@ library('readxl')
 library('viridis')
 library('Seurat')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/DE_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/DE_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
 
 if(interactive()){
   project <- '2021600_kristin'
   qc_name <- 'Run2023-05-14'
-  fgsea_files <- Sys.glob(file.path(paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', 
+  fgsea_files <- Sys.glob(file.path(paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', 
                                            qc_name, '/DE/*/*/*GSEA*.tsv')))
-  sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, 
+  sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, 
                       '/Mapped.RDS')
   
-  gtf_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
-  out_pdf1 <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, 
+  gtf_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
+  out_pdf1 <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, 
                     '/DE/Bubble_plots.pdf') 
-  out_pdf1 <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, 
+  out_pdf1 <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, 
                      '/DE/GSEA_Bubble_within_strat.pdf') 
-  out_pdf2 <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, 
+  out_pdf2 <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, 
                      '/DE/GSEA_Bubble_within_test.pdf') 
   
 } else{
@@ -79,7 +79,8 @@ test_value2 <- sapply(test_chunk, function(x) strsplit(x, '-')[[1]][3])
 ### For those whose values are NA (because it was binary) figure out which is 1 and which is 2
 is <- which(test_value1 == 'NA' | test_value2 == 'NA')
 for(i in is){
-  Idents(sdat) <- sdat[[test_name[1]]]
+  #Idents(sdat) <- sdat[[test_name[1]]]
+  Idents(sdat) <- test_name[1]
   idents <- levels(Idents(sdat))
   test_value1[i] <- idents[1]
   test_value2[i] <- idents[2]

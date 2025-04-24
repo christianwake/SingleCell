@@ -4,9 +4,9 @@ if(interactive()){
   project <- '2021614_21-002'
   qc_name <- '2024-01-20'
   method <- 'Custom'
-  calls_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, 
+  calls_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, 
                        '/data/Dehash_calls_', method, '.tsv')
-  out_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, 
+  out_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, 
                      '/results/', qc_name, '/Dehash_calls_', method, '_CRint.tsv')
 }else{
   args <- commandArgs(trailingOnly=TRUE)

@@ -1,11 +1,11 @@
 
 
 if(interactive()){
-  in_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021600_kristin/data/bam/Nreads.csv'
-  out_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021600_kristin/data/Post_filter.csv'
+  in_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2021600_kristin/data/bam/Nreads.csv'
+  out_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2021600_kristin/data/Post_filter.csv'
   
-  in_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2022620_857.1/data/bam/Nreads.csv'
-  out_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2022620_857.1/data/Post_filter.csv'
+  in_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2022620_857.1/data/bam/Nreads.csv'
+  out_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2022620_857.1/data/Post_filter.csv'
   
 } else{
   args = commandArgs(trailingOnly=TRUE)
@@ -14,6 +14,7 @@ if(interactive()){
   out_file <- args[2] 
 }
 
+### Minimum number of reads (column N)
 filt <- 0
 covs <- read.csv(in_file, stringsAsFactors = F, header = F, check.names = F)
 colnames(covs) <- c('ID', 'N')

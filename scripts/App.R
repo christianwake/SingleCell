@@ -9,7 +9,7 @@ library('ggplot2')
 library('dplyr')
 library('Seurat')
 library('scales')
-library('textshape')
+#library('textshape')
 library('grid')
 options(bitmapType='cairo')
 ### Note: This line is necessary because X11 forwarding has some unknown issue causing a plot error
@@ -22,11 +22,11 @@ library('rsconnect')
 library('XML')
 library('MASS')
 
-# load('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021617_mis-c/results/Dropout_mitigated/App/Data.RData')
-# load('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021618_galt/results/Go1/App/Data.RData')
+# load('/data/vrc_his/douek_lab/projects/RNASeq/2021617_mis-c/results/Dropout_mitigated/App/Data.RData')
+# load('/data/vrc_his/douek_lab/projects/RNASeq/2021618_galt/results/Go1/App/Data.RData')
 
 load('Data.RData')
-#source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/sc_functions.R')
+#source('/data/vrc_his/douek_lab/wakecg/sc_functions.R')
 source('sc_functions.R')
 
 ### Find all cluster options from the serurat object and choose from our list, the first in our order of preference

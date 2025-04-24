@@ -1,0 +1,327 @@
+import pandas as pd
+import subprocess
+import os
+from collections import defaultdict
+
+configfile: 'project_config_file.yaml'
+localrules: aggregate_fastqc, aggregate_trim_stderr, aggregate_RSeQC
+
+config = defaultdict(str, config)
+
+if config['adapter'] == 'Illumina':
+  adapter_file = '/hpcdata/vrc/vrc1_data/douek_lab/programs/Trimmomatic-0.39/adapters/TruSeq3-PE.fa'
+elif config['adapter'] == 'Nextera':
+  adapter_file = '/hpcdata/vrc/vrc1_data/douek_lab/programs/Trimmomatic-0.39/adapters/NexteraPE-PE.fa'
+
+cell_sheet = os.path.join(os.getcwd(), config['cell_sheet'])
+cells = pd.read_table(cell_sheet, sep = ',').set_index("Cell_ID", drop = False)
+cells['Lane'] = cells['Lane'].apply(str)
+### Specific to Kristins T, bcl2fastq won't produce results for one sample
+cells = cells[(cells['flowcell_full'] != '210401_K00241_0189_BHKMVMBBXY') & (cells['Lane'] != '8')]
+
+#def cells_from_fc(wildcards): ### subdir is Z1/samplename_Z1_etc.fastq.gz
+#  sub = cells[cells['flowcell_full'] == wildcards.FC]
+#  return list(sub.R1_subdir) + list(sub.R2_subdir)
+
+### fastq file names  output from bcl2fastq (and then Sam's demultiplexing?)
+cells['R1'] = 'read1_index_' + cells['UDP_ID'].map(str) + '.fq.gz' 
+cells['R2'] = 'read2_index_' + cells['UDP_ID'].map(str) + '.fq.gz' 
+### fastq file paths  output from bcl2fastq (and then Sam's demultiplexing?)
+cells['R1_fullpath'] = list([os.path.join(config['runs_dir'], cells.flowcell_full[i], 'demultiplexed', cells['Lane'][i], cells['UDP_ID'][i], cells['R1'][i] + '.fastq.gz') for i in range(0, len(cells['R1']))])
+cells['R2_fullpath'] = list([os.path.join(config['runs_dir'], cells.flowcell_full[i], 'demultiplexed', cells['Lane'][i], cells['UDP_ID'][i], cells['R2'][i] + '.fastq.gz') for i in range(0,len(cells['R1']))])
+### List of full paths to R1 and R2
+fastq_files = list(cells['R1_fullpath']) + list(cells['R2_fullpath'])
+
+### Trimmomatic error logs per cell
+cells['trimerr'] = list([os.path.join(config['runs_dir'], cells.flowcell_full[i], 'demultiplexed', cells['Lane'][i], cells['UDP_ID'][i], 'trim_stderr.txt') for i in range(0,len(cells['R1']))])
+trimerr_files = cells['trimerr']
+### fastq file paths output from trimmomatic and moved to project directory. IS THIS CURRENTLY USED?
+cells['R1_projpath'] = list([os.path.join('data', 'fastq', 'raw', cells['R1'][i] + '.fastq.gz') for i in range(0,len(cells['R1']))])
+cells['R2_projpath'] = list([os.path.join('data', 'fastq', 'raw', cells['R2'][i] + '.fastq.gz') for i in range(0,len(cells['R2']))])
+### List of both R1 and R2
+proj_fastqs = list(cells['R1_projpath']) + list(cells['R2_projpath'])
+### fastq relative paths from the FC directory 
+#cells['R1_subdir'] = list([os.path.join(cells['Sample_ID'][i], cells['R1'][i] + '.fastq.gz') for i in range(0,len(cells['R1']))])
+#cells['R2_subdir'] = list([os.path.join(cells['Sample_ID'][i], cells['R2'][i] + '.fastq.gz') for i in range(0,len(cells['R2']))])
+
+### STAR bam file paths 
+cells['bam'] = list([os.path.join('data', cells.flowcell_full[i], cells['Lane'][i], cells['UDP_ID'][i], 'STAR', 'Aligned.sortedByCoord.out.bam') for i in range(0, len(cells['R1']))])
+### STAR count output pahts
+cells['tab'] = list([os.path.join('data', cells.flowcell_full[i], cells['Lane'][i], cells['UDP_ID'][i], 'STAR', 'gene_abundances.tab') for i in range(0, len(cells['R1']))])
+bam_files = cells['bam']
+tab_files = cells['tab']
+
+### dict of first_path/second_path for fastqs
+#path_dict = dict(zip(list(cells.R1_projpath) + list(cells.R2_projpath), list(cells.R1_fullpath) + list(cells.R2_fullpath)))
+#cells_to_fc = dict(zip(cells.samp, cells.flowcell_full))
+### Dictionary of flowcells, FullName:AbbreviatedName
+flowcells = dict(zip(cells.flowcell_full, cells.FCID))
+### Dictionary whose values are lane regular expressions for each flowcell
+#lane_regex = dict(zip(flowcells.keys(), ['s_[' + ''.join(map(str, list(set(cells[cells['FCID'] == fc].Lane)))) + ']'  for fc in list(flowcells.values())]))
+### Dict whose values are lists of raw fastq files
+#fc_fqs = dict(zip(flowcells.keys(), [list(cells[cells['FCID'] == fc].R1_fullpath) + list(cells[cells['FCID'] == fc].R2_fullpath) for fc in list(flowcells.values())]))
+#proj_fqs = dict(zip(flowcells.keys(), [list(cells[cells['FCID'] == fc].R1) + list(cells[cells['FCID'] == fc].R2) for fc in list(flowcells.values())]))
+
+### Input wildcard is flowcell_full, which is converted to a list of the associated cells
+#def check_bcl2fastq(wildcards):
+#  checkpoint_output = checkpoints.run_bcltofastq.get(**wildcards).output[0]
+#  samps = cells_from_fc(wildcards)
+#  return [os.path.join(checkpoint_output, samp) for samp in samps]
+
+rule all:
+  input:
+    "data/Seurat_object.rds"
+
+### Pipeline starts after bcl2fastq has been completed separately
+rule run_fastqc_once_raw:
+  input:
+    config['runs_dir'] + "/{FC}/demultiplexed/{Lane}/{UDP}/{fastq}.fq.gz"
+  params:
+    path = config['runs_dir'] + "{FC}/demultiplexed/{Lane}/{UDP}/"
+  output:
+    config['runs_dir'] + "{FC}/demultiplexed/{Lane}/{UDP}/{fastq}_fastqc.zip"
+  shell:
+    "fastqc --extract -o {params.path} {input}"
+
+### wildcard sdir cannot go in the expand function with the non-wildcard fastq
+rule aggregate_fastqc_raw:
+  input:
+    fastq_files
+  output:
+    "data/multiqc_input_files.txt"
+  shell:
+    "ls {input} > {output}"
+
+#rule aggregate_bams:
+#  input:
+#    expand('data/bam/{sample}/{sample}_Aligned.sortedByCoord.out.bam', sample = cells['samp'])
+#  output:
+#    'data/bam/bam_files.txt'
+#  shell:
+#    'ls {input} > {output}'
+
+#rule aggregate_rseqc:
+#  input:
+#    expand('data/bam/{sample}/RSeQC/multiqc_input_files.txt', sample = cells['samp'])
+#  output:
+#    'data/bam/multiqc_input_files.txt'
+#  shell:
+#    "cat {input} > {output}"
+
+rule multiqc:
+  input:
+    "data/{sdir}/multiqc_input_files.txt"
+  output:
+    "data/{sdir}/multiqc.html"
+  shell:
+    "multiqc --file-list {input} -f --filename {output}"
+
+rule run_trimmomatic_once:
+  input:
+    ###  These are the file paths output by Sam's sans-sample-sheet system
+    R1 = "/hpcdata/vrc/vrc1_data/douek_lab/Runs/{FC}/demultiplexed/{Lane}/{UDP}/read1_index_{UDP}.fq.gz",
+    R2 = "/hpcdata/vrc/vrc1_data/douek_lab/Runs/{FC}/demultiplexed/{Lane}/{UDP}/read2_index_{UDP}.fq.gz"
+    ### These are the file paths output by bcl2fastq with sample sheet
+    #R1 = os.path.join(config['runs_dir'], 'demultiplexed', config['project'], 
+  params:
+    adapter_file = adapter_file
+  output:
+    R1_paired = "/hpcdata/vrc/vrc1_data/douek_lab/Runs/{FC}/demultiplexed/{Lane}/{UDP}/paired_read1_index_{UDP}.fq.gz",
+    R1_unpaired = "/hpcdata/vrc/vrc1_data/douek_lab/Runs/{FC}/demultiplexed/{Lane}/{UDP}/unpaired_read1_index_{UDP}.fq.gz",
+    R2_paired = "/hpcdata/vrc/vrc1_data/douek_lab/Runs/{FC}/demultiplexed/{Lane}/{UDP}/paired_read2_index_{UDP}.fq.gz",
+    R2_unpaired = "/hpcdata/vrc/vrc1_data/douek_lab/Runs/{FC}/demultiplexed/{Lane}/{UDP}/unpaired_read2_index_{UDP}.fq.gz",
+  conda:
+    "/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/RRBSeq/py2.7.yml"
+  log:
+    log1 = "/hpcdata/vrc/vrc1_data/douek_lab/Runs/{FC}/demultiplexed/{Lane}/{UDP}/trim_stdout.txt",
+    log2 = "/hpcdata/vrc/vrc1_data/douek_lab/Runs/{FC}/demultiplexed/{Lane}/{UDP}/trim_stderr.txt"
+  shell:
+    """
+    java -Xmx7G -jar /hpcdata/vrc/vrc1_data/douek_lab/programs/Trimmomatic-0.39/trimmomatic-0.39.jar PE -phred33 -threads 1 {input.R1} {input.R2} {output.R1_paired} {output.R1_unpaired} {output.R2_paired} {output.R2_unpaired} ILLUMINACLIP:{params.adapter_file}:2:30:10:4:true LEADING:3 TRAILING:3 SLIDINGWINDOW:4:20 MINLEN:50 1>{log.log1} 2>{log.log2}
+    """
+
+rule aggregate_trim_stderr:
+  input: 
+    trimerr_files
+  output:
+    "data/trims.txt"
+  shell:
+    "ls {input} > {output}"
+
+rule run_STAR_once:
+  input: 
+    "/hpcdata/vrc/vrc1_data/douek_lab/Runs/{FC}/demultiplexed/{Lane}/{UDP}/paired_read1_index_{UDP}.fq.gz",
+    "/hpcdata/vrc/vrc1_data/douek_lab/Runs/{FC}/demultiplexed/{Lane}/{UDP}/paired_read2_index_{UDP}.fq.gz",
+  params:
+    starDB = config['starDB'],
+    prefix = "data/{FC}/{Lane}/{UDP}/STAR/",
+    log3 = "data/{FC}/{Lane}/{UDP}/STAR/Log.final.out"
+  output:
+    bam = "data/{FC}/{Lane}/{UDP}/STAR/Aligned.sortedByCoord.out.bam"
+  log:
+    log0 = "data/{FC}/{Lane}/{UDP}/STAR/Log.out",
+    log1 = "data/{FC}/{Lane}/{UDP}/STAR/star_stdout.txt",
+    log2 = "data/{FC}/{Lane}/{UDP}/STAR/star_stderr.txt",
+    log4 = "data/{FC}/{Lane}/{UDP}/STAR/flowcell_{FC}_lane_{Lane}_index_{UDP}_star_align_summary.txt"
+  resources: mem_mb=30000
+  shell:
+    """
+    mkdir -p "{params.prefix}"
+    STAR --genomeDir {params.starDB} --readFilesIn {input} --outFileNamePrefix {params.prefix} --readFilesCommand gzip -dc --outReadsUnmapped Fastx --outSAMtype BAM SortedByCoordinate --outFilterMultimapNmax 20 --outFilterMismatchNoverReadLmax 0.04 --limitSjdbInsertNsj 1200000 1>{log.log1} 2>{log.log2}
+    mv {params.log3} {log.log4}
+   """
+
+rule run_index_once:
+  input:
+    "data/{FC}/{Lane}/{UDP}/STAR/Aligned.sortedByCoord.out.bam",
+  output:
+    "data/{FC}/{Lane}/{UDP}/STAR/Aligned.sortedByCoord.out.bam.bai",
+  shell:
+    "samtools index {input}"
+
+rule run_idxstats_once:
+  input:
+    "data/{FC}/{Lane}/{UDP}/STAR/Aligned.sortedByCoord.out.bam",
+  output:
+    "data/{FC}/{Lane}/{UDP}/STAR/flowcell_{FC}_lane_{Lane}_index_{UDP}_star_alignment_stats.txt"
+  shell:
+    "samtools idxstats {input} > {output}"
+
+###  These two RSeQC functions take so long that they will run separately
+rule run_RSeQC_tin:
+  input:
+    bam = "data/bam/{sample}/{sample}_Aligned.sortedByCoord.out.bam",
+    bai = "data/bam/{sample}/{sample}_Aligned.sortedByCoord.out.bam.bai"
+  params:
+    anno = config['refbed'],
+    inter1 = '{sample}_Aligned.sortedByCoord.out.summary.txt',
+    inter2 = '{sample}_Aligned.sortedByCoord.out.tin.xls'
+  output: 
+    tin = 'data/bam/{sample}/RSeQC/{sample}.out.summary.txt',
+    xls = 'data/bam/{sample}/RSeQC/{sample}.out.tin.xls'
+  shell:
+    """
+    tin.py -i {input.bam} -r {params.anno} > {output.tin}
+    mv {params.inter1} {output.tin}
+    mv {params.inter2} {output.xls}
+    """
+
+rule run_RSeQC_gbc:
+  input: 
+    bam = "data/bam/{sample}/{sample}_Aligned.sortedByCoord.out.bam",
+    bai = "data/bam/{sample}/{sample}_Aligned.sortedByCoord.out.bam.bai"
+  params:
+    anno = config['refbed'],
+    out_pref = 'data/bam/{sample}/RSeQC/{sample}'
+  output:
+    geneBody_cov = 'data/bam/{sample}/RSeQC/{sample}.geneBodyCoverage.txt'
+  shell:
+    "geneBody_coverage.py -i {input.bam} -o {params.out_pref} -r {params.anno}"
+
+rule run_RSeQC_once:
+  input:
+    bam = "data/bam/{sample}/{sample}_Aligned.sortedByCoord.out.bam",
+    bai = "data/bam/{sample}/{sample}_Aligned.sortedByCoord.out.bam.bai"
+  params:
+    anno = config['refbed'],
+    out_pref = 'data/bam/{sample}/RSeQC/{sample}'
+  output:
+    bam_stat = 'data/bam/{sample}/RSeQC/{sample}.bam_stat.txt',
+    read_dist = 'data/bam/{sample}/RSeQC/{sample}.read_distribution.txt',
+    infer_exp = 'data/bam/{sample}/RSeQC/{sample}.infer_experiment.txt',
+    inner_dist = 'data/bam/{sample}/RSeQC/{sample}.inner_distance_freq.txt',
+    junction_anno = 'data/bam/{sample}/RSeQC/{sample}_junction_annotation.txt',
+    junction_sat = 'data/bam/{sample}/RSeQC/{sample}.junctionSaturation_plot.r',
+    read_GC = 'data/bam/{sample}/RSeQC/{sample}.GC.xls',
+    dup_rate = 'data/bam/{sample}/RSeQC/{sample}.pos.DupRate.xls',
+    RNA_frag_size = 'data/bam/{sample}/RSeQC/{sample}.RNA_fragment_size.txt'
+  shell:
+    """
+    mkdir -p data/bam/{wildcards.sample}/RSeQC/
+    bam_stat.py -i {input.bam} > {output.bam_stat}
+    read_distribution.py -i {input.bam} -r {params.anno} > {output.read_dist}
+    infer_experiment.py -i {input.bam} -r {params.anno} > {output.infer_exp}
+    inner_distance.py -i {input.bam} -o {params.out_pref} -r {params.anno}
+    junction_annotation.py -i {input.bam} -o {params.out_pref} -r {params.anno} 2>{output.junction_anno}
+    junction_saturation.py -i {input.bam} -o {params.out_pref} -r {params.anno}
+    read_GC.py -i {input.bam} -o {params.out_pref}
+    read_duplication.py -i {input.bam} -o {params.out_pref}
+    #read_NVC.py -i {input} -o {params.out_pref}
+    #stread_quality.py -i {input} -o {params.out_pref}
+    RNA_fragment_size.py -i {input} -r {params.anno} > {output.RNA_frag_size}
+    #RPKM_saturation.py -i {input} -o {params.out_pref} -r {params.anno}
+    #mismatch_profile.py -i {input} -o {params.out_pref}
+    """
+
+rule aggregate_RSeQC:
+  input:
+    bam_stat = 'data/bam/{sample}/RSeQC/{sample}.bam_stat.txt',
+    read_dist = 'data/bam/{sample}/RSeQC/{sample}.read_distribution.txt',
+    infer_exp = 'data/bam/{sample}/RSeQC/{sample}.infer_experiment.txt',
+    inner_dist = 'data/bam/{sample}/RSeQC/{sample}.inner_distance_freq.txt',
+    junction_anno = 'data/bam/{sample}/RSeQC/{sample}_junction_annotation.txt',
+    junction_sat = 'data/bam/{sample}/RSeQC/{sample}.junctionSaturation_plot.r',
+    read_GC = 'data/bam/{sample}/RSeQC/{sample}.GC.xls',
+    dup_rate = 'data/bam/{sample}/RSeQC/{sample}.pos.DupRate.xls',
+    RNA_frag_size = 'data/bam/{sample}/RSeQC/{sample}.RNA_fragment_size.txt',
+    geneBody_cov = 'data/bam/{sample}/RSeQC/{sample}.geneBodyCoverage.txt',
+    tin = 'data/bam/{sample}/RSeQC/{sample}.out.summary.txt',
+    starlog = 'data/bam/{sample}/{sample}_Log.final.out'
+  output:
+    'data/bam/{sample}/RSeQC/multiqc_input_files.txt'
+  shell:
+    'ls {input} > {output}'
+
+rule run_stringtie:
+  input:
+    bam = 'data/{FC}/{Lane}/{UDP}/STAR/Aligned.sortedByCoord.out.bam',
+    bai = 'data/{FC}/{Lane}/{UDP}/STAR/Aligned.sortedByCoord.out.bam.bai'
+  output:
+    tab = 'data/{FC}/{Lane}/{UDP}/STAR/gene_abundances.tab'
+  log:
+    gtflog = 'data/{FC}/{Lane}/{UDP}/STAR/stringtie.gtf',
+    txtlog = 'data/{FC}/{Lane}/{UDP}/STAR/stringtie_stderr.txt'
+  params:
+    ref = config['refgtf']
+  shell:
+    'stringtie {input.bam} -G {params.ref} -A {output.tab} -e 1> {log.gtflog} 2> {log.txtlog}'
+
+rule create_mtx:
+  input:
+    tab_files
+  params:
+    project = config['project'],
+    sample_sheet = config['sample_sheet'],
+  output:
+    mtx_file = 'data/raw_mtx.rds'
+  shell:
+    "Rscript scripts/tab2mtx.R {params} {output}"
+
+rule compile_QC_metrics:
+  input:
+    'data/raw_mtx.rds'
+  params:
+    runs_dir = config['runs_dir'],
+    project = config['project'],
+    sample_sheet = config['sample_sheet'],
+    gtf_file = config['refgtf']
+  output:
+    'data/gtf.RData',
+    'data/Cell_filters.txt',
+    'data/Cell_filters.pdf',
+    'data/Covariates_QC_metrics.csv'
+  shell:
+    'Rscript scripts/SC_Compile_QC_metrics.R {input} {params} {output}'
+
+rule create_seurat_object:
+  input:
+    'data/raw_mtx.rds',
+    'data/Covariates_QC_metrics.csv'
+  params:
+    project = config['project'],
+    gtf_file = config['refgtf']
+  output:
+    'data/Seurat_object.rds'
+  shell:
+    'Rscript scripts/mtx2seurat.R {input} {output}'
+

@@ -5,7 +5,61 @@ import re
 from collections import defaultdict
 import csv
 
-step_names = ['Base data', 'Sample filter', 'Imputation', 'Cell filter', 'Integration', 'Cluster filter']
-include: "/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/SingleCell/Common_prep.py"
-include: "/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/SingleCell/Snakefile"
+### Define possible QC steps
+### 
+#step_names = ['Base data', 'Sample filter', 'Imputation', 'Cell filter', 'Integration', 'Cluster filter']
+### From CITESeq Snakefile
+#step_names =  ['DSB_background', 'Sample filter', 'Imputation', 'Downsample', 'Transcript filter', 'Cell filter', 'Integration', 'cluster filter']
+### Combo
+step_names =  ['Base data',  'Sample filter', 'Imputation', 'Downsample', 'Transcript filter', 'Cell filter', 'Integration', 'cluster filter']
+
+#sample_sheet = 'data/Sample_sheet.csv'
+#sample_sheet = os.path.join(os.getcwd(), config['Cell_sheet'])
+#sheet_filename = 'Cell_sheet.csv'
+#sheet_ID = 'Cell_ID'
+
+### For dynamic batches. Uses checkpoint 'set_batches', creates a list for input to rule 'Combine_batches'
+def aggregate_rds_inputs(wildcards):
+  checkpoint_output = checkpoints.set_batches.get(**wildcards).output[0]
+  rna_rds = expand(results_dir + "batches/{i}/Cell_filtered.RDS", i = glob_wildcards(os.path.join(checkpoint_output, "{i}", "Cell_sheet.csv")).i)
+  return rna_rds
+
+def aggregate_multiqc_inputs(wildcards):
+  checkpoint_output = checkpoints.set_batches.get(**wildcards).output[0]
+  fqc = expand(results_dir + "batches/{i}/multiqc_input_files.txt", i = glob_wildcards(os.path.join(checkpoint_output, "{i}", "Cell_sheet.csv")).i)
+  return fqc
+
+include: "/data/vrc_his/douek_lab/snakemakes/SingleCell/Common_prep.py"
+
+sample_sheet = os.path.join(os.getcwd(), config['Cell_sheet'])
+sheet_filename = 'Cell_sheet.csv'
+sheet_ID = 'Cell_ID'
+include: "/data/vrc_his/douek_lab/snakemakes/SingleCell/Snakefile"
+#include: "/data/vrc_his/douek_lab/snakemakes/SingleCell/SmartSeq/preprocessing/Snakefile"
+
+### QC step 5, remove cells based on RNA content
+rule Cell_filters:
+  input:
+    **maybe_skip_QC_stepN(qcdat, 5), ### Returns RDS file as 'rds' and file with QC details as 'qc', and 'touch'
+    samples = results_dir + sheet_filename,
+    exclude = results_dir + "Excluded_genes.txt",
+    gtf = 'data/gtf.RDS',
+    fastqc = 'data/fastq/trimmed/multiqc_input_files.txt'
+  params:
+    scripts = config['SC_scripts'],
+    batch_name = config['batch'],
+    results_dir = results_dir
+  output:
+    results_dir + "batches/{batch}/Cell_filtered.RDS",
+    results_dir + "batches/{batch}/Cell_filtered.pdf",
+    results_dir + "batches/{batch}/Cell_filtered.txt",
+    results_dir + "batches/{batch}/multiqc_input_files.txt"
+  resources: mem_mb=get_mem_mb
+  log:
+    results_dir + "batches/{batch}/Cell_filtered.log"
+  shell:
+    """
+    mkdir -p {params.results_dir}/batches/{wildcards.batch}/
+    Rscript {params.scripts}/Cell_filters.R {input.rds} {input.qc} {input.samples} {input.exclude} {input.gtf} '{wildcards.batch}' '{params.batch_name}' {output} {input.fastqc} > {log}
+    """
 

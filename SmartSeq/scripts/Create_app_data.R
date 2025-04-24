@@ -11,8 +11,8 @@ library('grid')
 library('scales')
 library('rsconnect')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/sc_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/data/vrc_his/douek_lab/wakecg/sc_functions.R')
+source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
 
 args = commandArgs(trailingOnly=TRUE)
 sdat_file <- args[1]
@@ -22,9 +22,9 @@ project <- args[4]
 username <- args[5]
 server <- args[6]
 
-# sdat_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021618_galt/results/Go2/Filtered.RDS'
-# de_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021618_galt/results/Go2/Cluster_DE.RDS'
-# out_rdata <-'/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021618_galt/results/Go2/App/Data.RData'
+# sdat_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2021618_galt/results/Go2/Filtered.RDS'
+# de_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2021618_galt/results/Go2/Cluster_DE.RDS'
+# out_rdata <-'/data/vrc_his/douek_lab/projects/RNASeq/2021618_galt/results/Go2/App/Data.RData'
 # project <- '2021618_galt'
 # username <- 'wakecg'
 # server <- 'rstudio-connect.niaid.nih.gov'
@@ -38,7 +38,7 @@ print(names(sdat@reductions))
 DefaultAssay(sdat) <- 'RNA'
 umaps <- names(sdat@reductions)[grepl('umap', names(sdat@reductions))]
 print(umaps)
-sdat <- DietSeurat(sdat, counts = F, dimreducs = umaps, assays = c('RNA'))
+sdat <- DietSeurat(sdat, layers = c('data'), dimreducs = umaps, assays = c('RNA'))
 
 rna_by_rna <- readRDS(de_file)
 

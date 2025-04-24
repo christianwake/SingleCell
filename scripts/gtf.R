@@ -2,16 +2,15 @@
 library('sys')
 library('viridis')
 library('data.table')
-library('PKI')
 library('stringr')
 library('stringi')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
 
 if(interactive()){
-  gtf_file <- '/hpcdata/vrc/vrc1_data/douek_lab/reference_sets/tenX/Homo_sapiens.GRCh38.93/GRCh38_protein_coding_only/genes/genes.gtf'
-  rds_file <- '/hpcdata/vrc/vrc1_data/douek_lab/wakecg/data/gtf.RDS'
+  gtf_file <- '/data/vrc_his/douek_lab/reference_sets/tenX/Homo_sapiens.GRCh38.93/GRCh38_protein_coding_only/genes/genes.gtf'
+  rds_file <- '/data/vrc_his/douek_lab/wakecg/data/gtf.RDS'
 } else{
   args = commandArgs(trailingOnly=TRUE)
   ### snakemake input

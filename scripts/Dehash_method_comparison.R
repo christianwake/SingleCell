@@ -13,7 +13,7 @@ library('dplyr')
 library('viridis')
 library('data.table')
 library('patchwork')
-library('PKI')
+#library('PKI')
 library('tinytex')
 library('dsb')
 #library('tidyverse')
@@ -27,30 +27,30 @@ library('WriteXLS')
 library('Matrix')
 library('pastecs')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sample_sheet_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/dehash_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
+source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/sample_sheet_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/dehash_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
 
 if(interactive()){
   project <- '2021614_21-002'
 
-  runs_dir <- '/hpcdata/vrc/vrc1_data/douek_lab/Runs/'
-  covs_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, 
+  runs_dir <- '/data/vrc_his/douek_lab/Runs/'
+  covs_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, 
                       '/Sample_sheet_Innate.csv')
-  out_pdf1 <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/Dehash_comparisons_calls2.pdf')
-  out_pdf2 <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/Dehash_comparisons_threshs2.pdf')
-  out_threshs <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/Dehash_comparisons2.csv')
+  out_pdf1 <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/Dehash_comparisons_calls2.pdf')
+  out_pdf2 <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/Dehash_comparisons_threshs2.pdf')
+  out_threshs <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/Dehash_comparisons2.csv')
   demux_methods <- 'MULTIseqDemux,Trough,Custom'
   ### Method 1 of input: specifying Trough. But it won't be exactly reproducible due to randomness.
   do_trough <- F
   ### Method 2 of input: a csv of threshold values
   thresh_files <- sapply(strsplit(demux_methods, ',')[[1]], function(x) 
-    paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/Dehash_threshs_', x, '.csv'))
+    paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/Dehash_threshs_', x, '.csv'))
   ### Method 3 of input: csv of cell dehashing calls
   calls_files <- sapply(strsplit(demux_methods, ',')[[1]], function(x) 
-    paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/Dehash_calls_', x, '.tsv'))
+    paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/Dehash_calls_', x, '.tsv'))
 }else{
   args <- commandArgs(trailingOnly=TRUE)
 
@@ -73,7 +73,7 @@ if(project == '2023105_21-0012'){
 } else{
   CR_version = '7.1.1'
 }
-project_dir <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project)
+project_dir <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project)
 
 ### Read covariates
 dat <- read.csv(covs_file, stringsAsFactors = F, header = T,
@@ -257,7 +257,7 @@ for(id in unique(dat$CR_ID)){
   minx <- 1
   for(i in 1:length(hash_ids)){
     hash_id <- hash_ids[i]
-    #print(hash_id)
+    print(hash_id)
  
     ### Determine the threshold used by the input dehash results
     #threshs <- sapply(labels, function(lab) determine_threshold(lab, datNorm, hash_id))
@@ -293,10 +293,12 @@ for(id in unique(dat$CR_ID)){
     maxx <- max(maxx, max(plot_dat$size))
     ### Plot without thresholds yet
     print(max_cr)
-    p <- ggplot(plot_dat) + ggtitle(hash_id) + theme(plot.title = element_text(size = 10, face = "bold"), 
-                                                     panel.background = element_rect(fill = "lightgrey", colour = "darkgrey",
-                                                                                     size = 0.5, linetype = "solid")) + 
-     aes(x = size, y = density) + geom_line(aes(color = cumulative_CR), size = 1.5) +
+    p <- ggplot(plot_dat) + 
+         ggtitle(hash_id) + theme(plot.title = element_text(size = 10, face = "bold"), 
+                            panel.background = element_rect(fill = "lightgrey", colour = "darkgrey",
+                            size = 0.5, linetype = "solid")) + 
+     aes(x = size, y = density) + 
+     geom_line(aes(color = cumulative_CR), size = 1.5) +
      scale_colour_gradient2(name = 'cumulative\nCR- calls', trans = 'log2',
                             limits = c(1, max_cr/1000),
                             midpoint = log2(max_cr/5000),

@@ -4,7 +4,7 @@ library('stringr')
 library('pheatmap')
 library('ggplot2')
 #library('umap')
-library('textshape')
+#library('textshape')
 library('dplyr')
 library('biomaRt')
 library('grid')
@@ -13,31 +13,40 @@ library('data.table')
 library('VennDiagram')
 #library('scuttle')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
+source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
 
 if(interactive()){
-  project <- '2021614_21-002'
-  qc_name <- '2024-01-20'
+  project <- '2024615_Boswell'
+  qc_name <- 'FirstRun'
+  batch_value <- 'FC_ID'
+  
+  #project <- '2021600_kristin'
+  #qc_name <- 'Run2025-03-03'
+  #batch_value <- 'Lane'
+  
+  # project <- '2021614_21-002'
+  # qc_name <- '2024-01-20'
   # qc_name <- '2023-Jan'
   # qc_name <- 'Both_celltypes'
-  # sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/All_data.RDS')
-  # covs_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/Sample_sheet.csv')
-  # filter_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/QC_steps/RNA_filters.csv')
-  batch_name <- 'Sample_Name'
-  batch_value <- 'Su1_03_B_cells'
+  # sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/All_data.RDS')
+  # covs_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/Sample_sheet.csv')
+  # filter_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/QC_steps/RNA_filters.csv')
+  # batch_name <- 'Sample_Name'
+  # batch_value <- 'Su1_03_B_cells'
   # batch_name <- 'Date_sort'
   # batch_value <- '2021-11-09'
   # batch_value <- '2022-08-12'
   # #batch_value <- '2021-12-02'
-  # base_dir <- '/hpcdata/vrc/vrc1_data/'
+  # base_dir <- '/data/vrc_his/'
   
   #base_dir <- '/Volumes/VRC1_DATA/'
-  base_dir <- '/hpcdata/vrc/vrc1_data/'
+  base_dir <- '/data/vrc_his/'
   # project <- '2022619_857.3b'
   # qc_name <- 'QC_SampleName_pass'
-  sdat_file <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/data/All_data.RDS')
+  #sdat_file <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/data/All_data.RDS')
+  sdat_file <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/All_data.RDS')
   #covs_file <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/Sample_sheet.csv')
   #filter_file <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/QC_steps/step3_cell_and_feature_filters.csv')
   filter_file <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/QC_steps/Transcript_filters.csv')
@@ -53,10 +62,11 @@ if(interactive()){
   args = commandArgs(trailingOnly = TRUE)
   sdat_file <- args[1]
   filter_file <- args[2]
-  out_txt1 <- args[3]
-  out_txt2 <- args[4]
-  out_rds <- args[5]
-  out_tsv <- args[6]
+  gtf_file <- args[3]
+  out_txt1 <- args[4]
+  out_txt2 <- args[5]
+  out_rds <- args[6]
+  out_tsv <- args[7]
 }
 
 filters <- read.table(filter_file, header = T, sep = ',')
@@ -81,8 +91,27 @@ if(length(exceptions) == 0){
 filters$N <- NA
 #### Read Seurat object
 sdat <- readRDS(sdat_file)
-print(row.names(sdat@assays$prot))
 DefaultAssay(sdat) <- 'RNA'
+
+print(paste0('Reading gtf file ', gtf_file))
+if(gtf_file == '' | is.na(gtf_file)){
+  gtf <- NA
+} else{
+  if(grepl('\\.gtf', gtf_file)){
+    gtf <- read_gtf(gtf_file, 'gene', c('gene_name', 'gene_id')) 
+  } else{
+    gtf <- readRDS(gtf_file)
+  }
+  row.names(gtf) <- gtf$gene_id
+  ### Determine whether 'gene_name' or 'gene_id' better matches those in the seurat object
+  gtf_cols <- c('gene_name', 'gene_id')
+  #id_type <- names(which.max(sapply(gtf_cols, function(col) sum(row.names(sdat) %in% gtf[, col]))))
+  id_type <- get_id_name(row.names(sdat), gtf)
+}
+
+### Use the first of data or counts that is present in the Seurat object. Whether data is present depends on if normalization has been done already.
+lay <- c('data', 'counts')
+lay <- lay[which(lay %in% names(sdat@assays$RNA@layers))][1]
 
 exclude_gene_names <- c()
 ### Feature exclusion based on fraction of cells with at least one count
@@ -92,14 +121,20 @@ if(length(fraction_cells) > 0){
   
   min_cells <- length(colnames(sdat)) * fraction_cells
   a1 <- Sys.time()
-  a <- CreateSeuratObject(sdat@assays$RNA@data, assay = 'RNA', min.cells = min_cells)
-  genes <- setdiff(row.names(sdat), row.names(a))
+  ### No longer works, because CreateSeuratObject doesn't keep the names of the features.... It changest the names to FeatureXYZ
+  # a <- CreateSeuratObject(sdat@assays$RNA@layers[lay], assay = 'RNA', min.cells = min_cells)
+  # genes <- setdiff(row.names(sdat), row.names(a))
+  # rm(a)
+  a <- CreateSeuratObject(sdat@assays$RNA@layers[lay], assay = 'RNA', min.cells = min_cells)
+  rns <- row.names(sdat)[as.numeric(gsub('Feature', '', row.names(a)))]
+  ### Those in sdat but not in a (to be added to excluded_gene_names)
+  genes <- setdiff(row.names(sdat), rns)
   rm(a)
   a2 <- Sys.time()
   a2-a1
   
   exclude_gene_names <- c(exclude_gene_names, genes)
-  hist(rowSums(sdat@assays$RNA@data > 0)/length(row.names(sdat)), xlab = 'Fraction of cells with > 0 counts', main = 'N features by fraction of cells')
+  hist(rowSums(sdat@assays$RNA@layers[lay][[1]] > 0)/length(row.names(sdat)), xlab = 'Fraction of cells with > 0 counts', main = 'N features by fraction of cells')
   ### Update filters file
   filters[which(filters$feature == 'fraction_cells'), 'N'] <- length(genes)
   filters[which(filters$feature == 'fraction_cells'), 'value'] <- 
@@ -111,38 +146,48 @@ if(length(cell_min) > 0){
   print(paste0('Excluding features with fewer than ', cell_min, ' total cells'))
   cell_min <- as.numeric(cell_min)
   
-  a <- CreateSeuratObject(sdat@assays$RNA@data, assay = 'RNA', min.cells = cell_min)
+  a <- CreateSeuratObject(sdat@assays$RNA@layers[lay], assay = 'RNA', min.cells = cell_min)
   genes <- setdiff(row.names(sdat), row.names(a))
   rm(a)
 
   exclude_gene_names <- c(exclude_gene_names, genes)
-  hist(rowSums(sdat@assays$RNA@data > 0), xlab = 'N cells with > 0 counts', main = 'N features by fraction of cells')
+  hist(rowSums(sdat@assays$RNA@layers[lay] > 0), xlab = 'N cells with > 0 counts', main = 'N features by fraction of cells')
   filters[which(filters$feature == 'cells'), 'N'] <- length(genes)
 }
 ### Feature exclusion based on minimum read counts 
 if(length(count_min) > 0){
   print(paste0('Excluding features with fewer than ', count_min, ' total counts.'))
   count_min <- as.numeric(count_min) 
-  genes <- row.names(sdat)[which(rowSums(sdat@assays$RNA@data) <= count_min)]
+  genes <- row.names(sdat)[which(rowSums(sdat@assays$RNA@layers[lay][[1]]) <= count_min)]
   exclude_gene_names <- c(exclude_gene_names, genes)
   filters[which(filters$feature == 'counts'), 'N'] <- length(genes)
 }
 
 ### Feature exclusion based on gene name pattern
-all_names <- row.names(sdat@assays$RNA@counts)
+#all_names <- row.names(sdat@assays$RNA@layers[lay])
+all_names <- row.names(sdat@assays$RNA@features@.Data)
+### Use a key to convert between ID and Name, but should work even if both are Names
+if(id_type != 'gene_name'){
+  key <- gtf[all_names, 'gene_name']  
+  names(key) <- all_names
+} else{
+  key <- all_names
+  names(key) <- all_names
+}
+
 key_words <- strsplit(key_words, ',')[[1]]
-key_word_matches <- all_names[sapply(all_names, function(x) any(sapply(key_words, function(y) grepl(y, x))))]
+key_word_matches <- key[all_names][sapply(key[all_names], function(x) any(sapply(key_words, function(y) grepl(y, x))))]
 key_word_matches <- sort(key_word_matches)
 ### Exclude those specified as exceptions
-key_words <- strsplit(exceptions, ',')[[1]]
-if (length(key_words) > 0) {
+exc_key_words <- strsplit(exceptions, ',')[[1]]
+if(length(exc_key_words) > 0) {
   print(paste0('Excluding features whose names match key word(s):  ', toString(key_words), ', with exceptions: ', exceptions))
-  exception_gene_names <- key_word_matches[sapply(key_word_matches, function(x) any(sapply(key_words, function(y) grepl(y, x))))]
+  exception_gene_names <- key_word_matches[sapply(key_word_matches, function(x) any(sapply(exc_key_words, function(y) grepl(y, x))))]
   key_word_matches <- key_word_matches[!key_word_matches %in% exception_gene_names]
   filters[which(filters$feature == 'pattern'), 'N'] <- length(key_word_matches)
   filters[which(filters$feature == 'pattern_exceptions'), 'N'] <- length(exception_gene_names)
 }
-exclude_gene_names <- unique(c(exclude_gene_names, key_word_matches))
+exclude_gene_names <- unique(c(exclude_gene_names, names(key_word_matches)))
 
 print(filters)
 filters[(length(row.names(filters)) +1),] <- c('gene', 'total_filtered', '', length(exclude_gene_names))
@@ -163,21 +208,31 @@ if(length(key_words) == 0){
 if(length(exceptions) == 0){
   exceptions <- ''
 }
-all_names <- row.names(sdat@assays$RNA@counts)
+#all_names <- row.names(sdat@assays$RNA@counts)
+all_names <- row.names(sdat@assays$RNA@features@.Data)
+### Use a key to convert between ID and Name, but should work even if both are Names
+if(id_type != 'gene_name'){
+  key <- gtf[all_names, 'gene_name']  
+  names(key) <- all_names
+} else{
+  key <- all_names
+  names(key) <- all_names
+}
+
 key_words <- strsplit(key_words, ',')[[1]]
-key_word_matches <- all_names[sapply(all_names, function(x) any(sapply(key_words, function(y) grepl(y, x))))]
+key_word_matches <- all_names[sapply(key[all_names], function(x) any(sapply(key_words, function(y) grepl(y, x))))]
 key_word_matches <- sort(key_word_matches)
 ### Exclude those specified as exceptions
-key_words <- strsplit(exceptions, ',')[[1]]
+exc_key_words <- strsplit(exceptions, ',')[[1]]
 if (length(key_words) > 0) {
   print(paste0('Excluding features whose names match key word(s):  ', toString(key_words), ', with exceptions: ', exceptions))
-  exception_gene_names <- key_word_matches[sapply(key_word_matches, function(x) any(sapply(key_words, function(y) grepl(y, x))))]
+  exception_gene_names <- key_word_matches[sapply(key_word_matches, function(x) any(sapply(exc_key_words, function(y) grepl(y, x))))]
   key_word_matches <- key_word_matches[!key_word_matches %in% exception_gene_names]
   filters[which(filters$feature == 'pattern'), 'N'] <- length(key_word_matches)
   filters[which(filters$feature == 'pattern_exceptions'), 'N'] <- length(exception_gene_names)
 }
 egn <- c()
-egn <- unique(c(egn, key_word_matches))
+egn <- unique(c(egn, names(key_word_matches)))
 print(length(egn))
 egn <- egn[which(!(egn %in% exclude_gene_names))]
 write.table(egn, out_txt2, quote = F, sep = ',', row.names = F, col.names = F)

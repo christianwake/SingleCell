@@ -4,7 +4,7 @@ library('stringr')
 library('pheatmap')
 library('ggplot2')
 #library('umap')
-library('textshape')
+#library('textshape')
 library('plyr')
 library('dplyr')
 library('biomaRt')
@@ -12,62 +12,67 @@ library('grid')
 library('scales')
 library('readxl')
 library('cowplot')
-library('lisi')
+#library('lisi')
 library('data.table')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
-#source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
+#source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
 
 if(interactive()){
+  project <- '2024615_Boswell'
+  qc_name <- 'FirstRun'
+  reses <- c('RNA-0.1')
+  integration_file <- ''
+  #gene_file <- 'genes.xlsx'
+  
   # project <- '2023600_21-0012'
   # qc_name <- '2023-12-01'
-  # negative_markers <- ''
   # gene_file <- 'genes.xlsx'
-  # QC_input_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/Test_comparisons.csv')
+  # QC_input_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/Test_comparisons.csv')
   # integration_file <- ''
   # reses <- c('RNA-0.6', 'prot-0.6')
   
-  project <- '2021614_21-002'
-  qc_name <- '2024-01-20'
-  negative_markers <- ''
+  #project <- '2021614_21-002'
+  #qc_name <- '2024-01-20'
+  
   # project <- '2022620_857.1'
   # qc_name <- '2023-01-09' ### published
   # qc_name <- '2023-05-02' ### A few more cells salvaged
   # test_var <- 'timepoint'
-  # integration_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/QC_steps/step4_integration.csv')
-  # gene_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/genes.xlsx')
+  # integration_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/QC_steps/step4_integration.csv')
+  # gene_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/genes.xlsx')
   
   ### 1st cluster
-  sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, 
-                      '/results/', qc_name, '/Normalized.RDS')
-  sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, 
-                      '/results/', qc_name, '/DSB_normalized_data.RDS')
+  sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, 
+                      '/results/', qc_name, '/RNA_normalized.RDS')
+  #sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, 
+  #                    '/results/', qc_name, '/DSB_normalized_data.RDS')
   
-  out_rds <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Clustered.RDS')
-  out_pdf <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/RNA_clusters.pdf')
+  out_rds <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Clustered.RDS')
+  out_pdf <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/RNA_clusters.pdf')
   ### 2nd cluster
-  # sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filtered.RDS')
-  # out_rds <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filtered_clustered.RDS')
-  # out_pdf <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Clusters_filtered.pdf')
+  # sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filtered.RDS')
+  # out_rds <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filtered_clustered.RDS')
+  # out_pdf <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Clusters_filtered.pdf')
   # reses <- c('RNA-0.7')
 
   # project <- '2022619_857.3b'
   # qc_name <- 'QC_first_pass'
   # negative_markers <- ''
-  # sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/DSB_normalized_data.RDS')
-  # gene_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/genes.xlsx')
+  # sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/DSB_normalized_data.RDS')
+  # gene_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/genes.xlsx')
   # test_var <- 'Timepoint'
   # integration_file <- ''
-  # out_rds <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Clustered.RDS')
-  # out_pdf <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/ADT_clusters.pdf')
+  # out_rds <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Clustered.RDS')
+  # out_pdf <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/ADT_clusters.pdf')
   # reses <- c('RNA-0.08', 'prot-0.05')
   
   ### Should be universal
-  QC_input_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, 
+  QC_input_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, 
   '/Test_comparisons.csv')
-  gtf_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
-  exclude_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Excluded_genes.txt')
+  gtf_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
+  exclude_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Excluded_genes.txt')
   
 } else{
   args = commandArgs(trailingOnly=TRUE)
@@ -93,7 +98,12 @@ if(!interactive()){
   sdat <- readRDS(sdat_file)
   print('Done reading Seurat object')
   ### Downsample so I can work interactiveley for testing
-  ssub <- DietSeurat(sdat, counts = F, assays = c('RNA', 'prot'))
+  assays <- c('RNA', 'prot')
+  assays <- assays[which(assays %in% names(sdat@assays))]
+  layers <- c('counts', 'data')
+  #layers <- c('counts')
+  layers <- layers[which(layers %in% names(sdat@assays$RNA@layers))]
+  ssub <- DietSeurat(sdat, layers = layers, assays = assays)
   cells <- sample(x = colnames(ssub), size = (length(colnames(ssub)) * downsample_var), replace = F)
   
   ssub <- subset(ssub, cells = cells)
@@ -197,7 +207,7 @@ if(integration_file == '' | is.na(integration_file) | !file.exists(integration_f
   }
 }
 
-ilisi_rna <- compute_lisi(sdat@reductions[[umap_name]]@cell.embeddings, sdat@meta.data[, 'RNA_clusters', drop = F], c('RNA_clusters'))
+#ilisi_rna <- compute_lisi(sdat@reductions[[umap_name]]@cell.embeddings, sdat@meta.data[, 'RNA_clusters', drop = F], c('RNA_clusters'))
 
 ### Check if protein assay is included
 if('prot' %in% names(res) ){
@@ -205,7 +215,7 @@ if('prot' %in% names(res) ){
   print('Doing protein clustering')
   ### UMAP, Find neighbors, cluster on sdat assay prot, slot 'data'
   sdat <- cluster_prot(sdat, res['prot'])
-  ilisi_prot <- compute_lisi(sdat@reductions[['prot_umap']]@cell.embeddings, sdat@meta.data[, 'prot_clusters', drop = F], c('prot_clusters'))
+  #ilisi_prot <- compute_lisi(sdat@reductions[['prot_umap']]@cell.embeddings, sdat@meta.data[, 'prot_clusters', drop = F], c('prot_clusters'))
 
   features_list <- row.names(sdat@assays$prot@data)
   p <- DotPlot(sdat, features = features_list, group.by = 'prot_clusters', scale.by = 'radius',
@@ -239,7 +249,9 @@ names(res) <- clusters[names(res)]
 print(clusters)
 
 pdf(out_pdf)
-print(p)
+if('prot' %in% names(res) ){
+  print(p)
+}
 ### Get quantification to be visualized on each reduction with FeaturePlot
 quants <- c(paste0(c('nCount_', 'nFeature_'), rep(names(res), each = 2)), 'fraction_MT')
 quants <- quants[quants %in% colnames(sdat@meta.data)]
@@ -346,10 +358,10 @@ if(gene_file != '' & file.exists(gene_file) & file.info(gene_file)$size != 0){
   # }
 }
 
-if(length(reductions) > 1){
-  print(paste0('doing ilisi to compare ', toString(reductions[1:2])))
-  plot_ilisi(sdat, reductions, 'Sample_ID')
-}
+# if(length(reductions) > 1){
+#   print(paste0('doing ilisi to compare ', toString(reductions[1:2])))
+#   plot_ilisi(sdat, reductions, 'Sample_ID')
+# }
 
 
 dev.off()

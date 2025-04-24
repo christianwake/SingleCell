@@ -2,23 +2,23 @@
 library('sys')
 library('viridis')
 library('data.table')
-library('PKI')
+#library('PKI')
 library('stringr')
 library('stringi')
 library('biomaRt')
 library('fgsea')
 library('GSEABase')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
 
 if(interactive()){
   species <- 'hsapiens'
-  sdat_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021600_kristin/results/Run2022/PostQC3.RDS'
-  gtf_file <- '/hpcdata/vrc/vrc1_data/douek_lab/reference_sets/tenX/Homo_sapiens.GRCh38.93/GRCh38_protein_coding_only/genes/genes.gtf'
-  gmt_file <- '/hpcdata/vrc/vrc1_data/douek_lab/wakecg/c2.cp.v7.2.symbols.gmt'
-  gene_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021600_kristin/220921_transcriptome_analysis.xlsx'
-  out_file <- '/hpcdata/vrc/vrc1_data/douek_lab/wakecg/data/Gene_names.RDS'
+  sdat_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2021600_kristin/results/Run2022/PostQC3.RDS'
+  gtf_file <- '/data/vrc_his/douek_lab/reference_sets/tenX/Homo_sapiens.GRCh38.93/GRCh38_protein_coding_only/genes/genes.gtf'
+  gmt_file <- '/data/vrc_his/douek_lab/wakecg/c2.cp.v7.2.symbols.gmt'
+  gene_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2021600_kristin/220921_transcriptome_analysis.xlsx'
+  out_file <- '/data/vrc_his/douek_lab/wakecg/data/Gene_names.RDS'
 } else{
   args = commandArgs(trailingOnly=TRUE)
   ### snakemake input

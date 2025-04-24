@@ -3,7 +3,7 @@ library('Seurat')
 library('stringr')
 library('pheatmap')
 library('ggplot2')
-library('textshape')
+#library('textshape')
 library('dplyr')
 library('biomaRt')
 library('grid')
@@ -12,26 +12,26 @@ library('data.table')
 library('VennDiagram')
 library('scuttle')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
+source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
 
 if(interactive()){
   # project <- '2021614_21-002'
   # qc_name <- '2023-March'
   # qc_name <- '2023-Jan'
   # qc_name <- 'Both_celltypes'
-  # sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/All_data.RDS')
-  # covs_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/Sample_sheet.csv')
-  # filter_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/QC_steps/RNA_filters.csv')
+  # sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/All_data.RDS')
+  # covs_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/Sample_sheet.csv')
+  # filter_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/QC_steps/RNA_filters.csv')
   # batch_name <- 'Date_sort'
   # batch_value <- '2021-11-09'
   # batch_value <- '2022-08-12'
   # #batch_value <- '2021-12-02'
-  # base_dir <- '/hpcdata/vrc/vrc1_data/'
+  # base_dir <- '/data/vrc_his/'
   
-  base_dir <- '/Volumes/VRC1_DATA/'
-  #base_dir <- '/hpcdata/vrc/vrc1_data/'
+  #base_dir <- '/Volumes/VRC1_DATA/'
+  base_dir <- '/data/vrc_his/'
   project <- '2022619_857.3b'
   qc_name <- 'QC_SampleName_pass'
   sdat_file <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/data/All_data.RDS')

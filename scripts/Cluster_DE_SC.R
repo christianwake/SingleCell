@@ -1,18 +1,19 @@
 library('sys')
 library('Seurat')
+#library('Seurat', lib.loc = .libPaths()[2])
 library('stringr')
 library('pheatmap')
 library('ggplot2')
 library('umap')
-library('textshape')
+#library('textshape')
 library('dplyr')
 library('biomaRt')
 library('grid')
 library('scales')
 library('rsconnect')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
+source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
 
 if(interactive()){
   project <- '2021618_galt'
@@ -20,10 +21,10 @@ if(interactive()){
   
   project <- '2022620_857.1'
   qc_name <- '2022-11-01'
-  sdat_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filtered_clustered.RDS')
-  exclude_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Excluded_genes.txt')
-  out_rds <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cluster_DE.RDS')
-  out_tsv <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cluster_DE.tsv')
+  sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filtered_clustered.RDS')
+  exclude_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Excluded_genes.txt')
+  out_rds <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cluster_DE.RDS')
+  out_tsv <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cluster_DE.tsv')
 } else{
   args = commandArgs(trailingOnly=TRUE)
   sdat_file <- args[1]
@@ -59,8 +60,10 @@ row.names(gtf) <- gtf$gene_id
 sdat <- ScaleData(sdat, assay = "RNA", features = row.names(sdat))
 
 ### Exclude genes, e.g. IG and ribosomal RNAs
-rna_features <- row.names(sdat@assays$RNA@counts)[which(!row.names(sdat@assays$RNA@counts) %in% exclude_gene_names)]
+rna_features <- row.names(sdat@assays$RNA@layers$counts)[which(!row.names(sdat@assays$RNA@layers$counts) %in% exclude_gene_names)]
+print('Beginning run_fam()')
 de <- run_fam(sdat, 'RNA', 'RNA_clusters', 5, features = rna_features)
+print('Done with run_fam()')
 ### Order
 de <- de[order(de$p_val),]
 ### Add gene name
