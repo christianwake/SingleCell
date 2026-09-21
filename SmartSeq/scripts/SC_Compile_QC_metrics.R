@@ -15,25 +15,25 @@ library('stringi')
 library('limma')
 library('vegan')
 
-source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/sample_sheet_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/Utility_functions.R')
+source('/home/cwake/snakemakes/sample_sheet_functions.R')
 
 sheet <- NA
 if(interactive()){
-  runs_dir <- '/data/vrc_his/douek_lab/Runs/'
+  runs_dir <- '/home/cwake/data/'
   runs_subdir <- 'demultiplexed_2025'
   project <- '2021600_kristin'
-  covs_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/Cell_sheet_2025_sansMissing108.csv')
+  covs_file <- paste0('/home/cwake/projects/', project, '/Cell_sheet_2025_sansMissing108.csv')
   # runs_subdir <- 'demultiplexed'
   # project <- '2024615_Boswell'
-  # covs_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/Cell_sheet.csv')
+  # covs_file <- paste0('/home/cwake/projects/', project, '/Cell_sheet.csv')
   
-  mtx_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/', 'raw_mtx.RDS')
-  #gtf_r_file <- '/data/vrc_his/douek_lab/wakecg/data/gtf.RDS'
-  out_csv <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/', 'Covariates_QC_metrics.csv')
-  #out_txt <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/', 'Cell_filters.csv')
-  out_pdf <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/', 'Histograms.pdf')
+  mtx_file <- paste0('/home/cwake/projects/', project, '/data/', 'raw_mtx.RDS')
+  #gtf_r_file <- '/home/cwake/data/gtf.RDS'
+  out_csv <- paste0('/home/cwake/projects/', project, '/data/', 'Covariates_QC_metrics.csv')
+  #out_txt <- paste0('/home/cwake/projects/', project, '/data/', 'Cell_filters.csv')
+  out_pdf <- paste0('/home/cwake/projects/', project, '/data/', 'Histograms.pdf')
   #out_txt <- NA
   #out_pdf <- NA
 } else{
@@ -52,7 +52,7 @@ if(interactive()){
   out_csv <- args[7]
 }
 
-base_dir  <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/')
+base_dir  <- paste0('/home/cwake/projects/', project, '/')
 ### Load gtf info
 #gtf <- readRDS(gtf_r_file)
 

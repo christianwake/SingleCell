@@ -10,8 +10,8 @@ library('biomaRt')
 library('grid')
 library('scales')
 
-source('/data/vrc_his/douek_lab/wakecg/sc_functions.R')
-source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/CITESeq_functions.R')
 
 args = commandArgs(trailingOnly=TRUE)
 cseq_file <- args[1]
@@ -21,8 +21,8 @@ project <- args[4]
 username <- args[5]
 server <- args[6]
 
-# cseq_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/Go2/Processed_data.RDS'
-# exclude_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/Go2/Excluded_genes.txt'
+# cseq_file <- '/home/cwake/projects/2021614_21-002/results/Go2/Processed_data.RDS'
+# exclude_file <- '/home/cwake/projects/2021614_21-002/results/Go2/Excluded_genes.txt'
 
 cseq <- readRDS(cseq_file)
 DefaultAssay(cseq) <- 'prot'

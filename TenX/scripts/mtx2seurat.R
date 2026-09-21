@@ -15,15 +15,15 @@ library('stringi')
 #library('limma')
 library('vegan')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/Utility_functions.R')
 
 sheet <- NA
 if(interactive()){
-  mtx_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021600_kristin/data/raw_mtx0.rds'
-  covs_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021600_kristin/data/Covariates_QC_metrics.csv'
-  gtf_file <- '/hpcdata/vrc/vrc1_data/douek_lab/wakecg/data/GRCh38_reference.RDS'
-  out_seurat <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021600_kristin/data/seurat1.rds'
+  mtx_file <- '/home/cwake/projects/2021600_kristin/data/raw_mtx0.rds'
+  covs_file <- '/home/cwake/projects/2021600_kristin/data/Covariates_QC_metrics.csv'
+  gtf_file <- '/home/cwake/data/GRCh38_reference.RDS'
+  out_seurat <- '/home/cwake/projects/2021600_kristin/data/seurat1.rds'
   project <- '2021600_kristin'
 } else{
   args = commandArgs(trailingOnly=TRUE)

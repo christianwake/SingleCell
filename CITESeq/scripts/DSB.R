@@ -16,15 +16,14 @@ library('gridExtra')
 library('cowplot')
 #library('logspline')
 
-source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/CITESeq_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
 
-# source('/Volumes/VRC1_DATA/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-# source('/Volumes/VRC1_DATA/douek_lab/snakemakes/sc_functions.R')
+# source('/home/cwake/snakemakes/CITESeq_functions.R')
+# source('/home/cwake/snakemakes/sc_functions.R')
 
 if(interactive()){
-  base_dir <- '/Volumes/VRC1_DATA/'
-  base_dir <- '/data/vrc_his/'
+  base_dir <- '/home/cwake/projects/'
   
   project <- '2021614_21-002'
   qc_name <- 'DSB_by_sample'
@@ -44,13 +43,13 @@ if(interactive()){
   # batch_value <- '2022-02-22'
   # hto_string <- 'C0251,C0252,C0253,C0254,C0255,C0256,C0257,C0258,C0259,C0260'
 
-  sdat_file <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/results/', qc_name, 
+  sdat_file <- paste0(base_dir, project, '/results/', qc_name, 
                       '/batches/', batch_value, '/Cell_filtered.RDS')
-  br_rds <- paste0(base_dir,'/douek_lab/projects/RNASeq/', project, '/results/', qc_name, 
+  br_rds <- paste0(base_dir, project, '/results/', qc_name, 
                    '/Background.RDS')
-  covs_file <- paste0(base_dir,'/douek_lab/projects/RNASeq/', project, '/Sample_sheet.csv')
-  labels_file <- paste0(base_dir,'douek_lab/projects/RNASeq/', project, '/data/Cell_data.csv')
-  out_file <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/', batch_value, '/DSB_normalized_data.RDS')
+  covs_file <- paste0(base_dir, project, '/Sample_sheet.csv')
+  labels_file <- paste0(base_dir, project, '/data/Cell_data.csv')
+  out_file <- paste0(base_dir, project, '/results/', qc_name, '/', batch_value, '/DSB_normalized_data.RDS')
   
   }else{
   args <- commandArgs(trailingOnly=TRUE)

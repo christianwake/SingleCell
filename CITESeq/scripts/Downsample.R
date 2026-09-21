@@ -12,40 +12,38 @@ library('data.table')
 library('VennDiagram')
 library('scuttle')
 
-source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
-source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/CITESeq_functions.R')
+source('/home/cwake/snakemakes/Utility_functions.R')
 
 if(interactive()){
   # project <- '2021614_21-002'
   # qc_name <- '2023-March'
   # qc_name <- '2023-Jan'
   # qc_name <- 'Both_celltypes'
-  # sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/All_data.RDS')
-  # covs_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/Sample_sheet.csv')
-  # filter_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/QC_steps/RNA_filters.csv')
+  # sdat_file <- paste0('/home/cwake/projects/', project, '/data/All_data.RDS')
+  # covs_file <- paste0('/home/cwake/projects/', project, '/Sample_sheet.csv')
+  # filter_file <- paste0('/home/cwake/projects/', project, '/QC_steps/RNA_filters.csv')
   # batch_name <- 'Date_sort'
   # batch_value <- '2021-11-09'
   # batch_value <- '2022-08-12'
   # #batch_value <- '2021-12-02'
-  # base_dir <- '/data/vrc_his/'
   
-  #base_dir <- '/Volumes/VRC1_DATA/'
-  base_dir <- '/data/vrc_his/'
+  base_dir <- '/home/cwake/projects/'
   project <- '2022619_857.3b'
   qc_name <- 'QC_SampleName_pass'
-  sdat_file <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/data/All_data.RDS')
-  covs_file <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/Sample_sheet.csv')
-  filter_file <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/QC_steps/step3_cell_and_feature_filters.csv')
+  sdat_file <- paste0(base_dir, project, '/data/All_data.RDS')
+  covs_file <- paste0(base_dir, project, '/Sample_sheet.csv')
+  filter_file <- paste0(base_dir, project, '/QC_steps/step3_cell_and_feature_filters.csv')
   batch_name <- 'Sample_Name'
   batch_value <- '15C225_w31_Probe+'
-  gtf_file <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
-  out_rds <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/', batch_value, '/RNA_cell_filtered.RDS')
-  out_pdf <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/', batch_value, '/MT_nFeatures.pdf')
-  out_txt1 <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/', batch_value, '/Excluded_genes.txt')
-  out_txt2 <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/', batch_value, '/Filtered_Ncells.txt')
+  gtf_file <- paste0(base_dir, project, '/data/gtf.RDS')
+  out_rds <- paste0(base_dir, project, '/results/', qc_name, '/', batch_value, '/RNA_cell_filtered.RDS')
+  out_pdf <- paste0(base_dir, project, '/results/', qc_name, '/', batch_value, '/MT_nFeatures.pdf')
+  out_txt1 <- paste0(base_dir, project, '/results/', qc_name, '/', batch_value, '/Excluded_genes.txt')
+  out_txt2 <- paste0(base_dir, project, '/results/', qc_name, '/', batch_value, '/Filtered_Ncells.txt')
   
-  setwd(paste0(base_dir, 'douek_lab/projects/RNASeq/2022619_857.3b'))
+  setwd(paste0(base_dir, '2022619_857.3b'))
 } else {
   args = commandArgs(trailingOnly=TRUE)
   sdat_file <- args[1]

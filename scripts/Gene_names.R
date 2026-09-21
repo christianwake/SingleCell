@@ -9,16 +9,16 @@ library('biomaRt')
 library('fgsea')
 library('GSEABase')
 
-source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/Utility_functions.R')
 
 if(interactive()){
   species <- 'hsapiens'
-  sdat_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2021600_kristin/results/Run2022/PostQC3.RDS'
-  gtf_file <- '/data/vrc_his/douek_lab/reference_sets/tenX/Homo_sapiens.GRCh38.93/GRCh38_protein_coding_only/genes/genes.gtf'
-  gmt_file <- '/data/vrc_his/douek_lab/wakecg/c2.cp.v7.2.symbols.gmt'
-  gene_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2021600_kristin/220921_transcriptome_analysis.xlsx'
-  out_file <- '/data/vrc_his/douek_lab/wakecg/data/Gene_names.RDS'
+  sdat_file <- '/home/cwake/projects/2021600_kristin/results/Run2022/PostQC3.RDS'
+  gtf_file <- '/home/cwake/resources/genomes/Homo_sapiens.GRCh38.93/GRCh38_protein_coding_only/genes/genes.gtf'
+  gmt_file <- '/home/cwake/resources/gene_sets/c2.cp.v7.2.symbols.gmt'
+  gene_file <- '/home/cwake/projects/2021600_kristin/220921_transcriptome_analysis.xlsx'
+  out_file <- '/home/cwake/data/Gene_names.RDS'
 } else{
   args = commandArgs(trailingOnly=TRUE)
   ### snakemake input

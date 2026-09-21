@@ -14,24 +14,24 @@ library('Seurat')
 library('circlize')
 library('ComplexHeatmap')
 
-source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/DE_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/Utility_functions.R')
+source('/home/cwake/snakemakes/DE_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
 
 if(interactive()){
   project <- '2021600_kristin'
   qc_name <- 'Run2023-05-14'
-  de_files <- Sys.glob(file.path(paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', 
+  de_files <- Sys.glob(file.path(paste0('/home/cwake/projects/', project, '/results/', 
                                            qc_name, '/DE/*/*/*DE*.tsv')))
-  sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, 
+  sdat_file <- paste0('/home/cwake/projects/', project, '/results/', qc_name, 
                       '/Mapped.RDS')
   
-  gtf_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
-  out_pdf1 <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, 
+  gtf_file <- paste0('/home/cwake/projects/', project, '/data/gtf.RDS')
+  out_pdf1 <- paste0('/home/cwake/projects/', project, '/results/', qc_name, 
                      '/DE/Bubble_plots.pdf') 
-  out_pdf1 <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, 
+  out_pdf1 <- paste0('/home/cwake/projects/', project, '/results/', qc_name, 
                      '/DE/DE_Heatmap_within_strat.pdf') 
-  out_pdf2 <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, 
+  out_pdf2 <- paste0('/home/cwake/projects/', project, '/results/', qc_name, 
                      '/DE/DE_Heatmap_within_test.pdf') 
   
 } else{

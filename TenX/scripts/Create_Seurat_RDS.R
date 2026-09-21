@@ -8,10 +8,10 @@ library('WriteXLS')
 library('Matrix')
 library('Seurat')
 library('data.table')
-#source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/sample_sheet_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
+#source('/home/cwake/snakemakes/CITESeq_functions.R')
+source('/home/cwake/snakemakes/sample_sheet_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/Utility_functions.R')
 
 args = commandArgs(trailingOnly=TRUE)
 runs_dir <- args[1]
@@ -32,11 +32,11 @@ out_rds <- args[4]
 # } else{
 #   print('Input data files are not in the same directory. This will cause an error.')
 # }
-# runs_dir <- '/hpcdata/vrc/vrc1_data/douek_lab/Runs/CIENI-MX/211015_NB501187_0098_AHFCK7BGXG/count_output/'
-# runs_dir <- '/hpcdata/vrc/vrc1_data/douek_lab/Runs/'
-# covs_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021618_galt/C7_10x_15oct21.csv'
-# covs_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021618_galt/All_covariates.csv'
-# out_rds <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021618_galt/data/Seurat_raw.RDS'
+# runs_dir <- '/home/cwake/data/CIENI-MX/211015_NB501187_0098_AHFCK7BGXG/count_output/'
+# runs_dir <- '/home/cwake/data/'
+# covs_file <- '/home/cwake/projects/2021618_galt/C7_10x_15oct21.csv'
+# covs_file <- '/home/cwake/projects/2021618_galt/All_covariates.csv'
+# out_rds <- '/home/cwake/projects/2021618_galt/data/Seurat_raw.RDS'
 
 dat <- read.table(covs_file, sep = ',', header = T)
 row.names(dat) <- dat$Sample_ID

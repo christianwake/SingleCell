@@ -14,7 +14,7 @@ library('WriteXLS')
 library('logistf')
 library('readxl')
 
-source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
 
 if(interactive()){
   # project <- '2021600_kristin'
@@ -28,7 +28,7 @@ if(interactive()){
   # strat_name2 <- 'All'
   # strat_values2A <- 'All'
   # strat_values2B <- 'All'
-  # sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filtered_clustered.RDS')
+  # sdat_file <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Filtered_clustered.RDS')
   
   project <- '2024615_Boswell'
   qc_name <- 'Run2025-04-10'
@@ -41,7 +41,7 @@ if(interactive()){
   strat_name2 <- 'All'
   strat_values2A <- 'All'
   strat_values2B <- 'All'
-  sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cluster_filtered.RDS')
+  sdat_file <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Cluster_filtered.RDS')
   
   
   project <- '2021614_21-002'
@@ -55,7 +55,7 @@ if(interactive()){
   strat_name2 <- 'All'
   strat_values2A <- 'All'
   strat_values2B <- 'All'
-  sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, 
+  sdat_file <- paste0('/home/cwake/projects/', project, '/results/', qc_name, 
                       '/Mapped_DownSampledTo0.3.RDS')
   
   # project <- '2022620_857.1'
@@ -63,10 +63,10 @@ if(interactive()){
   # test <- 'timepoint'
   # strat_name <- 'All'
   # strat_name <- 'seurat_clusters-1+3'
-  #sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filtered.RDS')
-  exclude_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Excluded_genes.txt')
-  gtf_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
-  out_tsv <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/DE/', 
+  #sdat_file <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Filtered.RDS')
+  exclude_file <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Excluded_genes.txt')
+  gtf_file <- paste0('/home/cwake/projects/', project, '/data/gtf.RDS')
+  out_tsv <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/DE/', 
                     test_name, '/', strat_name1, '/DE_results.tsv')
   } else{
   args = commandArgs(trailingOnly=TRUE)

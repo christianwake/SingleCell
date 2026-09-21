@@ -15,27 +15,27 @@ library('data.table')
 library('plyr')
 library('lisi')
 
-source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
-source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/Utility_functions.R')
+source('/home/cwake/snakemakes/CITESeq_functions.R')
 
 if(interactive()){
   project <- '2021614_21-002'
   qc_name <- 'DSB_by_sample'
-  out_rdata <-  paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/App/Data.RData')
+  out_rdata <-  paste0('/home/cwake/projects/', project, '/results/', qc_name, '/App/Data.RData')
   username <- 'wakecg'
   server <- 'rstudio-connect.niaid.nih.gov'
   server <- ''
-  cseq_file <-  paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Mapped.RDS')
+  cseq_file <-  paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Mapped.RDS')
   rds_files <- c('RNA-RNA_clusters', 'RNA-prot_clusters', 'RNA-wnn_clusters', 'prot-RNA_clusters', 'prot-prot_clusters', 'prot-wnn_clusters')
   rds_files <- c('RNA-RNA_clusters', 'RNA-prot_clusters', 'prot-RNA_clusters', 'prot-prot_clusters', 'prot-wnn_clusters')
-  rds_files <- c(paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cluster_DE/One-all/', 
+  rds_files <- c(paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Cluster_DE/One-all/', 
                         rds_files, '.RDS'),
-                 paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/SubClusters/predicted.celltype.l1-B.RDS'))
+                 paste0('/home/cwake/projects/', project, '/results/', qc_name, '/SubClusters/predicted.celltype.l1-B.RDS'))
   
-  gene_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/genes.xlsx')
-  pdf_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/SomeGenes.pdf')
-  gtf_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
+  gene_file <- paste0('/home/cwake/projects/', project, '/genes.xlsx')
+  pdf_file <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/SomeGenes.pdf')
+  gtf_file <- paste0('/home/cwake/projects/', project, '/data/gtf.RDS')
   
 }else{
   args = commandArgs(trailingOnly=TRUE)

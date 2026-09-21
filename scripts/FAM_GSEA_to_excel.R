@@ -3,15 +3,15 @@ library('readr')
 library('WriteXLS')
 library('EnhancedVolcano')
 
-source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/DE_functions.R')
+source('/home/cwake/snakemakes/Utility_functions.R')
+source('/home/cwake/snakemakes/DE_functions.R')
 
 args = commandArgs(trailingOnly=TRUE)
 if(interactive()){
   project <- '2021600_kristin'
   qc_name <- 'Run2023-05-14'
-  rds <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cluster_DE.RDS')
-  outfile <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cluster_DE.xls')
+  rds <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Cluster_DE.RDS')
+  outfile <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Cluster_DE.xls')
   pthresh <- 0.1
 }else{
   args = commandArgs(trailingOnly=TRUE)

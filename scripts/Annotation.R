@@ -15,9 +15,9 @@ library('scuttle')
 #library('SeuratDisk')
 #library('scRNAseq')
 
-source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
-source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/CITESeq_functions.R')
+source('/home/cwake/snakemakes/Utility_functions.R')
 
 if(interactive()){
   
@@ -44,11 +44,11 @@ if(interactive()){
   # method <- 'SingleR'
   # #reference <- 'celldex:HumanPrimaryCellAtlasData'
   reference_name <- 'celldex:ImmGenData'
-  sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cluster_filtered.RDS')
-  out_rds <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Mapped.RDS')
-  out_pdf <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Mapping.pdf')
-  gtf_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
-  exclude_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Excluded_genes.txt')
+  sdat_file <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Cluster_filtered.RDS')
+  out_rds <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Mapped.RDS')
+  out_pdf <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Mapping.pdf')
+  gtf_file <- paste0('/home/cwake/projects/', project, '/data/gtf.RDS')
+  exclude_file <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Excluded_genes.txt')
 }else{
   args = commandArgs(trailingOnly=TRUE)
   sdat_file <- args[1]
@@ -108,10 +108,10 @@ features <- row.names(sdat)[which(!(row.names(sdat) %in% exclude_gene_names))]
 #sdat <- DietSeurat(sdat, counts = T, assays = c('RNA', 'RNA_orig'))
 # sdat <- subset(x = sdat, downsample = 1000)
 # print(dim(sdat))
-# saveRDS(sdat, file = '/data/vrc_his/douek_lab/projects/RNASeq/2021617_mis-c/results/Dropout_mitigated/Test_suberset.RDS')
+# saveRDS(sdat, file = '/home/cwake/projects/2021617_mis-c/results/Dropout_mitigated/Test_suberset.RDS')
 
 # if(method == 'Seurat'){
-#   reference <- LoadH5Seurat("/data/vrc_his/douek_lab/reference_sets/pbmc/pbmc_multimodal.h5seurat")
+#   reference <- LoadH5Seurat("/home/cwake/resources/genomes/pbmc/pbmc_multimodal.h5seurat")
 #   method <- 'Seurat'
 # }
 ### Single R with celldex HPCA reference
@@ -196,12 +196,12 @@ saveRDS(sdat, out_rds)
 
 ### To create a test set for interactive use
 # csub <- subset(x = sdat, downsample = 10000)
-# saveRDS(csub, file = '/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/Go2/Test_subset.RDS')
+# saveRDS(csub, file = '/home/cwake/projects/2021614_21-002/results/Go2/Test_subset.RDS')
 
 ### To create a test set for interactive use
 # csub <- subset(x = sdat, downsample = 1000)
 # print(dim(csub))
-# saveRDS(csub, file = '/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/Go2/Test_suberset.RDS')
+# saveRDS(csub, file = '/home/cwake/projects/2021614_21-002/results/Go2/Test_suberset.RDS')
 # 
 # cols <- c('MT_sum', 'orig.ident', 'propmt', 'rna_size', 'ngene', 'bc')
 # for(c in cols){

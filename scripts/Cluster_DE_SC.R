@@ -12,8 +12,8 @@ library('grid')
 library('scales')
 library('rsconnect')
 
-source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
-source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/CITESeq_functions.R')
 
 if(interactive()){
   project <- '2021618_galt'
@@ -21,10 +21,10 @@ if(interactive()){
   
   project <- '2022620_857.1'
   qc_name <- '2022-11-01'
-  sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filtered_clustered.RDS')
-  exclude_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Excluded_genes.txt')
-  out_rds <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cluster_DE.RDS')
-  out_tsv <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cluster_DE.tsv')
+  sdat_file <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Filtered_clustered.RDS')
+  exclude_file <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Excluded_genes.txt')
+  out_rds <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Cluster_DE.RDS')
+  out_tsv <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Cluster_DE.tsv')
 } else{
   args = commandArgs(trailingOnly=TRUE)
   sdat_file <- args[1]

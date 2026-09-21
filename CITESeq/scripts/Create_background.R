@@ -20,10 +20,10 @@ library('WriteXLS')
 library('Matrix')
 library('VennDiagram')
 
-source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/sample_sheet_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
+source('/home/cwake/snakemakes/CITESeq_functions.R')
+source('/home/cwake/snakemakes/sample_sheet_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/Utility_functions.R')
 
 if(interactive()){
   # project <- '2021614_21-002'
@@ -36,28 +36,26 @@ if(interactive()){
   
   # project <- '2022619_857.3b'
   # qc_name <- '2023-Mar'
-  # covs_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2022619_857.3b/Sample_sheet.csv'
-  # labels_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2022619_857.3b/data/Cell_data.csv'
-  # qc_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2022619_857.3b/QC_steps/DSB_background.csv'
-  # out_rds <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/2022619_857.3b/results/', qc_name, '/Background.RDS')
-  # out_pdf <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/2022619_857.3b/results/', qc_name, '/Background.pdf')
+  # covs_file <- '/home/cwake/projects/2022619_857.3b/Sample_sheet.csv'
+  # labels_file <- '/home/cwake/projects/2022619_857.3b/data/Cell_data.csv'
+  # qc_file <- '/home/cwake/projects/2022619_857.3b/QC_steps/DSB_background.csv'
+  # out_rds <- paste0('/home/cwake/projects/2022619_857.3b/results/', qc_name, '/Background.RDS')
+  # out_pdf <- paste0('/home/cwake/projects/2022619_857.3b/results/', qc_name, '/Background.pdf')
   
-  # base_dir <- '/Volumes/VRC1_DATA/douek_lab/'
-  # #base_dir <- '/data/vrc_his/douek_lab/'
   # project <- '2022619_857.3b'
   # qc_name <- 'QC_first_pass'
   
-  base_dir <- '/data/vrc_his/douek_lab/'
-  runs_dir <- '/data/vrc_his/douek_lab/Runs/'
-  covs_file <- paste0(base_dir, '/projects/RNASeq/', project, '/Sample_sheet.csv')
-  #labels_file <-  paste0(base_dir, '/projects/RNASeq/', project, '/data/Dehash_calls_', demux_method, '.tsv')
-  labels_file <-  paste0(base_dir, '/projects/RNASeq/', project, '/results/', qc_name, '/Dehash/Dehash_calls_', demux_method, '.tsv')
-  qc_file <-  paste0(base_dir, '/projects/RNASeq/', project, '/QC_steps/DSB_background.csv')
-  gtf_file <- paste0(base_dir, 'projects/RNASeq/', project, '/data/gtf.RDS')
-  out_rds <- paste0(base_dir, '/projects/RNASeq/', project, '/results/', qc_name, '/Background.RDS')
-  out_pdf <- paste0(base_dir, '/projects/RNASeq/', project, '/results/', qc_name, '/Background.pdf')
+  base_dir <- '/home/cwake/projects/'
+  runs_dir <- '/home/cwake/data/'
+  covs_file <- paste0(base_dir,  project, '/Sample_sheet.csv')
+  #labels_file <-  paste0(base_dir, project, '/data/Dehash_calls_', demux_method, '.tsv')
+  labels_file <-  paste0(base_dir, project, '/results/', qc_name, '/Dehash/Dehash_calls_', demux_method, '.tsv')
+  qc_file <-  paste0(base_dir, project, '/QC_steps/DSB_background.csv')
+  gtf_file <- paste0(base_dir, project, '/data/gtf.RDS')
+  out_rds <- paste0(base_dir, project, '/results/', qc_name, '/Background.RDS')
+  out_pdf <- paste0(base_dir, project, '/results/', qc_name, '/Background.pdf')
   # 
-  # setwd(paste0(base_dir, '/projects/RNASeq/2022619_857.3b'))
+  # setwd(paste0(base_dir, '2022619_857.3b'))
 
   
 } else{
@@ -75,8 +73,8 @@ if(interactive()){
 
 cellranger_quant <- c('multi', 'count')
 print(out_rds)
-project_dir <- paste0("/data/vrc_his/douek_lab/projects/RNASeq/", project)
-# project_dir <- paste0("/Volumes/VRC1_DATA/douek_lab/projects/RNASeq/", project)
+project_dir <- paste0("/home/cwake/projects/", project)
+# project_dir <- paste0("/home/cwake/projects/", project)
 
 ### Read covariates
 dat <- read.csv(covs_file, stringsAsFactors = F, header = T,

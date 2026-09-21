@@ -27,11 +27,11 @@ library('WriteXLS')
 library('Matrix')
 library('pastecs')
 
-source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/sample_sheet_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/dehash_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
+source('/home/cwake/snakemakes/CITESeq_functions.R')
+source('/home/cwake/snakemakes/sample_sheet_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/dehash_functions.R')
+source('/home/cwake/snakemakes/Utility_functions.R')
 
 if(interactive()){
   project <- '2021614_21-002'
@@ -39,31 +39,31 @@ if(interactive()){
   raw_or_norm <- 'raw'
   probes <- 'S2P_WT_APC,RBD_WT_APC,NTD_WT_APC,gp120_APC,S2P_Beta_PE,RBD_Beta_PE,NTD_Beta_PE,gp120_PE'
   if(raw_or_norm == 'raw'){
-    rds_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, 
+    rds_file <- paste0('/home/cwake/projects/', project, 
                        '/results/', qc_name, '/All_data.RDS')
     do_norm <- T
   } else{
-    rds_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, 
+    rds_file <- paste0('/home/cwake/projects/', project, 
                        '/results/', qc_name, '/Combined_batches.RDS')
     do_norm <- F
   }
-  runs_dir <- '/data/vrc_his/douek_lab/Runs/'
-  covs_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name,  
+  runs_dir <- '/home/cwake/data/'
+  covs_file <- paste0('/home/cwake/projects/', project, '/results/', qc_name,  
                       '/Sample_sheet.csv')
-  out_pdf <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name,
+  out_pdf <- paste0('/home/cwake/projects/', project, '/results/', qc_name,
                      '/Libraseq/', raw_or_norm, '/Libraseq_comparisons_threshs.pdf')
-  out_threshs <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name,
+  out_threshs <- paste0('/home/cwake/projects/', project, '/results/', qc_name,
                         '/Libraseq/', raw_or_norm , '/Libraseq_comparisons.csv')
   demux_methods <- 'MULTIseqDemux,Trough'
   ### Method 1 of input: specifying Trough. But it won't be exactly reproducible due to randomness.
   do_trough <- F
   ### Method 2 of input: a csv of threshold values
   thresh_files <- sapply(strsplit(demux_methods, ',')[[1]], function(x) 
-    paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name,
+    paste0('/home/cwake/projects/', project, '/results/', qc_name,
            '/Libraseq/', raw_or_norm, '/thresholds_', x, '.csv'))
   ### Method 3 of input: csv of cell dehashing calls
   calls_files <- sapply(strsplit(demux_methods, ',')[[1]], function(x) 
-    paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project,  '/results/', qc_name,
+    paste0('/home/cwake/projects/', project,  '/results/', qc_name,
            '/Libraseq/', raw_or_norm, '/calls_', x, '.tsv'))
 }else{
   args <- commandArgs(trailingOnly=TRUE)
@@ -83,7 +83,7 @@ if(interactive()){
   do_trough <- F
 }
 
-project_dir <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project)
+project_dir <- paste0('/home/cwake/projects/', project)
 
 ### Read covariates
 dat <- read.csv(covs_file, stringsAsFactors = F, header = T,

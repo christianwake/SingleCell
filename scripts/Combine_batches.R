@@ -16,7 +16,7 @@ library('gridExtra')
 library('cowplot')
 #library('logspline')
 
-source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/home/cwake/snakemakes/CITESeq_functions.R')
 
 if(interactive()){
   project <- '2024615_Boswell'
@@ -44,14 +44,14 @@ if(interactive()){
   # isotype_controls <- ''
   # prot <- TRUE
   
-  out_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', 
+  out_file <- paste0('/home/cwake/projects/', project, '/results/', 
                      qc_name, '/DSB_normalized_data.RDS')
-  pdf_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', 
+  pdf_file <- paste0('/home/cwake/projects/', project, '/results/', 
                      qc_name, '/DSB_normalized_data.pdf')
-  sdat_files <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, 
+  sdat_files <- paste0('/home/cwake/projects/', project, 
                        '/results/', qc_name, '/batches/', batches, '/Cell_filtered.RDS')
   
-  mat_files <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project,
+  mat_files <- paste0('/home/cwake/projects/', project,
                       '/results/', qc_name, '/batches/', batches, '/DSB_normalized_data.RDS')
 }else{
   args <- commandArgs(trailingOnly=TRUE)

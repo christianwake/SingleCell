@@ -13,9 +13,9 @@ library('data.table')
 library('VennDiagram')
 #library('scuttle')
 
-source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
-source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/CITESeq_functions.R')
+source('/home/cwake/snakemakes/Utility_functions.R')
 
 if(interactive()){
   project <- '2021600_kristin'
@@ -43,18 +43,17 @@ if(interactive()){
   # batch_name <- 'CR_ID'
   # batch_value <- 'CR1'
   
-  base_dir <- '/data/vrc_his/'
-  sdat_file <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/PostQC5.RDS')
-  covs_file <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/Sample_sheet.csv')
-  filter_file <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, 
-                        '/QC_steps/Cell_filters.csv')
-  gtf_file <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
-  fastqc_file <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/data/fastq/trimmed/multiqc_input_files.txt')
-  exclude_file <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Excluded_genes.txt') 
-  out_rds <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/', batch_value, '/Cell_filtered.RDS')
-  out_pdf <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/', batch_value, '/Cell_filtered.pdf')
-  out_txt1 <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/', batch_value, '/Excluded_genes.txt')
-  out_txt2 <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/', batch_value, '/Filtered_Ncells.txt')
+  base_dir <- '/home/cwake/projects/'
+  sdat_file <- paste0(base_dir, project, '/results/', qc_name, '/PostQC5.RDS')
+  covs_file <- paste0(base_dir, project, '/Sample_sheet.csv')
+  filter_file <- paste0(base_dir, project, '/QC_steps/Cell_filters.csv')
+  gtf_file <- paste0(base_dir, project, '/data/gtf.RDS')
+  fastqc_file <- paste0(base_dir, project, '/data/fastq/trimmed/multiqc_input_files.txt')
+  exclude_file <- paste0(base_dir, project, '/results/', qc_name, '/Excluded_genes.txt') 
+  out_rds <- paste0(base_dir, project, '/results/', qc_name, '/', batch_value, '/Cell_filtered.RDS')
+  out_pdf <- paste0(base_dir, project, '/results/', qc_name, '/', batch_value, '/Cell_filtered.pdf')
+  out_txt1 <- paste0(base_dir, project, '/results/', qc_name, '/', batch_value, '/Excluded_genes.txt')
+  out_txt2 <- paste0(base_dir, project, '/results/', qc_name, '/', batch_value, '/Filtered_Ncells.txt')
 } else {
   args = commandArgs(trailingOnly=TRUE)
   

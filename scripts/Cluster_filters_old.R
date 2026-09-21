@@ -11,9 +11,9 @@ library('grid')
 library('scales')
 library('data.table')
 
-source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
-source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/Utility_functions.R')
+source('/home/cwake/snakemakes/CITESeq_functions.R')
 
 ### Filters
 ### 1. Clusters with very few reads
@@ -23,14 +23,14 @@ source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
 if(interactive()){
   project <- '2021614_21-002'
   qc_name <- '2024-01-20'
-  filter_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/QC_steps/cluster_filters.csv')
+  filter_file <- paste0('/home/cwake/projects/', project, '/QC_steps/cluster_filters.csv')
 
-  gtf_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
-  sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/Test_subset.RDS')
-  sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Clustered.RDS')
-  out_rds <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filtered.RDS')
-  out_txt <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filters.txt')
-  out_pdf <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Clustered.pdf')
+  gtf_file <- paste0('/home/cwake/projects/', project, '/data/gtf.RDS')
+  sdat_file <- paste0('/home/cwake/projects/', project, '/results/Test_subset.RDS')
+  sdat_file <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Clustered.RDS')
+  out_rds <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Filtered.RDS')
+  out_txt <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Filters.txt')
+  out_pdf <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Clustered.pdf')
 }else{
   args = commandArgs(trailingOnly=TRUE)
   sdat_file <- args[1]

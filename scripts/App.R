@@ -22,11 +22,11 @@ library('rsconnect')
 library('XML')
 library('MASS')
 
-# load('/data/vrc_his/douek_lab/projects/RNASeq/2021617_mis-c/results/Dropout_mitigated/App/Data.RData')
-# load('/data/vrc_his/douek_lab/projects/RNASeq/2021618_galt/results/Go1/App/Data.RData')
+# load('/home/cwake/projects/2021617_mis-c/results/Dropout_mitigated/App/Data.RData')
+# load('/home/cwake/projects/2021618_galt/results/Go1/App/Data.RData')
 
 load('Data.RData')
-#source('/data/vrc_his/douek_lab/wakecg/sc_functions.R')
+#source('/home/cwake/snakemakes/sc_functions.R')
 source('sc_functions.R')
 
 ### Find all cluster options from the serurat object and choose from our list, the first in our order of preference

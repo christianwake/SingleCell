@@ -13,9 +13,9 @@ library('data.table')
 library('VennDiagram')
 #library('scuttle')
 
-source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
-source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/CITESeq_functions.R')
+source('/home/cwake/snakemakes/Utility_functions.R')
 
 if(interactive()){
   project <- '2021600_kristin'
@@ -28,12 +28,12 @@ if(interactive()){
   # batch_name <- 'FC_ID'
   # batch_value <- 'FC1'
  
-  base_dir <- '/data/vrc_his/'
-  in_file <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/data/fastq/trimmed/multiqc_input_files.txt')
-  out_file <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/data/fastq/filtered/multiqc_input_files.txt')
+  base_dir <- '/home/cwake/projects/'
+  in_file <- paste0(base_dir, project, '/data/fastq/trimmed/multiqc_input_files.txt')
+  out_file <- paste0(base_dir, project, '/data/fastq/filtered/multiqc_input_files.txt')
   
-  covs_file <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/data/Covariates_QC_metrics.csv')
-  filter_file <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, 
+  covs_file <- paste0(base_dir, project, '/data/Covariates_QC_metrics.csv')
+  filter_file <- paste0(base_dir, project, 
                         '/QC_steps/Cell_filters.csv')
 } else {
   args = commandArgs(trailingOnly=TRUE)

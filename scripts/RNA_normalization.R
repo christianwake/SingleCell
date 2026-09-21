@@ -13,8 +13,8 @@ library('Matrix')
 print(version)
 print(.libPaths())
 #.libPaths(.libPaths()[c(2,3,1)])
-source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/Utility_functions.R')
 
 if(interactive()){
   project <- '2024615_Boswell'
@@ -36,10 +36,10 @@ if(interactive()){
   # qc_name <- 'QC_first_pass'
   # sdat_step <- paste0('data/All_data.RDS')
   
-  sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/PostQC5.RDS')
-  exclude_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/Excluded_genes.txt')
-  gtf_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
-  out_rds <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/PostQC5.RDS')
+  sdat_file <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/PostQC5.RDS')
+  exclude_file <- paste0('/home/cwake/projects/', project, '/results/Excluded_genes.txt')
+  gtf_file <- paste0('/home/cwake/projects/', project, '/data/gtf.RDS')
+  out_rds <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/PostQC5.RDS')
 } else{
   args = commandArgs(trailingOnly=TRUE)
   

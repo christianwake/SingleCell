@@ -11,8 +11,8 @@ library('grid')
 library('scales')
 library('rsconnect')
 
-source('/data/vrc_his/douek_lab/wakecg/sc_functions.R')
-source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/CITESeq_functions.R')
 
 args = commandArgs(trailingOnly=TRUE)
 sdat_file <- args[1]
@@ -22,9 +22,9 @@ project <- args[4]
 username <- args[5]
 server <- args[6]
 
-# sdat_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2021618_galt/results/Go2/Filtered.RDS'
-# de_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2021618_galt/results/Go2/Cluster_DE.RDS'
-# out_rdata <-'/data/vrc_his/douek_lab/projects/RNASeq/2021618_galt/results/Go2/App/Data.RData'
+# sdat_file <- '/home/cwake/projects/2021618_galt/results/Go2/Filtered.RDS'
+# de_file <- '/home/cwake/projects/2021618_galt/results/Go2/Cluster_DE.RDS'
+# out_rdata <-'/home/cwake/projects/2021618_galt/results/Go2/App/Data.RData'
 # project <- '2021618_galt'
 # username <- 'wakecg'
 # server <- 'rstudio-connect.niaid.nih.gov'

@@ -15,17 +15,17 @@ library('data.table')
 #library('limma')
 #library('vegan')
 
-source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/Utility_functions.R')
 
 if(interactive()){
   project <- '2021600_kristin'
-  covs_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2021600_kristin/Cell_sheet.csv'
-  out_mtx <-  '/data/vrc_his/douek_lab/projects/RNASeq/2021600_kristin/data/raw_mtx.rds'
+  covs_file <- '/home/cwake/projects/2021600_kristin/Cell_sheet.csv'
+  out_mtx <-  '/home/cwake/projects/2021600_kristin/data/raw_mtx.rds'
   
   project <- '2022620_857.1'
-  covs_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2022620_857.1/Cell_sheet.csv'
-  out_mtx <-  '/data/vrc_his/douek_lab/projects/RNASeq/2022620_857.1/data/raw_mtx.rds'
+  covs_file <- '/home/cwake/projects/2022620_857.1/Cell_sheet.csv'
+  out_mtx <-  '/home/cwake/projects/2022620_857.1/data/raw_mtx.rds'
 } else{
   args = commandArgs(trailingOnly=TRUE)
   project <- args[1]
@@ -36,7 +36,7 @@ if(interactive()){
 print(project)
 print(covs_file)
 print(out_mtx)
-#base_dir  <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/')
+#base_dir  <- paste0('/home/cwake/projects/', project, '/')
 base_dir <- dirname(out_mtx)
 ### Read in covariates
 sample_info <- read.csv(covs_file, stringsAsFactors = F, header = T,

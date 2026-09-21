@@ -23,10 +23,10 @@ if(interactive()){
   #qc_name <- 'DSB_by_sample'
   project <- '2021600_kristin'
   qc_name <- 'Run2025-03-03'
-  sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/All_data.RDS')
-  filter_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/QC_steps/Sample_filters.csv')
-  out_rds <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/PostQC2.RDS')
-  out_csv <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Sample_sheet.csv')
+  sdat_file <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/All_data.RDS')
+  filter_file <- paste0('/home/cwake/projects/', project, '/QC_steps/Sample_filters.csv')
+  out_rds <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/PostQC2.RDS')
+  out_csv <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Sample_sheet.csv')
   }else{
   args = commandArgs(trailingOnly=TRUE)
   

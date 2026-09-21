@@ -14,19 +14,19 @@ library('scales')
 library('vegan')
 library('data.table')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/CITESeq_functions.R')
+source('/home/cwake/snakemakes/Utility_functions.R')
 
 args = commandArgs(trailingOnly=TRUE)
 
 sdat_file <- args[1]
 exclude_file <- args[2]
 out_rds <- args[3]
-# sdat_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021617_mis-c/results/Imputed.RDS'
-# exclude_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021617_mis-c/results/Excluded_genes.txt'
-# out_rds <- "/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021617_mis-c/results/Imputed_scaled.RDS"
-# out_pdf <-  "/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021617_mis-c/results/Dropout.pdf"
+# sdat_file <- '/home/cwake/projects/2021617_mis-c/results/Imputed.RDS'
+# exclude_file <- '/home/cwake/projects/2021617_mis-c/results/Excluded_genes.txt'
+# out_rds <- "/home/cwake/projects/2021617_mis-c/results/Imputed_scaled.RDS"
+# out_pdf <-  "/home/cwake/projects/2021617_mis-c/results/Dropout.pdf"
 
 sdat <- readRDS(sdat_file)
 DefaultAssay(sdat) <- 'RNA'
