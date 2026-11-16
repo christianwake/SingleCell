@@ -48,30 +48,30 @@ if(interactive()){
             'results/Run2023-05-14/DE/Stim/RNA_clusters/Stim-SEB-S42+S205+N88+M37+M45+N33_DE_Strat1-RNA_clusters-0-0_Strat2-All-All-All.tsv'
     )
 
-    # args <- c('/home/cwake/projects/2021612_finch/results/Treatment_DESeq2.xls',
-  #           '/home/cwake/projects/2021612_finch/results/Treatment_DESeq2_sig.xls',
+    # args <- c('/data/vrc_his/douek_lab/projects/RNASeq/2021612_finch/results/Treatment_DESeq2.xls',
+  #           '/data/vrc_his/douek_lab/projects/RNASeq/2021612_finch/results/Treatment_DESeq2_sig.xls',
   #           '0.05',
-  #           '/home/cwake/projects/2021612_finch/results/Treatment/All/DESeq2_results.txt',
-  #           '/home/cwake/projects/2021612_finch/results/Treatment/Euth_Age-D6/DESeq2_results.txt',
-  #           '/home/cwake/projects/2021612_finch/results/Treatment/Euth_Age-D18/DESeq2_results.txt',
-  #           '/home/cwake/projects/2021612_finch/results/Treatment/Euth_Age-D35/DESeq2_results.txt',
-  #           '/home/cwake/projects/2021612_finch/results/Treatment/Euth_Age-D90/DESeq2_results.txt')
+  #           '/data/vrc_his/douek_lab/projects/RNASeq/2021612_finch/results/Treatment/All/DESeq2_results.txt',
+  #           '/data/vrc_his/douek_lab/projects/RNASeq/2021612_finch/results/Treatment/Euth_Age-D6/DESeq2_results.txt',
+  #           '/data/vrc_his/douek_lab/projects/RNASeq/2021612_finch/results/Treatment/Euth_Age-D18/DESeq2_results.txt',
+  #           '/data/vrc_his/douek_lab/projects/RNASeq/2021612_finch/results/Treatment/Euth_Age-D35/DESeq2_results.txt',
+  #           '/data/vrc_his/douek_lab/projects/RNASeq/2021612_finch/results/Treatment/Euth_Age-D90/DESeq2_results.txt')
   
-  # args <- c('/home/cwake/projects/2021612_finch/results/Treatment_GSEA.xls',
-  #           '/home/cwake/projects/2021612_finch/results/Treatment_GSEA_sig.xls',
+  # args <- c('/data/vrc_his/douek_lab/projects/RNASeq/2021612_finch/results/Treatment_GSEA.xls',
+  #           '/data/vrc_his/douek_lab/projects/RNASeq/2021612_finch/results/Treatment_GSEA_sig.xls',
   #           '0.05',
-  #           '/home/cwake/projects/2021612_finch/results/Treatment/All/fgsea_results.txt',
-  #           '/home/cwake/projects/2021612_finch/results/Treatment/Euth_Age-D6/fgsea_results.txt',
-  #           '/home/cwake/projects/2021612_finch/results/Treatment/Euth_Age-D18/fgsea_results.txt',
-  #           '/home/cwake/projects/2021612_finch/results/Treatment/Euth_Age-D35/fgsea_results.txt',
-  #           '/home/cwake/projects/2021612_finch/results/Treatment/Euth_Age-D90/fgsea_results.txt')
+  #           '/data/vrc_his/douek_lab/projects/RNASeq/2021612_finch/results/Treatment/All/fgsea_results.txt',
+  #           '/data/vrc_his/douek_lab/projects/RNASeq/2021612_finch/results/Treatment/Euth_Age-D6/fgsea_results.txt',
+  #           '/data/vrc_his/douek_lab/projects/RNASeq/2021612_finch/results/Treatment/Euth_Age-D18/fgsea_results.txt',
+  #           '/data/vrc_his/douek_lab/projects/RNASeq/2021612_finch/results/Treatment/Euth_Age-D35/fgsea_results.txt',
+  #           '/data/vrc_his/douek_lab/projects/RNASeq/2021612_finch/results/Treatment/Euth_Age-D90/fgsea_results.txt')
 
-    # args <- c('/home/cwake/projects/2022612_Petrovas/results/Strain_GSEA.xls',
-    #         '/home/cwake/projects/2022612_Petrovas/results/Strain_GSEA_sig.xls',
+    # args <- c('/data/vrc_his/douek_lab/projects/RNASeq/2022612_Petrovas/results/Strain_GSEA.xls',
+    #         '/data/vrc_his/douek_lab/projects/RNASeq/2022612_Petrovas/results/Strain_GSEA_sig.xls',
     #         '0.05',
-    #         '/home/cwake/projects/2022612_Petrovas/results/Strain/All/fgsea_results.txt',
-    #         '/home/cwake/projects/2022612_Petrovas/results/Strain/Cell_type-pre_Tfh/fgsea_results.txt',
-    #         '/home/cwake/projects/2022612_Petrovas/results/Strain/Cell_type-Tfh/fgsea_results.txt')
+    #         '/data/vrc_his/douek_lab/projects/RNASeq/2022612_Petrovas/results/Strain/All/fgsea_results.txt',
+    #         '/data/vrc_his/douek_lab/projects/RNASeq/2022612_Petrovas/results/Strain/Cell_type-pre_Tfh/fgsea_results.txt',
+    #         '/data/vrc_his/douek_lab/projects/RNASeq/2022612_Petrovas/results/Strain/Cell_type-Tfh/fgsea_results.txt')
 }else{
   args = commandArgs(trailingOnly=TRUE)
 }
@@ -289,35 +289,40 @@ for(i in 1:length(files)){
 }
 names(dat_list) <- tab_names
 
-### Subset each by input p-value threshold
-p_val <- c('padj', 'p_val_adj')
-p_val <- p_val[which(p_val %in% colnames(dat_list[[1]]))]
-dats <- lapply(dat_list, function(dat) dat[which(dat[, p_val] < as.numeric(pthresh)),])
+sig_and_summary <- function(dat_list){
+  ### Subset each by input p-value threshold
+  p_val <- c('padj', 'p_val_adj')
+  p_val <- p_val[which(p_val %in% colnames(dat_list[[1]]))]
+  dats <- lapply(dat_list, function(dat) dat[which(dat[, p_val] < as.numeric(pthresh)),])
 
-### Create summary data
-sig_res <- unique(unlist(lapply(dats, function(dat) row.names(dat))))
-out <- as.data.frame(sig_res)
-row.names(out) <- sig_res
-### Add size, gtf_name columns to out if they are in the dat_list column names
-cols <- c('size', 'gene_name_gtf')
-cols <- cols[cols %in% colnames(dat_list[[1]])]
-for(col in cols){
-  out[, col] <- sapply(row.names(out), function(x) dat_list[[1]][x, col])
+  ### Create summary data
+  sig_res <- unique(unlist(lapply(dats, function(dat) row.names(dat))))
+  summ <- as.data.frame(sig_res)
+  row.names(summ) <- sig_res
+  ### Add size, gtf_name columns to summ if they are in the dat_list column names
+  cols <- c('size', 'gene_name_gtf')
+  cols <- cols[cols %in% colnames(dat_list[[1]])]
+  for(col in cols){
+    summ[, col] <- sapply(row.names(summ), function(x) dat_list[[1]][x, col])
+  }
+  summ$n_sig <- sapply(row.names(summ), function(gs) get_strats(gs, dats, T))
+  summ$sig_strats <- sapply(row.names(summ), function(gs) get_strats(gs, dats))
+
+  summ <- summ[order(summ$n_sig, decreasing = T),]
+  summ <- summ[, colnames(summ)[colnames(summ) != 'sig_res']]
+
+  dat_list[['Summary']] <- summ
+  dats[['Summary']] <- summ
+  out <- list("all" = data_list, "sig" = dats)
+  return(out)
 }
-out$n_sig <- sapply(row.names(out), function(gs) get_strats(gs, dats, T))
-out$sig_strats <- sapply(row.names(out), function(gs) get_strats(gs, dats))
-### Specific to finch data
-# out$sig_strats <- gsub('Treatment_Euth_Age-', '', out$sig_strats)
-# out$sig_strats <- gsub('Treatment_', '', out$sig_strats)
 
-out <- out[order(out$n_sig, decreasing = T),]
-out <- out[, colnames(out)[colnames(out) != 'sig_res']]
-
-dat_list[['Summary']] <- out
-dats[['Summary']] <- out
+out <- sig_and_summary(dat_list)
+dat_list <- out['all']
+sig_list <- out['sig']
 ### Write all results
 WriteXLS(x = dat_list, ExcelFileName = xls_file, SheetNames = names(dat_list), row.names = T)
 ### Write significant results
-WriteXLS(x = dats, ExcelFileName = sig_file, SheetNames = names(dats), row.names = T)
+WriteXLS(x = dats, ExcelFileName = sig_file, SheetNames = names(sig_list), row.names = T)
 ###
 
