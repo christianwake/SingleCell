@@ -16,7 +16,7 @@ library('gridExtra')
 library('cowplot')
 #library('logspline')
 library('WriteXLS')
-source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/home/cwake/snakemakes/CITESeq_functions.R')
 
 if(interactive()){
   project <- '2021600_kristin'
@@ -33,14 +33,14 @@ if(interactive()){
   # qc_name <- 'QC_first_pass'
   # batches <- c('2022-02-14', '2022-02-15', '2022-02-16', '2022-02-17', '2022-02-18', '2022-02-22', '2022-02-24', '2022-02-25')
   
-  txt_out <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cell_filtered.txt')
-  txt_out2 <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Batches_cells_remaining.txt')
-  xls_out <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cell_filtered.xls')
-  pdf_out <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Cell_filtered.pdf')
-  ex_out <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Excluded_genes.txt')
-  filter_files <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, 
+  txt_out <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Cell_filtered.txt')
+  txt_out2 <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Batches_cells_remaining.txt')
+  xls_out <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Cell_filtered.xls')
+  pdf_out <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Cell_filtered.pdf')
+  ex_out <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Excluded_genes.txt')
+  filter_files <- paste0('/home/cwake/projects/', project, 
                          '/results/', qc_name, '/batches/', batches, '/Cell_filtered.txt')
-  ex_files <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, 
+  ex_files <- paste0('/home/cwake/projects/', project, 
                      '/results/', qc_name, '/', batches, '/Excluded_genes.txt')
   
   

@@ -16,11 +16,11 @@ library('pastecs')
 library('RColorBrewer')
 library('ggnewscale')
 
-source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/sample_sheet_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/dehash_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
+source('/home/cwake/snakemakes/CITESeq_functions.R')
+source('/home/cwake/snakemakes/sample_sheet_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/dehash_functions.R')
+source('/home/cwake/snakemakes/Utility_functions.R')
 
 if(interactive()){
   project <- '2021614_21-002'
@@ -29,19 +29,19 @@ if(interactive()){
   demux_method <- 'MULTIseqDemux'
   raw_or_norm <- 'raw'
   if(raw_or_norm == 'raw'){
-    rds_in <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, 
+    rds_in <- paste0('/home/cwake/projects/', project, 
                      '/results/', qc_name, '/PostQC1.RDS')
     do_norm <- T
   } else{
-    rds_in <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, 
+    rds_in <- paste0('/home/cwake/projects/', project, 
                      '/results/', qc_name, '/Combined_batches.RDS')
     do_norm <- F
   }
-  thresh_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name,
+  thresh_file <- paste0('/home/cwake/projects/', project, '/results/', qc_name,
                         '/Libraseq/', raw_or_norm, '/thresholds_', demux_method, '.csv')
-  rds_out <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, 
+  rds_out <- paste0('/home/cwake/projects/', project, 
                    '/results/', qc_name, '/Libraseq/', raw_or_norm, '/calls_', demux_method, '.RDS')
-  pdf_out <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, 
+  pdf_out <- paste0('/home/cwake/projects/', project, 
                     '/results/', qc_name, '/Libraseq/', raw_or_norm, '/calls_', demux_method, '.pdf')
   probes <- 'S2P_WT_APC,RBD_WT_APC,NTD_WT_APC,gp120_APC,S2P_Beta_PE,RBD_Beta_PE,NTD_Beta_PE,gp120_PE'
  }else{

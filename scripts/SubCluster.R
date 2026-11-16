@@ -11,16 +11,16 @@ library('grid')
 library('scales')
 library('lisi')
 
-source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
-source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/CITESeq_functions.R')
 
 if(interactive()){
   project <- '2021600_kristin'
   qc_name <- 'Run2023-05-14'
-  sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Mapped.RDS')
-  exclude_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Excluded_genes.txt')
+  sdat_file <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Mapped.RDS')
+  exclude_file <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Excluded_genes.txt')
   cluster_info <- 'RNA_clusters-0'
-  out_rds <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/SubClusters/', cluster_info, '.RDS')
+  out_rds <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/SubClusters/', cluster_info, '.RDS')
   
 }else{
   args = commandArgs(trailingOnly=TRUE)

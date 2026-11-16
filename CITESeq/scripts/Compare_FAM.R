@@ -13,8 +13,8 @@ library('rsconnect')
 library('data.table')
 library('lisi')
 
-source('/data/vrc_his/douek_lab/wakecg/sc_functions.R')
-source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/CITESeq_functions.R')
 
 get_topN_genes_fam <- function(dat, topN, celltype = NA){
   if(!is.na(celltype)){
@@ -35,25 +35,25 @@ get_topN_genes_fm <- function(dat, topN){
 
 res_sub <- 'DS_by_batch'
 
-out_pdf <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/', res_sub, 'Cluster_DE_Comparison.pdf')
-rds_files <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/', res_sub, '/Downsample_',
+out_pdf <- paste0('/home/cwake/projects/2021614_21-002/results/', res_sub, 'Cluster_DE_Comparison.pdf')
+rds_files <- paste0('/home/cwake/projects/2021614_21-002/results/', res_sub, '/Downsample_',
                     c(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9), '/Cluster_DE/One-all/RNA-predicted.celltype.l1.RDS')
-rds_files <- c(rds_files, '/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/Go2/Cluster_DE/One-all/RNA-predicted.celltype.l1.RDS')
+rds_files <- c(rds_files, '/home/cwake/projects/2021614_21-002/results/Go2/Cluster_DE/One-all/RNA-predicted.celltype.l1.RDS')
 rds_files <- rds_files[file.exists(rds_files)]
 
 rna_dats <- lapply(rds_files, function(file) readRDS(file))
-names(rna_dats) <- sapply(rds_files, function(file) gsub('/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/', '', gsub('/Cluster_DE/One-all/RNA-predicted.celltype.l1.RDS', '', file)))
+names(rna_dats) <- sapply(rds_files, function(file) gsub('/home/cwake/projects/2021614_21-002/results/', '', gsub('/Cluster_DE/One-all/RNA-predicted.celltype.l1.RDS', '', file)))
 ### Go2 should've been named Downsample_1.0
 names(rna_dats)[which(names(rna_dats) == 'Go2')] <- 'Downsample_1.0'
 ### Remove "Downsample_"
 names(rna_dats) <- sapply(names(rna_dats), function(x) gsub('Downsample_', '', x))
 
-rds_files <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/', res_sub, '/Downsample_',
+rds_files <- paste0('/home/cwake/projects/2021614_21-002/results/', res_sub, '/Downsample_',
                     c(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9), '/Cluster_DE/One-all/prot-predicted.celltype.l1.RDS')
-rds_files <- c(rds_files, '/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/Go2/Cluster_DE/One-all/prot-predicted.celltype.l1.RDS')
+rds_files <- c(rds_files, '/home/cwake/projects/2021614_21-002/results/Go2/Cluster_DE/One-all/prot-predicted.celltype.l1.RDS')
 rds_files <- rds_files[file.exists(rds_files)]
 prot_dats <- lapply(rds_files, function(file) readRDS(file))
-names(prot_dats) <- sapply(rds_files, function(file) gsub('/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/', '', gsub('/Cluster_DE/One-all/prot-predicted.celltype.l1.RDS', '', file)))
+names(prot_dats) <- sapply(rds_files, function(file) gsub('/home/cwake/projects/2021614_21-002/results/', '', gsub('/Cluster_DE/One-all/prot-predicted.celltype.l1.RDS', '', file)))
 ### Go2 should've been named Downsample_1.0
 names(prot_dats)[which(names(prot_dats) == 'Go2')] <- 'Downsample_1.0'
 ### Remove "Downsample_"
@@ -94,12 +94,12 @@ assays <- c('prot', 'RNA')
 for(celltype in celltypes){
   for(assay in assays){
     later_path <- paste0('/Cluster_DE/One-one/', assay, '_predicted.celltype.l1-', celltype, '.RDS')
-    rds_files <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/', res_sub, '/Downsample_',
+    rds_files <- paste0('/home/cwake/projects/2021614_21-002/results/', res_sub, '/Downsample_',
                         c(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9), later_path)
-    rds_files <- c(rds_files, paste0('/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/Go2', later_path))
+    rds_files <- c(rds_files, paste0('/home/cwake/projects/2021614_21-002/results/Go2', later_path))
     rds_files <- rds_files[file.exists(rds_files)]
     de_dats <- lapply(rds_files, function(file) readRDS(file))
-    names(de_dats) <- sapply(rds_files, function(file) gsub(paste0('/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/', res_sub, '/'), 
+    names(de_dats) <- sapply(rds_files, function(file) gsub(paste0('/home/cwake/projects/2021614_21-002/results/', res_sub, '/'), 
                                                               '', gsub(later_path, '', file)))
     ### Go2 should've been named Downsample_1.0
     names(de_dats)[which(names(de_dats) == 'Go2')] <- 'Downsample_1.0'

@@ -20,10 +20,10 @@ library('readxl')
 library('WriteXLS')
 library('Matrix')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/sample_sheet_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
+source('/home/cwake/snakemakes/CITESeq_functions.R')
+source('/home/cwake/snakemakes/sample_sheet_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/Utility_functions.R')
 
 dehash_CR_ID <- function(dat, id, data_dir){
   hashtags <- as.data.frame(dat[which(dat$CR_ID == id),])[,'HTO_index_name']
@@ -95,16 +95,16 @@ covs_file <- args[1]
 runs_dir <- args[2]
 out_labels <- args[3]
 
-# runs_dir <- '/hpcdata/vrc/vrc1_data/douek_lab/Runs/210511_A00243_0102_AHC3YJDSX2/wakecg/'
-# covs_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021617_mis-c/All_covariates.csv'
-# out_rds <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021617_mis-c/seurat_object.RDS'
-# out_labels <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021617_mis-c/labels.csv'
-# out_csv <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021617_mis-c/RNA_counts.csv'
+# runs_dir <- '/home/cwake/data/210511_A00243_0102_AHC3YJDSX2/wakecg/'
+# covs_file <- '/home/cwake/projects/2021617_mis-c/All_covariates.csv'
+# out_rds <- '/home/cwake/projects/2021617_mis-c/seurat_object.RDS'
+# out_labels <- '/home/cwake/projects/2021617_mis-c/labels.csv'
+# out_csv <- '/home/cwake/projects/2021617_mis-c/RNA_counts.csv'
 
-# runs_dir <- '/hpcdata/vrc/vrc1_data/douek_lab/Runs/'
-# covs_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021614_21-002/All_covariates.csv'
-# out_labels <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021614_21-002/data/labels_allbackground.csv'
-# out_metrics <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021614_21-002/cellranger_count_metrics.tsv'
+# runs_dir <- '/home/cwake/data/'
+# covs_file <- '/home/cwake/projects/2021614_21-002/All_covariates.csv'
+# out_labels <- '/home/cwake/projects/2021614_21-002/data/labels_allbackground.csv'
+# out_metrics <- '/home/cwake/projects/2021614_21-002/cellranger_count_metrics.tsv'
 # quant_func <- 'count'
 # batch <- 'Date_Sort'
 

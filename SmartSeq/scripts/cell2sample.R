@@ -2,24 +2,24 @@ library('sys')
 library('dplyr')
 library('data.table')
 
-source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/sample_sheet_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/Utility_functions.R')
+source('/home/cwake/snakemakes/sample_sheet_functions.R')
 
 if(interactive()){
-  runs_dir <- '/data/vrc_his/douek_lab/Runs/'
+  runs_dir <- '/home/cwake/data/'
 
   runs_subdir <- 'demultiplexed_2025'
   project <- '2021600_kristin'
-  in_csv <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/Cell_sheet_2025.csv')
+  in_csv <- paste0('/home/cwake/projects/', project, '/Cell_sheet_2025.csv')
 
   # runs_subdir <- 'demultiplexed'
   # project <- '2024615_Boswell'
-  # in_csv <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/Cell_sheet.csv')
+  # in_csv <- paste0('/home/cwake/projects/', project, '/Cell_sheet.csv')
   
-  mtx_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/', 'raw_mtx.rds')
-  out_csv <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/', 'Covariates_QC_metrics.csv')
-  out_pdf <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/', 'Histograms.pdf')
+  mtx_file <- paste0('/home/cwake/projects/', project, '/data/', 'raw_mtx.rds')
+  out_csv <- paste0('/home/cwake/projects/', project, '/data/', 'Covariates_QC_metrics.csv')
+  out_pdf <- paste0('/home/cwake/projects/', project, '/data/', 'Histograms.pdf')
 } else{
   args = commandArgs(trailingOnly=TRUE)
   in_csv <- args[1]

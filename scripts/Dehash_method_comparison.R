@@ -27,30 +27,30 @@ library('WriteXLS')
 library('Matrix')
 library('pastecs')
 
-source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/sample_sheet_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/dehash_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
+source('/home/cwake/snakemakes/CITESeq_functions.R')
+source('/home/cwake/snakemakes/sample_sheet_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/dehash_functions.R')
+source('/home/cwake/snakemakes/Utility_functions.R')
 
 if(interactive()){
   project <- '2021614_21-002'
 
-  runs_dir <- '/data/vrc_his/douek_lab/Runs/'
-  covs_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, 
+  runs_dir <- '/home/cwake/data/'
+  covs_file <- paste0('/home/cwake/projects/', project, 
                       '/Sample_sheet_Innate.csv')
-  out_pdf1 <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/Dehash_comparisons_calls2.pdf')
-  out_pdf2 <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/Dehash_comparisons_threshs2.pdf')
-  out_threshs <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/Dehash_comparisons2.csv')
+  out_pdf1 <- paste0('/home/cwake/projects/', project, '/data/Dehash_comparisons_calls2.pdf')
+  out_pdf2 <- paste0('/home/cwake/projects/', project, '/data/Dehash_comparisons_threshs2.pdf')
+  out_threshs <- paste0('/home/cwake/projects/', project, '/data/Dehash_comparisons2.csv')
   demux_methods <- 'MULTIseqDemux,Trough,Custom'
   ### Method 1 of input: specifying Trough. But it won't be exactly reproducible due to randomness.
   do_trough <- F
   ### Method 2 of input: a csv of threshold values
   thresh_files <- sapply(strsplit(demux_methods, ',')[[1]], function(x) 
-    paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/Dehash_threshs_', x, '.csv'))
+    paste0('/home/cwake/projects/', project, '/data/Dehash_threshs_', x, '.csv'))
   ### Method 3 of input: csv of cell dehashing calls
   calls_files <- sapply(strsplit(demux_methods, ',')[[1]], function(x) 
-    paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/Dehash_calls_', x, '.tsv'))
+    paste0('/home/cwake/projects/', project, '/data/Dehash_calls_', x, '.tsv'))
 }else{
   args <- commandArgs(trailingOnly=TRUE)
 
@@ -73,7 +73,7 @@ if(project == '2023105_21-0012'){
 } else{
   CR_version = '7.1.1'
 }
-project_dir <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project)
+project_dir <- paste0('/home/cwake/projects/', project)
 
 ### Read covariates
 dat <- read.csv(covs_file, stringsAsFactors = F, header = T,

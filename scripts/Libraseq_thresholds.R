@@ -16,36 +16,36 @@ library('pastecs')
 library('RColorBrewer')
 library('ggnewscale')
 
-source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/sample_sheet_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/dehash_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
+source('/home/cwake/snakemakes/CITESeq_functions.R')
+source('/home/cwake/snakemakes/sample_sheet_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/dehash_functions.R')
+source('/home/cwake/snakemakes/Utility_functions.R')
 
 if(interactive()){
   project <- '2021614_21-002'
   qc_name <- '2024-07-31'
-  runs_dir <- '/data/vrc_his/douek_lab/Runs/'
+  runs_dir <- '/home/cwake/data/'
   demux_method <- 'MULTIseqDemux'
   demux_method <- 'Trough'
   raw_or_norm <- 'norm'
   if(raw_or_norm == 'raw'){
-    rds_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, 
+    rds_file <- paste0('/home/cwake/projects/', project, 
                      '/results/', qc_name, '/All_data.RDS')
     do_norm <- T
   } else{
-    rds_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, 
+    rds_file <- paste0('/home/cwake/projects/', project, 
                      '/results/', qc_name, '/Combined_batches.RDS')
     do_norm <- F
   }
   
-  covs_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, 
+  covs_file <- paste0('/home/cwake/projects/', project, 
                       '/results/', qc_name, '/Sample_sheet.csv')
-  thresh_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name,
+  thresh_file <- paste0('/home/cwake/projects/', project, '/results/', qc_name,
                         '/Libraseq/', raw_or_norm, '/thresholds_', demux_method, '.csv')
-  pdf_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, 
+  pdf_file <- paste0('/home/cwake/projects/', project, '/results/', qc_name, 
                      '/Libraseq/', raw_or_norm, '/thresholds_', demux_method, '.pdf')
-  gtf_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
+  gtf_file <- paste0('/home/cwake/projects/', project, '/data/gtf.RDS')
   probes <- 'S2P_WT_APC,RBD_WT_APC,NTD_WT_APC,gp120_APC,S2P_Beta_PE,RBD_Beta_PE,NTD_Beta_PE,gp120_PE'
 }else{
   args <- commandArgs(trailingOnly=TRUE)
@@ -283,7 +283,7 @@ Libraseq_method_branch <- function(id, prot, probes, out_dir = NA, demux_method 
   return(thresholds)
 }
 
-project_dir <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project)
+project_dir <- paste0('/home/cwake/projects/', project)
 
 ### Determine whether method is simply reading thresholds from a file and applying them.
 demux_method0 <- demux_method
@@ -393,7 +393,7 @@ for(id in unique(dat$CR_ID)){
 dev.off()
 threshs <- rbindlist(thresh_list)
 threshs <- as.data.frame(threshs)
-#threshs <- read.table('/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/libraseq.csv', sep = ',')
+#threshs <- read.table('/home/cwake/projects/2021614_21-002/libraseq.csv', sep = ',')
 #colnames(threshs) <- c('CRID', 'x', 'thresh')
 
 

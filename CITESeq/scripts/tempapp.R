@@ -22,14 +22,11 @@ library('rsconnect')
 library('XML')
 library('MASS')
 
-# source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
-# load('/data/vrc_his/douek_lab/wakecg/CITESeq/snakemake/results/50Ab/App/Data.RData')
+# source('/home/cwake/snakemakes/sc_functions.R')
 # cseq_ab <- cseq
-# load('/data/vrc_his/douek_lab/wakecg/CITESeq/snakemake/results/Biolegend/App/Data.RData')
 # cseq_b <- cseq
-#load('/data/vrc_his/douek_lab/wakecg/CITESeq/Flu/App/Data.RData')
 #cseq0 <- cseq
-#load('/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/Go2/App/Data.RData')
+#load('/home/cwake/projects/2021614_21-002/results/Go2/App/Data.RData')
 # dim(cseq_ab@assays$prot)
 # dim(cseq_b@assays$RNA)
 # dim(cseq0@assays$RNA)
@@ -38,7 +35,7 @@ library('MASS')
 load('Data.RData')
 source('sc_functions.R')
 
-#source('/data/vrc_his/douek_lab/wakecg/sc_functions.R')
+#source('/home/cwake/snakemakes/sc_functions.R')
 cluster_names = c('RNA_clusters', 'prot_clusters', 'wnn_clusters', 'predicted.celltype.l1', 'predicted.celltype.l2')
 names(cluster_names) <- c('RNA', 'Protein', 'WNN', 'Celltype prediction', 'Celltype prediction refined')
 cluster_names <- cluster_names[cluster_names %in% colnames(cseq@meta.data)]

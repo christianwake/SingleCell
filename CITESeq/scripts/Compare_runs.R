@@ -14,33 +14,34 @@ library('data.table')
 library('lisi')
 library('WriteXLS')
 
-source('/data/vrc_his/douek_lab/wakecg/sc_functions.R')
-source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/CITESeq_functions.R')
 
 # args = commandArgs(trailingOnly=TRUE)
 # out_pdf <- args[1]
 # rds_files <- args[2:length(args)]
 res_sub <- 'DS_by_batch'
 #res_sub <- ''
-cor_pdf <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/', res_sub, '/DSB_correlations.pdf')
-cor_hist__pdf <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/', res_sub, '/DSB_correlations_hist.pdf')
-cor_xls <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/', res_sub, '/DSB_correlations.xls')
-cor_dir <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/', res_sub, '/DSB_correlations/')
-out_pdf <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/', res_sub, '/Comparison.pdf')
-rds_files <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/', res_sub, '/Downsample_', 
+cor_pdf <- paste0('/home/cwake/projects/2021614_21-002/results/', res_sub, '/DSB_correlations.pdf')
+cor_hist__pdf <- paste0('/home/cwake/projects/2021614_21-002/results/', res_sub, '/DSB_correlations_hist.pdf')
+cor_xls <- paste0('/home/cwake/projects/2021614_21-002/results/', res_sub, '/DSB_correlations.xls')
+cor_dir <- paste0('/home/cwake/projects/2021614_21-002/results/', res_sub, '/DSB_correlations/')
+out_pdf <- paste0('/home/cwake/projects/2021614_21-002/results/', res_sub, '/Comparison.pdf')
+rds_files <- paste0('/home/cwake/projects/2021614_21-002/results/', res_sub, '/Downsample_', 
        c(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9), '/Mapped.RDS')
-rds_files <- c(rds_files, '/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/Go2/Mapped.RDS')
+rds_files <- c(rds_files, '/home/cwake/projects/2021614_21-002/results/Go2/Mapped.RDS')
 rds_files <- rds_files[file.exists(rds_files)]
 #rds_files <- rds_files[1:2]
-names(rds_files) <- sapply(rds_files, function(file) gsub(paste0('/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/', res_sub, '/'), '', gsub('/Mapped.RDS', '', file)))
-names(rds_files) <- sapply(names(rds_files), function(file) gsub('/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/', '', gsub('/Mapped.RDS', '', file)))
+names(rds_files) <- sapply(rds_files, function(file) gsub(paste0('/home/cwake/projects/2021614_21-002/results/', res_sub, '/'), '', gsub('/Mapped.RDS', '', file)))
+names(rds_files) <- sapply(names(rds_files), function(file) gsub('/home/cwake/projects/2021614_21-002/results/', '', gsub('/Mapped.RDS', '', file)))
 
 ### Go2 should've been named Downsample_1.0
 names(rds_files)[which(names(rds_files) == 'Go2')] <- 'Downsample_1.0'
 ### Remove "Downsample_"
 names(rds_files) <- sapply(names(rds_files), function(x) gsub('Downsample_', '', x))
 
-names_key_file <- '/data/vrc_his/douek_lab/wakecg/Biolegend_panel.csv'
+### I need a replacement for this file
+#names_key_file <- '/data/vrc_his/douek_lab/wakecg/Biolegend_panel.csv'
 names_key_dat <- read.table(names_key_file, sep = ',', quote = "", header = T)
 #names_key_dat$Name_brev <- gsub('', names_key_dat$Name
 names_key <- names_key_dat$Name
@@ -162,7 +163,7 @@ umaps <- c("RNA_umap", "prot_umap", "dsb_wnn_umap")
 #   geom_histogram() + ggtitle('All cell types, r-squared values')
 # dev.off()
 
-# out_rdata <-  '/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/DS_by_cell/Go2/App/Data.RData'
+# out_rdata <-  '/home/cwake/projects/2021614_21-002/results/DS_by_cell/Go2/App/Data.RData'
 sdats <- lapply(rds_files, function(file) read_diet_seurat(file, umaps))
 names(sdats) <- names(rds_files)
 for(i in 1:length(sdats)){
@@ -177,11 +178,11 @@ for(i in 1:length(sdats)){
 subdats <- sdats
 subdats[[1]] <- subset(subdats[[1]], downsample = 100)
 subdats <- lapply(subdats, function(sdat) subset(sdat, cells = colnames(subdats[[1]]@assays$RNA)))
-saveRDS(subdats, paste0('/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/', res_sub, '/Comparison.RDS'))
+saveRDS(subdats, paste0('/home/cwake/projects/2021614_21-002/results/', res_sub, '/Comparison.RDS'))
 
 ### Check that per cell fraction of total is the same per downsample
 ncounts <- lapply(sdats, function(sdat) sdat$nCount_RNA)
-#saveRDS(ncounts, '/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/DS_by_cell/downsample_fractions.RDS')
+#saveRDS(ncounts, '/home/cwake/projects/2021614_21-002/results/DS_by_cell/downsample_fractions.RDS')
 pdf(out_pdf)
 dat <- rbindlist(lapply(names(ncounts), function(ds) evaluating_downsample_fraction(ncounts, ds)))
 p <- ggplot(dat, aes(x=downsample_category, y=actual_fraction)) +

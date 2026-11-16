@@ -15,8 +15,8 @@ library('stringi')
 #library('limma')
 library('vegan')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/Utility_functions.R')
 
 if(interactive()){
   project <- args[1]
@@ -29,7 +29,7 @@ if(interactive()){
   out_mtx <- args[3]
 }
 
-base_dir  <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/')
+base_dir  <- paste0('/home/cwake/projects/', project, '/')
 ### Read in covariates
 sample_info <- read.csv(covs_file, stringsAsFactors = F, header = T,
                  check.names = F, 

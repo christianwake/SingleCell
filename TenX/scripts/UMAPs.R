@@ -10,16 +10,13 @@ library('biomaRt')
 library('grid')
 library('scales')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/sc_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/CITESeq_functions.R')
 
 args = commandArgs(trailingOnly=TRUE)
 
 sdat_file <- args[1]
 out_pdf <- args[2]
-
-#sdat_file <- '/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/snakemake/results/Biolegend/Filtered_clustered.RDS'
-#out_pdf <- '/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/snakemake/results/Biolegend/UMAP.pdf'
 
 sdat <- readRDS(sdat_file)
 DefaultAssay(sdat) <- 'prot'

@@ -10,11 +10,11 @@ library('biomaRt')
 library('grid')
 library('scales')
 
-source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
-source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/CITESeq_functions.R')
 
-# source('/Volumes/VRC1_DATA/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-# source('/Volumes/VRC1_DATA/douek_lab/snakemakes/sc_functions.R')
+# source('/home/cwake/snakemakes/CITESeq_functions.R')
+# source('/home/cwake/snakemakes/sc_functions.R')
 
 ### Filters
 ### 1. Clusters with very few reads
@@ -24,13 +24,13 @@ source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
 if(interactive()){
   project <- '2021614_21-002'
   qc_name <- '2024-01-20'
-  base_dir <- '/data/vrc_his/' 
-  sdat_file <- paste0(base_dir,'/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Clustered.RDS')
-  filter_file <- paste0(base_dir,'douek_lab/projects/RNASeq/', project, '/QC_steps/cluster_filters.csv')
-  out_rds <- paste0(base_dir,'douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filtered.RDS')
-  out_txt <- paste0(base_dir,'/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filters.txt')
-  out_pdf <- paste0(base_dir,'/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Clustered.pdf')
-  gtf_file <- paste0(base_dir, '/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
+  base_dir <- '/home/cwake/projects/' 
+  sdat_file <- paste0(base_dir, project, '/results/', qc_name, '/Clustered.RDS')
+  filter_file <- paste0(base_dir, project, '/QC_steps/cluster_filters.csv')
+  out_rds <- paste0(base_dir, project, '/results/', qc_name, '/Filtered.RDS')
+  out_txt <- paste0(base_dir, project, '/results/', qc_name, '/Filters.txt')
+  out_pdf <- paste0(base_dir, project, '/results/', qc_name, '/Clustered.pdf')
+  gtf_file <- paste0(base_dir, project, '/data/gtf.RDS')
   
   
 }else{

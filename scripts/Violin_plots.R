@@ -7,20 +7,20 @@ library('plyr')
 library('dplyr')
 library('cowplot')
 
-source('/data/vrc_his/douek_lab/wakecg/sc_functions.R')
-source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/CITESeq_functions.R')
 
 if(interactive()){
-  # sdat_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2021617_mis-c/results/Dropout_mitigated/PostQC3.RDS'
-  # gene_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2021617_mis-c/genes.xlsx'
+  # sdat_file <- '/home/cwake/projects/2021617_mis-c/results/Dropout_mitigated/PostQC3.RDS'
+  # gene_file <- '/home/cwake/projects/2021617_mis-c/genes.xlsx'
   # test_var <- 'Condition'
-  # out_pdf <- '/data/vrc_his/douek_lab/projects/RNASeq/2021617_mis-c/results/RNA_clusters.pdf'
+  # out_pdf <- '/home/cwake/projects/2021617_mis-c/results/RNA_clusters.pdf'
   
-  sdat_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2021600_kristin/results/Run2022/PostQC3.RDS'
-  gene_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2021600_kristin/220921_transcriptome_analysis.xlsx'
-  name_match_file <- '/data/vrc_his/douek_lab/wakecg/data/Gene_names.RDS'
+  sdat_file <- '/home/cwake/projects/2021600_kristin/results/Run2022/PostQC3.RDS'
+  gene_file <- '/home/cwake/projects/2021600_kristin/220921_transcriptome_analysis.xlsx'
+  name_match_file <- '/home/cwake/data/Gene_names.RDS'
   test_var <- 'Time,TCR.status'
-  out_pdf <- '/data/vrc_his/douek_lab/projects/RNASeq/2021600_kristin/results/Run2022/Violins.pdf'
+  out_pdf <- '/home/cwake/projects/2021600_kristin/results/Run2022/Violins.pdf'
 } else{
   args = commandArgs(trailingOnly=TRUE)
   

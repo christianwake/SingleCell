@@ -1,11 +1,11 @@
 
 
 if(interactive()){
-  in_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2021600_kristin/data/bam/Nreads.csv'
-  out_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2021600_kristin/data/Post_filter.csv'
+  in_file <- '/home/cwake/projects/2021600_kristin/data/bam/Nreads.csv'
+  out_file <- '/home/cwake/projects/2021600_kristin/data/Post_filter.csv'
   
-  in_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2022620_857.1/data/bam/Nreads.csv'
-  out_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2022620_857.1/data/Post_filter.csv'
+  in_file <- '/home/cwake/projects/2022620_857.1/data/bam/Nreads.csv'
+  out_file <- '/home/cwake/projects/2022620_857.1/data/Post_filter.csv'
   
 } else{
   args = commandArgs(trailingOnly=TRUE)

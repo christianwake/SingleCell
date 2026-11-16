@@ -17,22 +17,22 @@ library('WriteXLS')
 library('Matrix')
 library('pastecs')
 
-source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/sample_sheet_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/dehash_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
+source('/home/cwake/snakemakes/CITESeq_functions.R')
+source('/home/cwake/snakemakes/sample_sheet_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/dehash_functions.R')
+source('/home/cwake/snakemakes/Utility_functions.R')
 
 if(interactive()){
   project <- '2021614_21-002'
   qc_name <- '2024-01-20'
-  runs_dir <- '/data/vrc_his/douek_lab/Runs/'
-  covs_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, 
+  runs_dir <- '/home/cwake/data/'
+  covs_file <- paste0('/home/cwake/projects/', project, 
                       '/Sample_sheet.csv')
   method <- 'Custom'
-  calls_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, 
+  calls_file <- paste0('/home/cwake/projects/', project, 
                         '/data/Dehash_CRint_calls_', method, '.tsv')
-  out_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, 
+  out_file <- paste0('/home/cwake/projects/', project, 
                      '/results/', qc_name, '/For_SONAR.csv')
 }else{
   args <- commandArgs(trailingOnly=TRUE)
@@ -70,7 +70,7 @@ for(id in unique(calls$Assignment)){
 calls <- calls[which(!(calls$VDJ_index_name == 'no VDJ')), ]
 
 #calls$VDJ_dir <- paste0(getwd(), '/multi_output/', calls$CR_ID, '/outs/per_sample_outs/', calls$CR_ID, '/vdj_b/')
-calls$VDJ_dir <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, 
+calls$VDJ_dir <- paste0('/home/cwake/projects/', project, 
                         '/multi_output/', calls$CR_ID, '/outs/per_sample_outs/', calls$CR_ID, 
                         '/vdj_b/')
 

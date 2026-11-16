@@ -15,20 +15,20 @@ library('stringi')
 #library('limma')
 library('vegan')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/Utility_functions.R')
 
 sheet <- NA
 if(interactive()){
-  runs_dir <- '/hpcdata/vrc/vrc1_data/douek_lab/Runs/'
+  runs_dir <- '/home/cwake/data/'
   project <- '2021600_kristin'
-  mtx_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/', 'raw_mtx.rds')
-  covs_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/All_covariates.csv')
-  gtf_file <- '/hpcdata/vrc/vrc1_data/douek_lab/reference_sets/tenX/Homo_sapiens.GRCh38.93/GRCh38_protein_coding_only/genes/genes.gtf'
-  gtf_r_file <- '/hpcdata/vrc/vrc1_data/douek_lab/wakecg/data/GRCh38_reference.RDS'
-  out_txt <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/', 'Cell_filters.csv')
-  out_pdf <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/', 'Cell_filters.pdf')
-  out_csv <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/', 'Covariates_QC_metrics.csv')
+  mtx_file <- paste0('/home/cwake/projects/', project, '/data/', 'raw_mtx.rds')
+  covs_file <- paste0('/home/cwake/projects/', project, '/All_covariates.csv')
+  gtf_file <- '/home/cwake/resources/genomes/Homo_sapiens.GRCh38.93/GRCh38_protein_coding_only/genes/genes.gtf'
+  gtf_r_file <- '/home/cwake/data/GRCh38_reference.RDS'
+  out_txt <- paste0('/home/cwake/projects/', project, '/data/', 'Cell_filters.csv')
+  out_pdf <- paste0('/home/cwake/projects/', project, '/data/', 'Cell_filters.pdf')
+  out_csv <- paste0('/home/cwake/projects/', project, '/data/', 'Covariates_QC_metrics.csv')
 } else{
   args = commandArgs(trailingOnly=TRUE)
   ### snakemake input
@@ -45,7 +45,7 @@ if(interactive()){
   out_csv <- args[9]
 }
 
-base_dir  <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/')
+base_dir  <- paste0('/home/cwake/projects/', project, '/')
 if(file.exists(gtf_r_file)){
   gtf <- readRDS(gtf_r_file)
 } else {
@@ -187,11 +187,11 @@ filteredN$Filter <- c('Original', 'Trim_Input_Read_Pairs', 'Mapped_freq', 'Trim_
 write.table(filteredN, out_txt, row.names=F, col.names = T, quote = F, sep = ',')
 write.table(sample_info, out_csv, row.names = F, col.names = T, quote  = F, sep = ',')
 
-# a<-read.table('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021600_kristin/temp7.txt', sep = ',')
+# a<-read.table('/home/cwake/projects/2021600_kristin/temp7.txt', sep = ',')
 # sample_info$key <- paste(sample_info$flowcell_full, sample_info$Lane, sample_info$UDP_ID, sep = '_')
 # a$key <- paste(a$V1, a$V2, a$V3, sep = '_')
 # all(a$key %in% sample_info$key)
 # 
 # b<-sample_info[which(sample_info$key %in% a$key),]
 # 
-# write.table(b$trim_files, '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021600_kristin/temp.sh', row.names = F, col.names = T, quote  = F, sep = ',')
+# write.table(b$trim_files, '/home/cwake/projects/2021600_kristin/temp.sh', row.names = F, col.names = T, quote  = F, sep = ',')

@@ -14,19 +14,19 @@ library('scales')
 library('vegan')
 library('data.table')
 
-source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
-source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/CITESeq_functions.R')
+source('/home/cwake/snakemakes/Utility_functions.R')
 
 if(interactive()){
   #project <- '2021617_mis-c'
   project <- '2022620_857.1'
   qc_name <- 'Run2022'
-  sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/All_data.RDS')
-  QC_input_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/QC_steps/step2_imputation.csv')
-  out_rds <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/PostQC2.RDS')
-  out_pdf <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Imputed.pdf')
-  #out_txt1 <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/Excluded_genes.txt')
+  sdat_file <- paste0('/home/cwake/projects/', project, '/data/All_data.RDS')
+  QC_input_file <- paste0('/home/cwake/projects/', project, '/QC_steps/step2_imputation.csv')
+  out_rds <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/PostQC2.RDS')
+  out_pdf <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Imputed.pdf')
+  #out_txt1 <- paste0('/home/cwake/projects/', project, '/results/Excluded_genes.txt')
 } else{
   args = commandArgs(trailingOnly=TRUE)
   sdat_file <- args[1]

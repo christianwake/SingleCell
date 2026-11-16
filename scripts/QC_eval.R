@@ -12,42 +12,42 @@ library('grid')
 library('scales')
 library('data.table')
 
-source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
-source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/CITESeq_functions.R')
+source('/home/cwake/snakemakes/Utility_functions.R')
 
 if(interactive()){
   project <- '2024615_Boswell'
   qc_name <- 'FirstRun'
   candidates <- 'FC_ID'
-  QC_input_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/Test_comparisons.csv')
+  QC_input_file <- paste0('/home/cwake/projects/', project, '/Test_comparisons.csv')
   
   project <- '2021600_kristin'
   qc_name <- 'Run2025-03-03'
   candidates <- 'Lane'
-  QC_input_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/Test_comparisons.csv')
+  QC_input_file <- paste0('/home/cwake/projects/', project, '/Test_comparisons.csv')
   
   # project <- '2021614_21-002'
   # qc_name <- '2024-01-20'
   # candidates <- 'Sample_Name'
   # tests <- 'Arm,Visit'
   # strats <- 'Cell_subset-B_cells,Cell_subset-Innate'
-  # QC_input_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/Test_comparisons.csv')
+  # QC_input_file <- paste0('/home/cwake/projects/', project, '/Test_comparisons.csv')
 
   # project <- '2024605_Hillary_test'
   # qc_name <- '2024-06-04'
   # candidates <- 'CR_ID'
-  # QC_input_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/Test_comparisons.csv')
+  # QC_input_file <- paste0('/home/cwake/projects/', project, '/Test_comparisons.csv')
   ### Before filtering
-  sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/All_data.RDS')
-  plots_path <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/plots/')
-  txt_out <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/Batch.txt')
-  pdf_out <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/Initial_QC.pdf')
+  sdat_file <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/All_data.RDS')
+  plots_path <- paste0('/home/cwake/projects/', project, '/plots/')
+  txt_out <- paste0('/home/cwake/projects/', project, '/data/Batch.txt')
+  pdf_out <- paste0('/home/cwake/projects/', project, '/data/Initial_QC.pdf')
   ### After filtering
-  # sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/DSB_normalized_data.RDS')
-  # plots_path <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/post_DSB/')
-  # txt_out <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Batch.txt')
-  # pdf_out <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Post_QC.pdf')
+  # sdat_file <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/DSB_normalized_data.RDS')
+  # plots_path <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/post_DSB/')
+  # txt_out <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Batch.txt')
+  # pdf_out <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Post_QC.pdf')
   
  }else{
   args = commandArgs(trailingOnly = TRUE)

@@ -11,25 +11,25 @@ library('biomaRt')
 library('grid')
 library('scales')
 
-source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
-source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/CITESeq_functions.R')
 
 args = commandArgs(trailingOnly=TRUE)
 cseq_file <- args[1]
 out_rds <- args[2]
 out_pdf <- args[3]
-# cseq_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/Go2/Filtered.RDS'
-# out_rds <- '/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/Go2/Processed_data.RDS'
-# out_pdf <- '/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/Go2/WNN.pdf'
+# cseq_file <- '/home/cwake/projects/2021614_21-002/results/Go2/Filtered.RDS'
+# out_rds <- '/home/cwake/projects/2021614_21-002/results/Go2/Processed_data.RDS'
+# out_pdf <- '/home/cwake/projects/2021614_21-002/results/Go2/WNN.pdf'
 
-# cseq <- readRDS('/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/Downsample_0.33/Processed_data.RDS')
-# saveRDS(cseq$RNA.weight, '/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/Downsample_0.33/weights.RDS')
+# cseq <- readRDS('/home/cwake/projects/2021614_21-002/results/Downsample_0.33/Processed_data.RDS')
+# saveRDS(cseq$RNA.weight, '/home/cwake/projects/2021614_21-002/results/Downsample_0.33/weights.RDS')
 # rm(cseq)
-# cseq <- readRDS('/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/Go2/Processed_data.RDS')
-# saveRDS(cseq$RNA.weight, '/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/Go2/weights.RDS')
+# cseq <- readRDS('/home/cwake/projects/2021614_21-002/results/Go2/Processed_data.RDS')
+# saveRDS(cseq$RNA.weight, '/home/cwake/projects/2021614_21-002/results/Go2/weights.RDS')
 # 
-# ds <- readRDS('/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/Downsample_0.33/weights.RDS')
-# wall <-  readRDS('/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/Go2/weights.RDS')
+# ds <- readRDS('/home/cwake/projects/2021614_21-002/results/Downsample_0.33/weights.RDS')
+# wall <-  readRDS('/home/cwake/projects/2021614_21-002/results/Go2/weights.RDS')
 # 
 # ds <- as.data.frame(as.numeric(ds))
 # ds$downsample <- 'True'
@@ -80,7 +80,7 @@ prots <- rownames(cseq@assays$prot@data)
 VariableFeatures(cseq) <- prots
 
 print(summary(cseq$nCount_prot))
-pdf('/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/ADT.pdf')
+pdf('/home/cwake/projects/2021614_21-002/results/ADT.pdf')
 VlnPlot(cseq, features = 'nCount_dsb')
 dev.off()
 # run true pca to initialize dr pca slot for WNN 

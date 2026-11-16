@@ -21,42 +21,42 @@ library('WriteXLS')
 library('Matrix')
 library('pastecs')
 
-# source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-# source('/data/vrc_his/douek_lab/wakecg/sample_sheet_functions.R')
-# source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
-# source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
+# source('/home/cwake/snakemakes/CITESeq_functions.R')
+# source('/home/cwake/snakemakes/sample_sheet_functions.R')
+# source('/home/cwake/snakemakes/sc_functions.R')
+# source('/home/cwake/snakemakes/Utility_functions.R')
 
-source('/Volumes/VRC1_DATA/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/Volumes/VRC1_DATA/douek_lab/wakecg/sample_sheet_functions.R')
-source('/Volumes/VRC1_DATA/douek_lab/snakemakes/sc_functions.R')
-source('/Volumes/VRC1_DATA/douek_lab/snakemakes/Utility_functions.R')
+source('/home/cwake/snakemakes/CITESeq_functions.R')
+source('/home/cwake/snakemakes/sample_sheet_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/Utility_functions.R')
 
 project <- '2022619_857.3b'
-# runs_dir <- '/data/vrc_his/douek_lab/Runs/'
-# covs_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2022619_857.3b/Sample_sheet.csv'
+# runs_dir <- '/home/cwake/data/'
+# covs_file <- '/home/cwake/projects/2022619_857.3b/Sample_sheet.csv'
 # ### Auto thresh off
-# multiseq_off_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2022619_857.3b/data/Cell_data_old.csv'
+# multiseq_off_file <- '/home/cwake/projects/2022619_857.3b/data/Cell_data_old.csv'
 # ### Auto thresh on
-# multiseq_on_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2022619_857.3b/data/Cell_data_new.csv'
+# multiseq_on_file <- '/home/cwake/projects/2022619_857.3b/data/Cell_data_new.csv'
 # ### Custom method
-# custom_labels_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2022619_857.3b/hash_calls.tsv'
+# custom_labels_file <- '/home/cwake/projects/2022619_857.3b/hash_calls.tsv'
 
 
-runs_dir <- '/Volumes/VRC1_DATA/douek_lab/Runs/'
-covs_file <- '/Volumes/VRC1_DATA/douek_lab/projects/RNASeq/2022619_857.3b/Sample_sheet.csv'
+runs_dir <- '/home/cwake/data/'
+covs_file <- '/home/cwake/projects/2022619_857.3b/Sample_sheet.csv'
 ### Auto thresh off
-multiseq_off_file <- '/Volumes/VRC1_DATA/douek_lab/projects/RNASeq/2022619_857.3b/data/Cell_data_old.csv'
+multiseq_off_file <- '/home/cwake/projects/2022619_857.3b/data/Cell_data_old.csv'
 ### Auto thresh on
-multiseq_on_file <- '/Volumes/VRC1_DATA/douek_lab/projects/RNASeq/2022619_857.3b/data/Cell_data_new.csv'
+multiseq_on_file <- '/home/cwake/projects/2022619_857.3b/data/Cell_data_new.csv'
 ### Custom method
-custom_labels_file <- '/Volumes/VRC1_DATA/douek_lab/projects/RNASeq/2022619_857.3b/hash_calls.tsv'
+custom_labels_file <- '/home/cwake/projects/2022619_857.3b/hash_calls.tsv'
 
-# out_metrics <- '/data/vrc_his/douek_lab/projects/RNASeq/2022619_857.3b/BHLN7YDSX3/cellranger_count_metrics.tsv'
+# out_metrics <- '/home/cwake/projects/2022619_857.3b/BHLN7YDSX3/cellranger_count_metrics.tsv'
 # quant_func <- 'count'
 # batch <- 'Date_Sort'
 
-project_dir <- paste0('/Volumes/VRC1_DATA/douek_lab/projects/RNASeq/', project)
-# project_dir <- paste0('/Volumes/VRC1_DATA/douek_lab/projects/RNASeq/', project)
+project_dir <- paste0('/home/cwake/projects/', project)
+# project_dir <- paste0('/home/cwake/projects/', project)
 ### Read covariates
 dat <- read.csv(covs_file, stringsAsFactors = F, header = T,
                 check.names = F, 
@@ -77,8 +77,8 @@ labels_ms$Assignment_simple_mson <- ifelse(labels_ms$Assignment_mson %in% c('Dou
 labels_cust$Assignment_simple_cust <- ifelse(labels_cust$Assignment %in% c('Doublet', 'Negative'),labels_cust$Assignment, 'Positive')
 
 cust_list <- lapply(unique(dat$CR_ID), function(cr) {
-       # custom_labels_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/2022619_857.3b/count_output/', cr, '/outs/all_hash_calls.tsv')
-       custom_labels_file <- paste0('/Volumes/VRC1_DATA/douek_lab/projects/RNASeq/2022619_857.3b/count_output/', cr, '/outs/all_hash_calls.tsv')
+       # custom_labels_file <- paste0('/home/cwake/projects/2022619_857.3b/count_output/', cr, '/outs/all_hash_calls.tsv')
+       custom_labels_file <- paste0('/home/cwake/projects/2022619_857.3b/count_output/', cr, '/outs/all_hash_calls.tsv')
        read.table(custom_labels_file, sep = '\t', header = T)
        })
 names(cust_list) <- unique(dat$CR_ID)

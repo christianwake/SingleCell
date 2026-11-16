@@ -10,8 +10,8 @@ library('biomaRt')
 library('grid')
 library('scales')
 
-source('/data/vrc_his/douek_lab/wakecg/sc_functions.R')
-source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/CITESeq_functions.R')
 
 args = commandArgs(trailingOnly=TRUE)
 cseq_file <- args[1]
@@ -20,9 +20,9 @@ out_rds <- args[3]
 assay <- args[4]
 cluster <- args[5]
 
-# cseq_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/Go2/Mapped.RDS'
-# exclude_file <- '/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/Go2/Excluded_genes.txt'
-# out_rds <- '/data/vrc_his/douek_lab/projects/RNASeq/2021614_21-002/results/Go2/Cluster_DE/One-one/test.RDS'
+# cseq_file <- '/home/cwake/projects/2021614_21-002/results/Go2/Mapped.RDS'
+# exclude_file <- '/home/cwake/projects/2021614_21-002/results/Go2/Excluded_genes.txt'
+# out_rds <- '/home/cwake/projects/2021614_21-002/results/Go2/Cluster_DE/One-one/test.RDS'
 # assay = 'RNA'
 # cluster = 'predicted.celltype.l1-B-T'
 

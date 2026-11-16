@@ -15,9 +15,9 @@ library('cowplot')
 #library('lisi')
 library('data.table')
 
-source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
-#source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/Utility_functions.R')
+#source('/home/cwake/snakemakes/CITESeq_functions.R')
 
 if(interactive()){
   project <- '2024615_Boswell'
@@ -29,7 +29,7 @@ if(interactive()){
   # project <- '2023600_21-0012'
   # qc_name <- '2023-12-01'
   # gene_file <- 'genes.xlsx'
-  # QC_input_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/Test_comparisons.csv')
+  # QC_input_file <- paste0('/home/cwake/projects/', project, '/Test_comparisons.csv')
   # integration_file <- ''
   # reses <- c('RNA-0.6', 'prot-0.6')
   
@@ -40,39 +40,39 @@ if(interactive()){
   # qc_name <- '2023-01-09' ### published
   # qc_name <- '2023-05-02' ### A few more cells salvaged
   # test_var <- 'timepoint'
-  # integration_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/QC_steps/step4_integration.csv')
-  # gene_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/genes.xlsx')
+  # integration_file <- paste0('/home/cwake/projects/', project, '/QC_steps/step4_integration.csv')
+  # gene_file <- paste0('/home/cwake/projects/', project, '/genes.xlsx')
   
   ### 1st cluster
-  sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, 
+  sdat_file <- paste0('/home/cwake/projects/', project, 
                       '/results/', qc_name, '/RNA_normalized.RDS')
-  #sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, 
+  #sdat_file <- paste0('/home/cwake/projects/', project, 
   #                    '/results/', qc_name, '/DSB_normalized_data.RDS')
   
-  out_rds <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Clustered.RDS')
-  out_pdf <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/RNA_clusters.pdf')
+  out_rds <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Clustered.RDS')
+  out_pdf <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/RNA_clusters.pdf')
   ### 2nd cluster
-  # sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filtered.RDS')
-  # out_rds <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Filtered_clustered.RDS')
-  # out_pdf <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Clusters_filtered.pdf')
+  # sdat_file <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Filtered.RDS')
+  # out_rds <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Filtered_clustered.RDS')
+  # out_pdf <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Clusters_filtered.pdf')
   # reses <- c('RNA-0.7')
 
   # project <- '2022619_857.3b'
   # qc_name <- 'QC_first_pass'
   # negative_markers <- ''
-  # sdat_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/DSB_normalized_data.RDS')
-  # gene_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/genes.xlsx')
+  # sdat_file <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/DSB_normalized_data.RDS')
+  # gene_file <- paste0('/home/cwake/projects/', project, '/genes.xlsx')
   # test_var <- 'Timepoint'
   # integration_file <- ''
-  # out_rds <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Clustered.RDS')
-  # out_pdf <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/ADT_clusters.pdf')
+  # out_rds <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Clustered.RDS')
+  # out_pdf <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/ADT_clusters.pdf')
   # reses <- c('RNA-0.08', 'prot-0.05')
   
   ### Should be universal
-  QC_input_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, 
+  QC_input_file <- paste0('/home/cwake/projects/', project, 
   '/Test_comparisons.csv')
-  gtf_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
-  exclude_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/results/', qc_name, '/Excluded_genes.txt')
+  gtf_file <- paste0('/home/cwake/projects/', project, '/data/gtf.RDS')
+  exclude_file <- paste0('/home/cwake/projects/', project, '/results/', qc_name, '/Excluded_genes.txt')
   
 } else{
   args = commandArgs(trailingOnly=TRUE)

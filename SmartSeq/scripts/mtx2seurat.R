@@ -15,18 +15,18 @@ library('stringi')
 #library('limma')
 library('vegan')
 
-source('/data/vrc_his/douek_lab/snakemakes/sc_functions.R')
-source('/data/vrc_his/douek_lab/snakemakes/Utility_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/Utility_functions.R')
 
 if(interactive()){
   project <- '2021600_kristin'
   project <- '2024615_Boswell'
   #project <- '2022620_857.1'
   
-  mtx_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/raw_mtx.RDS')
-  covs_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/Covariates_QC_metrics.csv')
-  gtf_file <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
-  out_seurat <- paste0('/data/vrc_his/douek_lab/projects/RNASeq/', project, '/data/All_data.RDS')
+  mtx_file <- paste0('/home/cwake/projects/', project, '/data/raw_mtx.RDS')
+  covs_file <- paste0('/home/cwake/projects/', project, '/data/Covariates_QC_metrics.csv')
+  gtf_file <- paste0('/home/cwake/projects/', project, '/data/gtf.RDS')
+  out_seurat <- paste0('/home/cwake/projects/', project, '/data/All_data.RDS')
 } else{
   args = commandArgs(trailingOnly=TRUE)
   project <- args[1]

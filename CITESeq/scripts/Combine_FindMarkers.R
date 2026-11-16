@@ -10,8 +10,8 @@ library('grid')
 library('scales')
 library('rsconnect')
 
-source('/data/vrc_his/douek_lab/wakecg/sc_functions.R')
-source('/data/vrc_his/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/CITESeq_functions.R')
 
 args = commandArgs(trailingOnly=TRUE)
 out_rdata <- args[1]

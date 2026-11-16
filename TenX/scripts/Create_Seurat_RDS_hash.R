@@ -18,22 +18,22 @@ library('readxl')
 library('WriteXLS')
 library('Matrix')
 
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/CITESeq/CITESeq_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/wakecg/sample_sheet_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/sc_functions.R')
-source('/hpcdata/vrc/vrc1_data/douek_lab/snakemakes/Utility_functions.R')
+source('/home/cwake/snakemakes/CITESeq_functions.R')
+source('/home/cwake/snakemakes/sample_sheet_functions.R')
+source('/home/cwake/snakemakes/sc_functions.R')
+source('/home/cwake/snakemakes/Utility_functions.R')
 
 if(interactive()){
   # project <- '2021614_21-002'
-  # covs_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2021614_21-002/All_covariates.csv'
+  # covs_file <- '/home/cwake/projects/2021614_21-002/All_covariates.csv'
   
   project <- '2022619_857.3b'
-  covs_file <- '/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/2022619_857.3b/Sample_sheet.csv'
+  covs_file <- '/home/cwake/projects/2022619_857.3b/Sample_sheet.csv'
   
-  runs_dir <- '/hpcdata/vrc/vrc1_data/douek_lab/Runs/'
-  labels_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/Cell_data.csv')
-  gtf_file <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/gtf.RDS')
-  out_rds <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project, '/data/All_data.RDS')
+  runs_dir <- '/home/cwake/data/'
+  labels_file <- paste0('/home/cwake/projects/', project, '/data/Cell_data.csv')
+  gtf_file <- paste0('/home/cwake/projects/', project, '/data/gtf.RDS')
+  out_rds <- paste0('/home/cwake/projects/', project, '/data/All_data.RDS')
 } else{
   args = commandArgs(trailingOnly=TRUE)
   runs_dir <- args[1]
@@ -44,7 +44,7 @@ if(interactive()){
   out_rds <- args[6]  
 }
 
-project_dir <- paste0('/hpcdata/vrc/vrc1_data/douek_lab/projects/RNASeq/', project)
+project_dir <- paste0('/home/cwake/projects/', project)
 ### Read covariates
 dat <- read.csv(covs_file, stringsAsFactors = F, header = T,
                  check.names = F, 
